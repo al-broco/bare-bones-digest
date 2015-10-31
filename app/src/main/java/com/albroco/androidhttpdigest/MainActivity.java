@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.albroco.androidhttpdigest.lib.HttpDigestState;
+
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -25,7 +27,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... params) {
             try {
-                HttpURLConnection connection = (HttpURLConnection) new URL(TEST_URL).openConnection();
+                HttpDigestState httpDigestState = new HttpDigestState();
+                HttpURLConnection connection;
+                do {
+                    connection = (HttpURLConnection) new URL(TEST_URL).openConnection();
+                    httpDigestState.processRequest(connection);
+                } while (httpDigestState.requestNeedsResend());
+
                 int statusCode = connection.getResponseCode();
                 Log.i(LOG_TAG, "Request response code: " + statusCode);
             } catch (Exception e) {
