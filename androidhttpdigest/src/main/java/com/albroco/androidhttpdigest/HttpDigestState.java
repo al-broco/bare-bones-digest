@@ -1,4 +1,4 @@
-package com.albroco.androidhttpdigest.lib;
+package com.albroco.androidhttpdigest;
 
 import android.util.Log;
 

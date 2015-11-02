@@ -1,11 +1,11 @@
-package com.albroco.androidhttpdigest;
+package com.albroco.http_digest_test;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
-import com.albroco.androidhttpdigest.lib.HttpDigestState;
+import com.albroco.androidhttpdigest.HttpDigestState;
 
 import java.net.CookieHandler;
 import java.net.CookieManager;

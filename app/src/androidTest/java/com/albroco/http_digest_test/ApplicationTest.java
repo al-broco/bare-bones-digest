@@ -1,4 +1,4 @@
-package com.albroco.androidhttpdigest;
+package com.albroco.http_digest_test;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
