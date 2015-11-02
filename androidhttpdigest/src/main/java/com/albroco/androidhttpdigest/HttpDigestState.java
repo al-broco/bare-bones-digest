@@ -191,49 +191,18 @@ public class HttpDigestState {
     }
 
     private void updateStateFromHttpDigestChallenge(HttpURLConnection connection) {
-        String authenticateHeader = connection.getHeaderField(WWW_AUTHENTICATE_HTTP_HEADER_NAME);
+        WwwAuthenticateHeader header = WwwAuthenticateHeader.parse(connection.getHeaderField(WWW_AUTHENTICATE_HTTP_HEADER_NAME));
 
-        if (!authenticateHeader.startsWith(HTTP_DIGEST_CHALLENGE_PREFIX)) {
-            return;
-        }
-
-        realm = null;
-        nonce = null;
-        opaqueQuoted = null;
-        algorithm = null;
-
-        // TODO: Current parsing is broken and only works for simple cases
-        String digestChallenge = authenticateHeader.substring(HTTP_DIGEST_CHALLENGE_PREFIX.length());
-        String challengeParts[] = digestChallenge.split(",");
-        for (String challengePart : challengeParts) {
-            int equalsIndex = challengePart.indexOf('=');
-            if (equalsIndex != -1) {
-                String key = challengePart.substring(0, equalsIndex).trim();
-                String value = challengePart.substring(equalsIndex + 1).trim();
-
-                if (key.equals("realm")) {
-                    realm = unquoteString(value);
-                } else if (key.equals("nonce")) {
-                    nonce = unquoteString(value);
-                } else if (key.equals("opaque")) {
-                    opaqueQuoted = value;
-                } else if (key.equals("algorithm")) {
-                    algorithm = value;
-                }
-            }
+        if (header != null) {
+            realm = header.getRealm();
+            nonce = header.getNonce();
+            opaqueQuoted = header.getOpaqueQuoted();
+            algorithm = header.getAlgorithm();
         }
     }
 
     private String quoteString(String str) {
         // TODO: implement properly
         return "\"" + str + "\"";
-    }
-
-    private String unquoteString(String str) {
-        // TODO: implement properly
-        if (str.startsWith("\"") && str.endsWith("\"")) {
-            return str.substring(1, str.length() - 1);
-        }
-        return str;
     }
 }
