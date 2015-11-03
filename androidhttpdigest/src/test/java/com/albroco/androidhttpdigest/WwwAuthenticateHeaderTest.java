@@ -23,4 +23,16 @@ public class WwwAuthenticateHeaderTest {
     assertEquals("\"5ccc069c403ebaf9f0171e9517f40e41\"", header.getOpaqueQuoted());
     assertNull(header.getAlgorithm());
   }
+
+  @Test
+  public void testThatDigestLiteralIsCaseInsensitive() throws Exception {
+    String EXAMPLE = "DIGEST " +
+        "realm=\"\", " +
+        "qop=\"auth\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
+
+    WwwAuthenticateHeader header = WwwAuthenticateHeader.parse(EXAMPLE);
+
+    assertNotNull(header);
+  }
 }
