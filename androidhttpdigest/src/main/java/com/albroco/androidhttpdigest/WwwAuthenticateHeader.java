@@ -64,6 +64,7 @@ public class WwwAuthenticateHeader {
           // TODO: deal with malformed/unsupported qop
           // TODO: Not really a quoted string
           // TODO store qop
+          // TODO test site returns non-quoted qop, consider allowing it
           parser.consumeQuotedString();
         } else if (token.equals("domain")) {
           // Domain definition from RFC 2617, Section 3.2.1:

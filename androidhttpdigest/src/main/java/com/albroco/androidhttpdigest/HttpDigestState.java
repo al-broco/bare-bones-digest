@@ -7,6 +7,8 @@ import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import java.util.Map;
 
 public class HttpDigestState {
     private static final String LOG_TAG = HttpDigestState.class.getSimpleName();
@@ -36,8 +38,58 @@ public class HttpDigestState {
         }
     }
 
+    public void updateStateFromResponse(int statusCode, Map<String, List<String>> responseHeaders) {
+        updateStateFromChallenge(responseHeaders);
+    }
+
+    public void updateStateFromResponse(HttpURLConnection connection) throws IOException {
+        updateStateFromResponse(connection.getResponseCode(), connection.getHeaderFields());
+    }
+
+    public void updateStateFromChallenge(Map<String, List<String>> responseHeaders) {
+        for (String wwwAuthenticateHeader : responseHeaders.get(WWW_AUTHENTICATE_HTTP_HEADER_NAME))
+        {
+            updateStateFromChallenge(wwwAuthenticateHeader);
+        }
+    }
+
+    public void updateStateFromChallenge(String wwwAuthenticateResponseHeader) {
+        WwwAuthenticateHeader header = WwwAuthenticateHeader.parse(wwwAuthenticateResponseHeader);
+
+        if (header != null) {
+            realm = header.getRealm();
+            nonce = header.getNonce();
+            opaqueQuoted = header.getOpaqueQuoted();
+            algorithm = header.getAlgorithm();
+        }
+    }
+
+    public String getAuthorizationHeaderForRequest(String requestMethod, String path) {
+        if (nonce == null) {
+            return null;
+        }
+
+        return createAuthorizationHeader(requestMethod, path);
+    }
+
+    public String getAuthorizationHeaderForRequest(HttpURLConnection connection) {
+        String requestMethod = connection.getRequestMethod();
+        String path = connection.getURL().getPath();
+        return getAuthorizationHeaderForRequest(requestMethod, path);
+    }
+
+    public void setHeadersOnRequest(HttpURLConnection connection) {
+        String requestMethod = connection.getRequestMethod();
+        String path = connection.getURL().getPath();
+        String authorizationHeader = getAuthorizationHeaderForRequest(requestMethod, path);
+
+        if (authorizationHeader != null) {
+            connection.setRequestProperty(AUTHORIZATION_HTTP_HEADER_NAME, authorizationHeader);
+        }
+    }
+
     public void processRequest(HttpURLConnection connection) throws IOException {
-        updateRequestBeforeSending(connection);
+        setHeadersOnRequest(connection);
 
         boolean challengeReceived = responseHasHttpDigestChallenge(connection);
         if (challengeReceived) {
@@ -52,18 +104,10 @@ public class HttpDigestState {
         return needsResend;
     }
 
-    private void updateRequestBeforeSending(HttpURLConnection connection) {
-        if (nonce == null) {
-            return;
-        }
-
-        connection.setRequestProperty(AUTHORIZATION_HTTP_HEADER_NAME, createAuthorizationHeader(connection));
-    }
-
-    private String createAuthorizationHeader(HttpURLConnection connection) {
+    private String createAuthorizationHeader(String requestMethod, String path) {
         generateClientNonce();
 
-        String response = calculateResponse(connection);
+        String response = calculateResponse(requestMethod, path);
 
         StringBuilder result = new StringBuilder();
         result.append("Digest ");
@@ -82,7 +126,7 @@ public class HttpDigestState {
         result.append(",");
 
         result.append("uri=");
-        result.append(quoteString(connection.getURL().getPath()));
+        result.append(quoteString(path));
         result.append(",");
 
         result.append("response=");
@@ -120,9 +164,9 @@ public class HttpDigestState {
         return result.toString();
     }
 
-    private String calculateResponse(HttpURLConnection connection) {
+    private String calculateResponse(String requestMethod, String path) {
         String a1 = calculateA1();
-        String a2 = calculateA2(connection);
+        String a2 = calculateA2(requestMethod, path);
 
         String secret = calculateMd5(a1);
         String data = joinWithColon(nonce, String.format("%08x", nonceCount), clientNonce, "auth", calculateMd5(a2));
@@ -134,8 +178,8 @@ public class HttpDigestState {
         return joinWithColon(authentication.getUserName(), realm, new String(authentication.getPassword()));
     }
 
-    private String calculateA2(HttpURLConnection connection) {
-        return joinWithColon(connection.getRequestMethod(), connection.getURL().getPath());
+    private String calculateA2(String requestMethod, String path) {
+        return joinWithColon(requestMethod, path);
     }
 
     private void generateClientNonce() {
