@@ -10,6 +10,7 @@ import com.albroco.androidhttpdigest.HttpDigestState;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.HttpURLConnection;
+import java.net.PasswordAuthentication;
 import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,7 +32,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... params) {
             try {
-                HttpDigestState httpDigestState = new HttpDigestState("user", "passwd");
+                PasswordAuthentication auth = new PasswordAuthentication("user", "passwd".toCharArray());
+                HttpDigestState httpDigestState = new HttpDigestState(auth);
                 HttpURLConnection connection;
 
                 connection = (HttpURLConnection) new URL(TEST_URL).openConnection();

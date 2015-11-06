@@ -4,6 +4,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.PasswordAuthentication;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -16,18 +17,17 @@ public class HttpDigestState {
 
     private final MessageDigest md5;
     private boolean needsResend = false;
-    private String userName;
-    private String password;
     private int nonceCount;
     private String realm;
     private String nonce;
     private String clientNonce;
     private String opaqueQuoted;
     private String algorithm;
+    private PasswordAuthentication authentication;
 
-    public HttpDigestState(String userName, String password) {
-        this.userName = userName;
-        this.password = password;
+    public HttpDigestState(PasswordAuthentication authentication) {
+        this.authentication = authentication;
+
         try {
             this.md5 = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
@@ -69,7 +69,7 @@ public class HttpDigestState {
         result.append("Digest ");
 
         result.append("username=");
-        result.append(quoteString(userName));
+        result.append(quoteString(authentication.getUserName()));
         result.append(",");
 
         // TODO unsure what this is
@@ -131,7 +131,7 @@ public class HttpDigestState {
     }
 
     private String calculateA1() {
-        return joinWithColon(userName, realm, password);
+        return joinWithColon(authentication.getUserName(), realm, new String(authentication.getPassword()));
     }
 
     private String calculateA2(HttpURLConnection connection) {
