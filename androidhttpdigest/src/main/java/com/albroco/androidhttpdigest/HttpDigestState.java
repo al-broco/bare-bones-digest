@@ -51,6 +51,8 @@ public class HttpDigestState {
         {
             updateStateFromChallenge(wwwAuthenticateHeader);
         }
+
+        // TODO: Support Authentication-Info header with changing nonce values
     }
 
     public void updateStateFromChallenge(String wwwAuthenticateResponseHeader) {
@@ -112,36 +114,53 @@ public class HttpDigestState {
         StringBuilder result = new StringBuilder();
         result.append("Digest ");
 
+        // Username is defined in Section 3.2.2 of RFC 2617
+        // username         = "username" "=" username-value
+        // username-value   = quoted-string
         result.append("username=");
         result.append(quoteString(authentication.getUserName()));
         result.append(",");
 
-        // TODO unsure what this is
+        // Realm is defined in RFC 2617, Section 1.2
+        // realm       = "realm" "=" realm-value
+        // realm-value = quoted-string
+        // TODO: Keep different states per realm, see Section 1.2 of RFC 2617
+        // TODO: Unnecessary to quote and then unquote string value
         result.append("realm=");
         result.append(quoteString(realm));
         result.append(",");
 
+        // nonce             = "nonce" "=" nonce-value
+        // nonce-value       = quoted-string
+        // TODO: Unnecessary to quote and then unquote string value
         result.append("nonce=");
         result.append(quoteString(nonce));
         result.append(",");
 
+        // digest-uri       = "uri" "=" digest-uri-value
+        // digest-uri-value = request-uri   ; As specified by HTTP/1.1
         result.append("uri=");
         result.append(quoteString(path));
         result.append(",");
 
+        // Response is defined in RFC 2617, Section 3.2.2 and 3.2.2.1
+        // response         = "response" "=" request-digest
         result.append("response=");
         result.append(response);
         result.append(",");
 
-        if (algorithm != null) {
-            result.append("algorithm=");
-            result.append(algorithm);
-            result.append(",");
-        }
-
+        // Cnonce is defined in RFC 2617, Section 3.2.2
+        // cnonce           = "cnonce" "=" cnonce-value
+        // cnonce-value     = nonce-value
+        // Must be present if qop is specified, must not if qop is unspecified
         result.append("cnonce=");
         result.append(clientNonce);
         result.append(",");
+
+        // Opaque and algorithm are explained in Section 3.2.2 of RFC 2617:
+        // "The values of the opaque and algorithm fields must be those supplied
+        // in the WWW-Authenticate response header for the entity being
+        // requested."
 
         if (opaqueQuoted != null) {
             result.append("opaque=");
@@ -149,15 +168,23 @@ public class HttpDigestState {
             result.append(",");
         }
 
-        // TODO handle other qop values
+        if (algorithm != null) {
+            result.append("algorithm=");
+            result.append(algorithm);
+            result.append(",");
+        }
+
+        // TODO Verify that server supports auth
+        // TODO Also support auth-int
         result.append("qop=auth");
         result.append(",");
 
-        // TODO: not sure about case
+        // Nonce count is defined in RFC 2617, Section 3.2.2
+        // nonce-count      = "nc" "=" nc-value
+        // nc-value         = 8LHEX (lower case hex)
+        // Must be present if qop is specified, must not if qop is unspecified
         result.append("nc=");
         result.append(String.format("%08x", nonceCount));
-
-        // TODO other values
 
         Log.e(LOG_TAG, "Hdr: " + result);
 
@@ -165,6 +192,8 @@ public class HttpDigestState {
     }
 
     private String calculateResponse(String requestMethod, String path) {
+        // TODO: Below calculation is for the case where qop is present, if not qop is calculated
+        // differently
         String a1 = calculateA1();
         String a2 = calculateA2(requestMethod, path);
 
@@ -175,10 +204,14 @@ public class HttpDigestState {
     }
 
     private String calculateA1() {
+        // TODO: Below calculation is for if algorithm is MD5 or unspecified
+        // TODO: Support MD5-sess algorithm
         return joinWithColon(authentication.getUserName(), realm, new String(authentication.getPassword()));
     }
 
     private String calculateA2(String requestMethod, String path) {
+        // TODO: Below calculation if if qop is auth or unspecified
+        // TODO: Support auth-int qop
         return joinWithColon(requestMethod, path);
     }
 
