@@ -236,12 +236,49 @@ public class WwwAuthenticateHeader {
     return stale;
   }
 
-  private static String unquoteString(String str) {
-    // TODO: implement properly
-    if (str.startsWith("\"") && str.endsWith("\"")) {
+  /**
+   * Unqoutes a quoted string.
+   *
+   * Quoted strings are explained in
+   * <a href="https://tools.ietf.org/html/rfc2616#section-2.2">Section 2.2 of RFC 2616</a>.:
+   *
+   * <dl>
+   *     <dt>quoted-string</dt>
+   *     <dd>A string of text is parsed as a single word if it is quoted using
+   *         double-quote marks.
+   *         <pre>
+   * quoted-string  = ( &lt;"&gt; *(qdtext | quoted-pair ) &lt;"&gt; )
+   * qdtext         = &lt;any TEXT except &lt;"&gt;&gt;
+   *         </pre>
+   *         The backslash character ("\") MAY be used as a single-character
+   *         quoting mechanism only within quoted-string and comment
+   *         constructs.
+   *         <pre>
+   * quoted-pair    = "\" CHAR
+   *         </pre></dd>
+   * </dl>
+   *
+   * @param str the string to unqoute
+   * @return the unquoted string
+   */
+  public static String unquote(String str) {
+    // TODO: Handle malformed strings (missing quotes, strings ending in \)
+    if (str.indexOf('\\') == -1) {
       return str.substring(1, str.length() - 1);
     }
-    return str;
+
+    StringBuffer result = new StringBuffer();
+
+    int index = 1;
+    while (index < str.length() - 1) {
+      char c = str.charAt(index);
+      if (c == '\\') {
+        c = str.charAt(++index);
+      }
+      result.append(c);
+    }
+
+    return result.toString();
   }
 
   private static final class Parser {
