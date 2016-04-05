@@ -18,7 +18,7 @@ public class HttpDigestState {
   public static final String HTTP_DIGEST_CHALLENGE_PREFIX = "Digest ";
 
   private final MessageDigest md5;
-  private boolean needsResend = false;
+  private boolean resendNeeded = false;
   private int nonceCount;
   private String realm;
   private String nonce;
@@ -39,19 +39,54 @@ public class HttpDigestState {
   }
 
   public void updateStateFromResponse(int statusCode, Map<String, List<String>> responseHeaders) {
-    updateStateFromChallenge(responseHeaders);
+    resendNeeded = false;
+    
+    if (responseContainsChallenge(statusCode, responseHeaders)) {
+      updateStateFromChallenge(responseHeaders);
+    }
+
+    // TODO: Support Authentication-Info header with changing nonce values
   }
 
   public void updateStateFromResponse(HttpURLConnection connection) throws IOException {
     updateStateFromResponse(connection.getResponseCode(), connection.getHeaderFields());
   }
 
-  public void updateStateFromChallenge(Map<String, List<String>> responseHeaders) {
-    for (String wwwAuthenticateHeader : responseHeaders.get(WWW_AUTHENTICATE_HTTP_HEADER_NAME)) {
-      updateStateFromChallenge(wwwAuthenticateHeader);
+  public static boolean responseContainsChallenge(int statusCode,
+      Map<String, List<String>> responseHeaders) {
+    // RFC 2617, Section 3.2.1:
+    // If a server receives a request for an access-protected object, and an
+    // acceptable Authorization header is not sent, the server responds with
+    // a "401 Unauthorized" status code, and a WWW-Authenticate header as
+    // per the framework defined above
+    if (statusCode != 401) {
+      return false;
     }
 
-    // TODO: Support Authentication-Info header with changing nonce values
+    List<String> wwwAuthenticateHeaders = responseHeaders.get(WWW_AUTHENTICATE_HTTP_HEADER_NAME);
+    for (String wwwAuthenticateHeader : wwwAuthenticateHeaders) {
+      if (wwwAuthenticateHeader.startsWith(HTTP_DIGEST_CHALLENGE_PREFIX)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public static boolean responseContainsChallenge(HttpURLConnection connection) throws IOException {
+    return responseContainsChallenge(connection.getResponseCode(), connection.getHeaderFields());
+  }
+
+  public void updateStateFromChallenge(Map<String, List<String>> responseHeaders) {
+    List<String> wwwAuthenticateResponseHeaders =
+        responseHeaders.get(WWW_AUTHENTICATE_HTTP_HEADER_NAME);
+    if (wwwAuthenticateResponseHeaders == null) {
+      return;
+    }
+
+    for (String wwwAuthenticateResponseHeader : wwwAuthenticateResponseHeaders) {
+      updateStateFromChallenge(wwwAuthenticateResponseHeader);
+    }
   }
 
   public void updateStateFromChallenge(String wwwAuthenticateResponseHeader) {
@@ -59,9 +94,10 @@ public class HttpDigestState {
 
     if (header != null) {
       realm = header.getRealm();
-      nonce = header.getNonce();
+      setNonce(header.getNonce());
       opaqueQuoted = header.getOpaqueQuoted();
       algorithm = header.getAlgorithm();
+      resendNeeded = true;
     }
   }
 
@@ -89,20 +125,35 @@ public class HttpDigestState {
     }
   }
 
+  public boolean isResendNeeded() {
+    return resendNeeded;
+  }
+
+  // TODO: this is useless for requests that POST a body or where the request must be manipulated
+  // after headers are set
   public void processRequest(HttpURLConnection connection) throws IOException {
     setHeadersOnRequest(connection);
 
-    boolean challengeReceived = responseHasHttpDigestChallenge(connection);
-    if (challengeReceived) {
-      updateStateFromHttpDigestChallenge(connection);
-      nonceCount = 1;
-    }
-
-    needsResend = challengeReceived;
+    updateStateFromResponse(connection);
   }
 
-  public boolean requestNeedsResend() {
-    return needsResend;
+  private void setNonce(String nonce) {
+    if (!nonce.equals(this.nonce)) {
+      // When nonce changes, reset the nonce count.
+      // RFC 2617 Section 3.2.2:
+      // [...] The nc-value is the hexadecimal count of the number of requests (including the
+      // current request) that the client has sent with the nonce value in this request.
+      this.nonce = nonce;
+      resetNonceCount();
+    }
+  }
+
+  private void resetNonceCount() {
+    this.nonceCount = 1;
+  }
+
+  private void incrementNonceCount() {
+    this.nonceCount++;
   }
 
   private String createAuthorizationHeader(String requestMethod, String path) {
@@ -152,6 +203,7 @@ public class HttpDigestState {
     // cnonce           = "cnonce" "=" cnonce-value
     // cnonce-value     = nonce-value
     // Must be present if qop is specified, must not if qop is unspecified
+    // TODO: don't include if qop is unspecified
     result.append("cnonce=");
     result.append(clientNonce);
     result.append(",");
@@ -184,6 +236,8 @@ public class HttpDigestState {
     // Must be present if qop is specified, must not if qop is unspecified
     result.append("nc=");
     result.append(String.format("%08x", nonceCount));
+
+    incrementNonceCount();
 
     Log.e(LOG_TAG, "Hdr: " + result);
 
@@ -254,35 +308,8 @@ public class HttpDigestState {
     return result.toString();
   }
 
-
-  private static boolean responseHasHttpDigestChallenge(HttpURLConnection connection) throws
-      IOException {
-    // RFC 2617, Section 3.2.1:
-    // If a server receives a request for an access-protected object, and an
-    // acceptable Authorization header is not sent, the server responds with
-    // a "401 Unauthorized" status code, and a WWW-Authenticate header as
-    // per the framework defined above
-    int statusCode = connection.getResponseCode();
-    if (statusCode != 401) {
-      return false;
-    }
-
-    // TODO: Handle multiple challenges
-    String authenticateHeader = connection.getHeaderField(WWW_AUTHENTICATE_HTTP_HEADER_NAME);
-    return authenticateHeader != null &&
-        authenticateHeader.startsWith(HTTP_DIGEST_CHALLENGE_PREFIX);
-  }
-
-  private void updateStateFromHttpDigestChallenge(HttpURLConnection connection) {
-    WwwAuthenticateHeader header =
-        WwwAuthenticateHeader.parse(connection.getHeaderField(WWW_AUTHENTICATE_HTTP_HEADER_NAME));
-
-    if (header != null) {
-      realm = header.getRealm();
-      nonce = header.getNonce();
-      opaqueQuoted = header.getOpaqueQuoted();
-      algorithm = header.getAlgorithm();
-    }
+  private void updateStateFromChallenge(HttpURLConnection connection) {
+    updateStateFromChallenge(connection.getHeaderField(WWW_AUTHENTICATE_HTTP_HEADER_NAME));
   }
 
   private String quoteString(String str) {

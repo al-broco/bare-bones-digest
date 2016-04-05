@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
                 httpDigestState.processRequest(connection);
                 Log.i(LOG_TAG, "First request response code: " + connection.getResponseCode());
 
-                if (httpDigestState.requestNeedsResend()) {
+                if (httpDigestState.isResendNeeded()) {
                     connection = (HttpURLConnection) new URL(TEST_URL).openConnection();
                     httpDigestState.processRequest(connection);
                     Log.i(LOG_TAG, "Second request response code: " + connection.getResponseCode());
