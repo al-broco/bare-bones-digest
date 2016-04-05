@@ -1,6 +1,8 @@
 package com.albroco.androidhttpdigest;
 
 public class WwwAuthenticateHeader {
+  public static final String HEADER_NAME = "WWW-Authenticate";
+
   private static final String HTTP_DIGEST_CHALLENGE_PREFIX = "digest";
 
   private final String realm;
