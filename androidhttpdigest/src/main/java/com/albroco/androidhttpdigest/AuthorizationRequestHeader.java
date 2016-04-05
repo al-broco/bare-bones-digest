@@ -4,7 +4,18 @@ import java.net.PasswordAuthentication;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * Describes an <code>Authorization</code> HTTP request header. Once the client has received a
+ * HTTP Digest challenge from the server this header should be included in all subsequent requests
+ * to authorize the client.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">RFC 2617, "HTTP Digest Access
+ * Authentication", Section 3.2.2, "The Authorization Request Header"</a>
+ */
 public class AuthorizationRequestHeader {
+  /**
+   * The name of the HTTP request header ({@value #HEADER_NAME}).
+   */
   public static final String HEADER_NAME = "Authorization";
 
   private final MessageDigest md5;
