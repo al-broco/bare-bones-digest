@@ -72,7 +72,11 @@ public class WwwAuthenticateHeader {
           // stale             = "stale" "=" ( "true" | "false" )
           String staleToken = parser.consumeToken().get();
           // TRUE (case-insensitive) means stale, any other value (or stale
-          // directive not present) means false.
+          // directive not present) means false. From RFC 2617, Section 3.2.1:
+          // [...] If stale is TRUE (case-insensitive), the client may wish to simply retry the
+          // request with a new encrypted response [...] If stale is FALSE, or anything other
+          // than TRUE, or the stale directive is not present, the username and/or password are
+          // invalid [...]
           stale = staleToken.equalsIgnoreCase("true");
         } else {
           // Any other directive can be included (and MUST be ignored).
