@@ -116,14 +116,6 @@ public class HttpDigestState {
     return resendNeeded;
   }
 
-  // TODO: this is useless for requests that POST a body or where the request must be manipulated
-  // after headers are set
-  public void processRequest(HttpURLConnection connection) throws IOException {
-    setHeadersOnRequest(connection);
-
-    updateStateFromResponse(connection);
-  }
-
   private void setNonce(String nonce) {
     if (!nonce.equals(authorizationRequestHeader.getNonce())) {
       // When nonce changes, reset the nonce count.

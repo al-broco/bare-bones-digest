@@ -49,7 +49,8 @@ public class MainActivity extends AppCompatActivity {
       HttpURLConnection connection;
 
       connection = (HttpURLConnection) new URL(TEST_URL).openConnection();
-      httpDigestState.processRequest(connection);
+      httpDigestState.setHeadersOnRequest(connection);
+      httpDigestState.updateStateFromResponse(connection);
       Log.i(LOG_TAG,
           "Header out: " +
               connection.getRequestProperty(AuthorizationRequestHeader.HEADER_NAME));
@@ -57,7 +58,8 @@ public class MainActivity extends AppCompatActivity {
 
       if (httpDigestState.isResendNeeded()) {
         connection = (HttpURLConnection) new URL(TEST_URL).openConnection();
-        httpDigestState.processRequest(connection);
+        httpDigestState.setHeadersOnRequest(connection);
+        httpDigestState.updateStateFromResponse(connection);
         Log.i(LOG_TAG,
             "Header out: " + connection.getRequestProperty(AuthorizationRequestHeader
                 .HEADER_NAME));
