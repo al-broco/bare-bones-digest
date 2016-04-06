@@ -11,7 +11,11 @@ public class WwwAuthenticateHeader {
   private final String algorithm;
   private final boolean stale;
 
-  private WwwAuthenticateHeader(String realm, String nonce, String opaqueQuoted, String algorithm, boolean stale) {
+  private WwwAuthenticateHeader(String realm,
+      String nonce,
+      String opaqueQuoted,
+      String algorithm,
+      boolean stale) {
     this.realm = realm;
     this.nonce = nonce;
     this.opaqueQuoted = opaqueQuoted;
@@ -115,13 +119,13 @@ public class WwwAuthenticateHeader {
    * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
    *
    * <dl>
-   *     <dt>realm</dt>
-   *     <dd>A string to be displayed to users so they know which
-   *         username and password to use.  This string should contain
-   *         at least the name of the host performing the
-   *         authentication and might additionally indicate the
-   *         collection of users who might have access. An example
-   *         might be "registered_users@gotham.news.com".</dd>
+   * <dt>realm</dt>
+   * <dd>A string to be displayed to users so they know which
+   * username and password to use.  This string should contain
+   * at least the name of the host performing the
+   * authentication and might additionally indicate the
+   * collection of users who might have access. An example
+   * might be "registered_users@gotham.news.com".</dd>
    * </dl>
    *
    * @return The value of the realm directive
@@ -137,17 +141,17 @@ public class WwwAuthenticateHeader {
    * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
    *
    * <dl>
-   *     <dt>algorithm</dt>
+   * <dt>algorithm</dt>
    *
-   *     <dd>A string indicating a pair of algorithms used to produce
-   *         the digest and a checksum. If this is not present it is
-   *         assumed to be "MD5".  If the algorithm is not understood,
-   *         the challenge should be ignored (and a different one
-   *         used, if there is more than one). [&hellip;]</dd>
+   * <dd>A string indicating a pair of algorithms used to produce
+   * the digest and a checksum. If this is not present it is
+   * assumed to be "MD5".  If the algorithm is not understood,
+   * the challenge should be ignored (and a different one
+   * used, if there is more than one). [&hellip;]</dd>
    * </dl>
    *
    * @return The value of the algorithm directive or {@code null} if the
-   *         algorithm directive is not present in the header
+   * algorithm directive is not present in the header
    */
   public String getAlgorithm() {
     return algorithm;
@@ -160,18 +164,18 @@ public class WwwAuthenticateHeader {
    * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
    *
    * <dl>
-   *     <dt>nonce</dt>
+   * <dt>nonce</dt>
    *
-   *     <dd>A server-specified data string which should be uniquely generated
-   *         each time a 401 response is made. It is recommended that this
-   *         string be base64 or hexadecimal data. Specifically, since the
-   *         string is passed in the header lines as a quoted string, the
-   *         double-quote character is not allowed.
-   *         <p>
-   *         The contents of the nonce are implementation dependent. The quality
-   *         of the implementation depends on a good choice. [&hellip;]
-   *         <p>
-   *         The nonce is opaque to the client.</dd>
+   * <dd>A server-specified data string which should be uniquely generated
+   * each time a 401 response is made. It is recommended that this
+   * string be base64 or hexadecimal data. Specifically, since the
+   * string is passed in the header lines as a quoted string, the
+   * double-quote character is not allowed.
+   * <p>
+   * The contents of the nonce are implementation dependent. The quality
+   * of the implementation depends on a good choice. [&hellip;]
+   * <p>
+   * The nonce is opaque to the client.</dd>
    * </dl>
    *
    * @return the nonce as a string
@@ -188,16 +192,16 @@ public class WwwAuthenticateHeader {
    * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
    *
    * <dl>
-   *     <dt>opaque</dt>
-   *     <dd>A string of data, specified by the server, which should
-   *         be returned by the client unchanged in the Authorization
-   *         header of subsequent requests with URIs in the same
-   *         protection space. It is recommended that this string be
-   *         base64 or hexadecimal data.</dd>
+   * <dt>opaque</dt>
+   * <dd>A string of data, specified by the server, which should
+   * be returned by the client unchanged in the Authorization
+   * header of subsequent requests with URIs in the same
+   * protection space. It is recommended that this string be
+   * base64 or hexadecimal data.</dd>
    * </dl>
    *
    * @return the value of the opaque directive or {@code null} if the
-   *         opaque directive is not present in the header
+   * opaque directive is not present in the header
    */
   public String getOpaqueQuoted() {
     return opaqueQuoted;
@@ -215,24 +219,24 @@ public class WwwAuthenticateHeader {
    * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
    *
    * <dl>
-   *     <dt>stale</dt>
-   *     <dd>A flag, indicating that the previous request from the
-   *         client was rejected because the nonce value was stale. If
-   *         stale is TRUE (case-insensitive), the client may wish to
-   *         simply retry the request with a new encrypted response,
-   *         without reprompting the user for a new username and
-   *         password. The server should only set stale to TRUE if it
-   *         receives a request for which the nonce is invalid but
-   *         with a valid digest for that nonce (indicating that the
-   *         client knows the correct username/password). If stale is
-   *         FALSE, or anything other than TRUE, or the stale
-   *         directive is not present, the username and/or password
-   *         are invalid, and new values must be obtained.</dd>
+   * <dt>stale</dt>
+   * <dd>A flag, indicating that the previous request from the
+   * client was rejected because the nonce value was stale. If
+   * stale is TRUE (case-insensitive), the client may wish to
+   * simply retry the request with a new encrypted response,
+   * without reprompting the user for a new username and
+   * password. The server should only set stale to TRUE if it
+   * receives a request for which the nonce is invalid but
+   * with a valid digest for that nonce (indicating that the
+   * client knows the correct username/password). If stale is
+   * FALSE, or anything other than TRUE, or the stale
+   * directive is not present, the username and/or password
+   * are invalid, and new values must be obtained.</dd>
    * </dl>
    *
    * @return {@code true} if a stale directive is present in the
-   *         header and equal to "true" (case-insensitive), {@code
-   *         false} otherwise.
+   * header and equal to "true" (case-insensitive), {@code
+   * false} otherwise.
    */
   public boolean isStale() {
     return stale;

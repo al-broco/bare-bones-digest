@@ -29,8 +29,7 @@ package com.albroco.androidhttpdigest;
 public final class Rfc2616AbnfParser {
   // TOOD: create table and do lookup
   // Defined in RFC 2616, Section 2.2
-  private static final String ABNF_SEPARATOR_CHARACTERS =
-          "()<>@,;:\\\"([]?={} \t";
+  private static final String ABNF_SEPARATOR_CHARACTERS = "()<>@,;:\\\"([]?={} \t";
 
   private String input;
   private int eltStart;
@@ -44,8 +43,7 @@ public final class Rfc2616AbnfParser {
     return input.substring(eltStart, eltEnd);
   }
 
-  public Rfc2616AbnfParser consumeLiteral(String literal) throws ParseException
-  {
+  public Rfc2616AbnfParser consumeLiteral(String literal) throws ParseException {
     // Definition from RFC 2616, Section 2.1:
     // "literal"
     //    Quotation marks surround literal text. Unless stated otherwise,
@@ -89,8 +87,7 @@ public final class Rfc2616AbnfParser {
     // Definition from RFC 2616, Section 2.2:
     // token          = 1*<any CHAR except CTLs or separators>
     int tokenEnd = eltEnd;
-    while (tokenEnd < input.length() &&
-            isValidTokenChar(input.charAt(tokenEnd))) {
+    while (tokenEnd < input.length() && isValidTokenChar(input.charAt(tokenEnd))) {
       ++tokenEnd;
     }
 
@@ -168,16 +165,16 @@ public final class Rfc2616AbnfParser {
    * RFC 2616</a>:
    *
    * <dl>
-   *     <dt>quoted-string</dt>
-   *     <dd>A string of text is parsed as a single word if it is quoted using
-   *         double-quote marks.
+   * <dt>quoted-string</dt>
+   * <dd>A string of text is parsed as a single word if it is quoted using
+   * double-quote marks.
    * <p><blockquote><pre>
    * quoted-string  = ( &lt;"&gt; *(qdtext | quoted-pair ) &lt;"&gt; )
    * qdtext         = &lt;any TEXT except &lt;"&gt;&gt;
    * </blockquote></pre>
-   *         The backslash character ("\") MAY be used as a single-character
-   *         quoting mechanism only within quoted-string and comment
-   *         constructs.
+   * The backslash character ("\") MAY be used as a single-character
+   * quoting mechanism only within quoted-string and comment
+   * constructs.
    * <p><blockquote><pre>
    * quoted-pair    = "\" CHAR
    * </blockquote></pre></dd>
@@ -213,7 +210,7 @@ public final class Rfc2616AbnfParser {
 
     ParseException(String message, Rfc2616AbnfParser parser) {
       this(message + " at pos " + parser.getPos() + ", remaining input: " +
-              parser.getRemainingInput());
+          parser.getRemainingInput());
     }
   }
 }

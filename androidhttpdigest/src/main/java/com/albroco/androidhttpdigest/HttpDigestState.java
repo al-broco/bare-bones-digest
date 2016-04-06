@@ -58,7 +58,8 @@ public class HttpDigestState {
   }
 
   public void updateStateFromChallenge(Map<String, List<String>> responseHeaders) {
-    List<String> wwwAuthenticateResponseHeaders = responseHeaders.get(WwwAuthenticateHeader.HEADER_NAME);
+    List<String> wwwAuthenticateResponseHeaders =
+        responseHeaders.get(WwwAuthenticateHeader.HEADER_NAME);
     if (wwwAuthenticateResponseHeaders == null) {
       return;
     }
