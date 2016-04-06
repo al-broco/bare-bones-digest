@@ -6,30 +6,44 @@ import java.net.PasswordAuthentication;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Describes an HTTP Digest Authentication session.
+ * <p>
+ * An authentication session starts when the server challenges the client for authentication. During
+ * the session, the client can authenticate using the values received in the challenge that started
+ * the session. Authentication sessions are explained in detail in
+ * <a href="https://tools.ietf.org/html/rfc2617#section-3.3">Section 3.3 of RFC 2617</a>.
+ * <p>
+ * TODO: add some examples here since this is the main entry point of the API
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.3">RFC 2617, "HTTP Digest Access
+ * Authentication", Section 3.3, "Digest Operation"</a>
+ */
 public class HttpDigestState {
-  public static final String HTTP_DIGEST_CHALLENGE_PREFIX = "Digest ";
+  private static final String HTTP_DIGEST_CHALLENGE_PREFIX = "Digest ";
 
-  private AuthorizationRequestHeader authorizationRequestHeader;
-
+  private AuthenticationSession authenticationSession = null;
+  private PasswordAuthentication authentication;
+  // Reuse to minimize object creation
+  private AuthorizationRequestHeader authorizationRequestHeader = new AuthorizationRequestHeader();
   private boolean resendNeeded = false;
 
   public HttpDigestState(PasswordAuthentication authentication) {
-    this.authorizationRequestHeader = new AuthorizationRequestHeader();
-    authorizationRequestHeader.setAuthentication(authentication);
+    this.authentication = authentication;
   }
 
-  public void updateStateFromResponse(int statusCode, Map<String, List<String>> responseHeaders) {
+  public void updateWithResponse(int statusCode, Map<String, List<String>> responseHeaders) {
     resendNeeded = false;
 
     if (responseContainsChallenge(statusCode, responseHeaders)) {
-      updateStateFromChallenge(responseHeaders);
+      updateWithChallenge(responseHeaders);
     }
 
     // TODO: Support Authentication-Info header with changing nonce values
   }
 
-  public void updateStateFromResponse(HttpURLConnection connection) throws IOException {
-    updateStateFromResponse(connection.getResponseCode(), connection.getHeaderFields());
+  public void updateWithResponse(HttpURLConnection connection) throws IOException {
+    updateWithResponse(connection.getResponseCode(), connection.getHeaderFields());
   }
 
   public static boolean responseContainsChallenge(int statusCode,
@@ -57,7 +71,7 @@ public class HttpDigestState {
     return responseContainsChallenge(connection.getResponseCode(), connection.getHeaderFields());
   }
 
-  public void updateStateFromChallenge(Map<String, List<String>> responseHeaders) {
+  public void updateWithChallenge(Map<String, List<String>> responseHeaders) {
     List<String> wwwAuthenticateResponseHeaders =
         responseHeaders.get(WwwAuthenticateHeader.HEADER_NAME);
     if (wwwAuthenticateResponseHeaders == null) {
@@ -65,36 +79,43 @@ public class HttpDigestState {
     }
 
     for (String wwwAuthenticateResponseHeader : wwwAuthenticateResponseHeaders) {
-      updateStateFromChallenge(wwwAuthenticateResponseHeader);
+      updateWithChallenge(wwwAuthenticateResponseHeader);
     }
   }
 
-  public void updateStateFromChallenge(String wwwAuthenticateResponseHeader) {
+  public void updateWithChallenge(String wwwAuthenticateResponseHeader) {
     WwwAuthenticateHeader header = WwwAuthenticateHeader.parse(wwwAuthenticateResponseHeader);
 
     if (header != null) {
-      authorizationRequestHeader.setRealm(header.getRealm());
-      setNonce(header.getNonce());
-      authorizationRequestHeader.setOpaqueQuoted(header.getOpaqueQuoted());
-      authorizationRequestHeader.setAlgorithm(header.getAlgorithm());
+      authenticationSession = new AuthenticationSession(authentication,
+          header.getNonce(),
+          header.getOpaqueQuoted(),
+          header.getRealm(),
+          header.getAlgorithm());
 
       resendNeeded = true;
     }
   }
 
   public String getAuthorizationHeaderForRequest(String requestMethod, String path) {
-    if (authorizationRequestHeader.getNonce() == null) {
+    if (authenticationSession == null) {
       return null;
     }
 
-    // TODO: Generate rnadom client nonce
+    authorizationRequestHeader.setAuthentication(authenticationSession.getAuthentication());
+    authorizationRequestHeader.setNonce(authenticationSession.getNonce());
+    authorizationRequestHeader.setNonceCount(authenticationSession.getNonceCount());
+    authorizationRequestHeader.setOpaqueQuoted(authenticationSession.getOpaqueQuoted());
+    authorizationRequestHeader.setRealm(authenticationSession.getRealm());
+    authorizationRequestHeader.setAlgorithm(authenticationSession.getAlgorithm());
+    // TODO: Generate random client nonce
     authorizationRequestHeader.setClientNonce("0a4f113b");
     authorizationRequestHeader.setPath(path);
     authorizationRequestHeader.setRequestMethod(requestMethod);
 
     String headerValue = authorizationRequestHeader.getHeaderValue();
 
-    authorizationRequestHeader.incrementNonceCount();
+    authenticationSession.incrementNonceCount();
 
     return headerValue;
   }
@@ -115,16 +136,5 @@ public class HttpDigestState {
 
   public boolean isResendNeeded() {
     return resendNeeded;
-  }
-
-  private void setNonce(String nonce) {
-    if (!nonce.equals(authorizationRequestHeader.getNonce())) {
-      // When nonce changes, reset the nonce count.
-      // RFC 2617 Section 3.2.2:
-      // [...] The nc-value is the hexadecimal count of the number of requests (including the
-      // current request) that the client has sent with the nonce value in this request.
-      authorizationRequestHeader.setNonce(nonce);
-      authorizationRequestHeader.resetNonceCount();
-    }
   }
 }
