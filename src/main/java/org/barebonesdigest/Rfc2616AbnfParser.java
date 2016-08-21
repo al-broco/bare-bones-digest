@@ -1,4 +1,4 @@
-package com.albroco.androidhttpdigest;
+package org.barebonesdigest;
 
 /**
  * Parses strings with a grammar defined using the augmented BNF described

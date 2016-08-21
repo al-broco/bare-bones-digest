@@ -1,4 +1,4 @@
-package com.albroco.androidhttpdigest;
+package org.barebonesdigest;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;

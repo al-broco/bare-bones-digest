@@ -1,4 +1,4 @@
-package com.albroco.androidhttpdigest;
+package org.barebonesdigest;
 
 public class WwwAuthenticateHeader {
   public static final String HEADER_NAME = "WWW-Authenticate";
