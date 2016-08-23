@@ -1,6 +1,5 @@
 package org.barebonesdigest;
 
-import java.net.PasswordAuthentication;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -12,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
  * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">RFC 2617, "HTTP Digest Access
  * Authentication", Section 3.2.2, "The Authorization Request Header"</a>
  */
-public class AuthorizationRequestHeader {
+public class DigestChallengeResponse {
   /**
    * The name of the HTTP request header ({@value #HEADER_NAME}).
    */
@@ -21,7 +20,8 @@ public class AuthorizationRequestHeader {
   private final MessageDigest md5;
 
   private String algorithm;
-  private PasswordAuthentication authentication;
+  private String username;
+  private String password;
   private String clientNonce;
   private String nonce;
   private int nonceCount;
@@ -30,93 +30,131 @@ public class AuthorizationRequestHeader {
   private String realm;
   private String requestMethod;
 
-  public AuthorizationRequestHeader() {
+  public DigestChallengeResponse() {
     try {
       this.md5 = MessageDigest.getInstance("MD5");
     } catch (NoSuchAlgorithmException e) {
       // TODO find out if this can happen
       throw new RuntimeException(e);
     }
+
+    this.nonceCount(1);
+  }
+
+  public static DigestChallengeResponse responseTo(DigestChallenge challenge) {
+    return new DigestChallengeResponse().challenge(challenge);
+  }
+
+  public DigestChallengeResponse algorithm(String algorithm) {
+    this.algorithm = algorithm;
+    return this;
+  }
+
+  public DigestChallengeResponse username(String username) {
+    this.username = username;
+    return this;
+  }
+
+  public DigestChallengeResponse password(String password) {
+    this.password = password;
+    return this;
+  }
+
+  public DigestChallengeResponse clientNonce(String clientNonce) {
+    this.clientNonce = clientNonce;
+    return this;
+  }
+
+  public DigestChallengeResponse nonce(String nonce) {
+    this.nonce = nonce;
+    return this;
+  }
+
+  public DigestChallengeResponse nonceCount(int nonceCount) {
+    this.nonceCount = nonceCount;
+    return this;
+  }
+
+  public DigestChallengeResponse opaqueQuoted(String opaqueQuoted) {
+    this.opaqueQuoted = opaqueQuoted;
+    return this;
+  }
+
+  public DigestChallengeResponse path(String path) {
+    this.path = path;
+    return this;
+  }
+
+  public DigestChallengeResponse realm(String realm) {
+    this.realm = realm;
+    return this;
+  }
+
+  public DigestChallengeResponse requestMethod(String requestMethod) {
+    this.requestMethod = requestMethod;
+    return this;
+  }
+
+  public DigestChallengeResponse challenge(DigestChallenge challenge) {
+    return nonce(challenge.getNonce()).opaqueQuoted(challenge.getOpaqueQuoted())
+        .realm(challenge.getRealm())
+        .algorithm(challenge.getAlgorithm());
   }
 
   public String getAlgorithm() {
     return algorithm;
   }
 
-  public void setAlgorithm(String algorithm) {
-    this.algorithm = algorithm;
+  public String getUsername() {
+    return username;
   }
 
-  public PasswordAuthentication getAuthentication() {
-    return authentication;
-  }
-
-  public void setAuthentication(PasswordAuthentication authentication) {
-    this.authentication = authentication;
+  public String getPassword() {
+    return password;
   }
 
   public String getClientNonce() {
-    return clientNonce;
-  }
+    if (clientNonce == null) {
+      synchronized (this) {
+        if (clientNonce == null) {
+          clientNonce = generateRandomNonce();
+        }
+      }
+    }
 
-  public void setClientNonce(String clientNonce) {
-    this.clientNonce = clientNonce;
+    return clientNonce;
   }
 
   public String getNonce() {
     return nonce;
   }
 
-  public void setNonce(String nonce) {
-    this.nonce = nonce;
-  }
-
   public int getNonceCount() {
     return nonceCount;
   }
 
-  public void setNonceCount(int nonceCount) {
-    this.nonceCount = nonceCount;
-  }
-
   public void resetNonceCount() {
-    setNonceCount(1);
+    nonceCount(1);
   }
 
   public void incrementNonceCount() {
-    setNonceCount(nonceCount + 1);
+    nonceCount(nonceCount + 1);
   }
 
   public String getOpaqueQuoted() {
     return opaqueQuoted;
   }
 
-  public void setOpaqueQuoted(String opaqueQuoted) {
-    this.opaqueQuoted = opaqueQuoted;
-  }
-
   public String getPath() {
     return path;
-  }
-
-  public void setPath(String path) {
-    this.path = path;
   }
 
   public String getRealm() {
     return realm;
   }
 
-  public void setRealm(String realm) {
-    this.realm = realm;
-  }
-
   public String getRequestMethod() {
     return requestMethod;
-  }
-
-  public void setRequestMethod(String requestMethod) {
-    this.requestMethod = requestMethod;
   }
 
   public String getHeaderValue() {
@@ -131,7 +169,7 @@ public class AuthorizationRequestHeader {
     // username         = "username" "=" username-value
     // username-value   = quoted-string
     result.append("username=");
-    result.append(quoteString(authentication.getUserName()));
+    result.append(quoteString(username));
     result.append(",");
 
     // Realm is defined in RFC 2617, Section 1.2
@@ -221,9 +259,7 @@ public class AuthorizationRequestHeader {
   private String calculateA1() {
     // TODO: Below calculation is for if algorithm is MD5 or unspecified
     // TODO: Support MD5-sess algorithm
-    return joinWithColon(authentication.getUserName(),
-        realm,
-        new String(authentication.getPassword()));
+    return joinWithColon(username, realm, password);
   }
 
   private String calculateA2() {
@@ -264,5 +300,10 @@ public class AuthorizationRequestHeader {
   private String quoteString(String str) {
     // TODO: implement properly
     return "\"" + str + "\"";
+  }
+
+  private static String generateRandomNonce() {
+    // TODO implement
+    return "0a4f113b";
   }
 }

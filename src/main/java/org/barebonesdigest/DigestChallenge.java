@@ -1,6 +1,8 @@
 package org.barebonesdigest;
 
-public class WwwAuthenticateHeader {
+public class DigestChallenge {
+  // Note: multiple WWW-Authenticate headers are allowed, see
+  // https://tools.ietf.org/html/rfc2616#section-14.47
   public static final String HEADER_NAME = "WWW-Authenticate";
 
   private static final String HTTP_DIGEST_CHALLENGE_PREFIX = "digest";
@@ -11,7 +13,7 @@ public class WwwAuthenticateHeader {
   private final String algorithm;
   private final boolean stale;
 
-  private WwwAuthenticateHeader(String realm,
+  private DigestChallenge(String realm,
       String nonce,
       String opaqueQuoted,
       String algorithm,
@@ -23,7 +25,7 @@ public class WwwAuthenticateHeader {
     this.stale = stale;
   }
 
-  public static WwwAuthenticateHeader parse(String authenticateHeader) {
+  public static DigestChallenge parse(String authenticateHeader) {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser(authenticateHeader);
     try {
       parser.consumeLiteral(HTTP_DIGEST_CHALLENGE_PREFIX);
@@ -106,7 +108,7 @@ public class WwwAuthenticateHeader {
         throw new Rfc2616AbnfParser.ParseException("Missing directive: nonce");
       }
 
-      return new WwwAuthenticateHeader(realm, nonce, opaqueQuoted, algorithm, stale);
+      return new DigestChallenge(realm, nonce, opaqueQuoted, algorithm, stale);
     } catch (Rfc2616AbnfParser.ParseException e) {
       return null;
     }
