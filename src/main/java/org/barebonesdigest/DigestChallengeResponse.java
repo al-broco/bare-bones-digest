@@ -26,7 +26,7 @@ public class DigestChallengeResponse {
   private String nonce;
   private int nonceCount;
   private String opaqueQuoted;
-  private String path;
+  private String uri;
   private String realm;
   private String requestMethod;
 
@@ -80,8 +80,8 @@ public class DigestChallengeResponse {
     return this;
   }
 
-  public DigestChallengeResponse path(String path) {
-    this.path = path;
+  public DigestChallengeResponse uri(String uri) {
+    this.uri = uri;
     return this;
   }
 
@@ -145,8 +145,8 @@ public class DigestChallengeResponse {
     return opaqueQuoted;
   }
 
-  public String getPath() {
-    return path;
+  public String getUri() {
+    return uri;
   }
 
   public String getRealm() {
@@ -190,7 +190,7 @@ public class DigestChallengeResponse {
     // digest-uri       = "uri" "=" digest-uri-value
     // digest-uri-value = request-uri   ; As specified by HTTP/1.1
     result.append("uri=");
-    result.append(quoteString(path));
+    result.append(quoteString(uri));
     result.append(",");
 
     // Response is defined in RFC 2617, Section 3.2.2 and 3.2.2.1
@@ -205,7 +205,7 @@ public class DigestChallengeResponse {
     // Must be present if qop is specified, must not if qop is unspecified
     // TODO: don't include if qop is unspecified
     result.append("cnonce=");
-    result.append(clientNonce);
+    result.append(quoteString(clientNonce));
     result.append(",");
 
     // Opaque and algorithm are explained in Section 3.2.2 of RFC 2617:
@@ -265,7 +265,7 @@ public class DigestChallengeResponse {
   private String calculateA2() {
     // TODO: Below calculation if if qop is auth or unspecified
     // TODO: Support auth-int qop
-    return joinWithColon(requestMethod, path);
+    return joinWithColon(requestMethod, uri);
   }
 
   private String joinWithColon(String... parts) {

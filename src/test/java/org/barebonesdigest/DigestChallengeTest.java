@@ -9,6 +9,8 @@ import static junit.framework.Assert.assertNull;
 public class DigestChallengeTest {
   @Test
   public void testExampleFromRfc2617() throws Exception {
+    // The example below is from Section 3.5 of RC 2617,
+    // https://tools.ietf.org/html/rfc2617#section-3.5
     String EXAMPLE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "qop=\"auth,auth-int\", " +
