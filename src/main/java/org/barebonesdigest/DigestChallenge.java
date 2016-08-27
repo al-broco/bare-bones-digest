@@ -1,9 +1,14 @@
 package org.barebonesdigest;
 
+// TODO. Document
 public class DigestChallenge {
-  // Note: multiple WWW-Authenticate headers are allowed, see
-  // https://tools.ietf.org/html/rfc2616#section-14.47
-  public static final String HEADER_NAME = "WWW-Authenticate";
+  /**
+   * Name of the HTTP response header containing the challenge.
+   *
+   * @see <href="https://tools.ietf.org/html/rfc7235#section-4.1">RFC 7235, Section 4.1,
+   * WWW-Authenticate</a>
+   */
+  public static final String HTTP_HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
 
   private static final String HTTP_DIGEST_CHALLENGE_PREFIX = "digest";
 
@@ -26,6 +31,7 @@ public class DigestChallenge {
   }
 
   public static DigestChallenge parse(String authenticateHeader) {
+    // see https://tools.ietf.org/html/rfc7235#section-4.1
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser(authenticateHeader);
     try {
       parser.consumeLiteral(HTTP_DIGEST_CHALLENGE_PREFIX);
@@ -90,8 +96,6 @@ public class DigestChallenge {
           // Any other directive can be included (and MUST be ignored).
           // Definition of auth-param from RFC 2617, Section 1.2;
           // auth-param     = token "=" ( token | quoted-string )
-          // TODO parse auth-params
-          // TODO store (or ignore) auth-params
           throw new Rfc2616AbnfParser.ParseException("Unrecognized auth-param: " + token, parser);
         }
 

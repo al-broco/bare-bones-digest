@@ -66,9 +66,13 @@ To implement HTTP digest with this library, do the following:
 
 - Make a request to the server.
 - Check the response, if the status code is 401 examine the
-  headers. For each `WWW-Authenticate header` (there can be more than
-  one), pass the value to `DigestChallenge.parse()`. If it returns
-  non-`null`, the header contains a HTTP Digest challenge.
+  headers. The `WWW-Authenticate` header, if present, contains one or
+  more challenges. If the header contains a single challenge you can
+  pass it to `DigestChallenge.parse()` which will return non-`null` if
+  the challenge is a valid HTTP digest challenge. If the header
+  contains multiple challenges you need to do some work here to
+  extract the digest challenge before passing it to
+  `DigestChallenge.parse()`.
 - Generate a response using `DigestChallengeResponse.responseTo`. Add
   the credentials (by calling `username` and `password`) and fill in
   details about the request (`uri` and `requestMethod`).
@@ -79,3 +83,18 @@ To implement HTTP digest with this library, do the following:
   it to generate `Authorization` headers for future request. Before
   each use, call `incrementNonceCount` to increment a counter in the
   header or the server will reject the request.
+
+## Limitations
+
+* The implementation is based on [RFC
+  2617](https://tools.ietf.org/html/rfc2617). Features from [RFC
+  7616](https://tools.ietf.org/html/rfc7616) (which obsoletes RFC
+  2617) are not implemented. In particular, MD5 is the only supported
+  algorithm, even though RFC 7616 [recommends against using
+  it](https://tools.ietf.org/html/rfc7616#section-3.2).
+* `WWW-Authenticate` headers containing multiple challenges is poorly
+  supported. Extracting the HTTP digest challenge, if any, from such a
+  header is currently left to the user of the library.
+* The MD5-sess algorithm is not supported.
+* Only `auth-int` quality of protection is not supported, only `auth`.
+* Quoting/unquoting of strings is not fully implemented.

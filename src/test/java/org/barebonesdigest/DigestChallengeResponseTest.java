@@ -32,7 +32,7 @@ public class DigestChallengeResponseTest {
         .requestMethod("GET")
         .nonceCount(1)
         .clientNonce("0a4f113b")
-        .opaqueQuoted("\"5ccc069c403ebaf9f0171e9517f40e41\"");
+        .quotedOpaque("\"5ccc069c403ebaf9f0171e9517f40e41\"");
 
     Set<String> expectedSubstrings = new HashSet<>(Arrays.asList(EXAMPLE.split(",")));
     Set<String> actualSubstrings =
