@@ -246,7 +246,7 @@ public class DigestChallengeResponse {
     // username         = "username" "=" username-value
     // username-value   = quoted-string
     result.append("username=");
-    result.append(quoteString(username));
+    result.append(Rfc2616AbnfParser.quote(username));
     result.append(",");
 
     // Realm is defined in RFC 2617, Section 1.2
@@ -254,20 +254,20 @@ public class DigestChallengeResponse {
     // realm-value = quoted-string
     // TODO: Unnecessary to quote and then unquote string value
     result.append("realm=");
-    result.append(quoteString(realm));
+    result.append(Rfc2616AbnfParser.quote(realm));
     result.append(",");
 
     // nonce             = "nonce" "=" nonce-value
     // nonce-value       = quoted-string
     // TODO: Unnecessary to quote and then unquote string value
     result.append("nonce=");
-    result.append(quoteString(nonce));
+    result.append(Rfc2616AbnfParser.quote(nonce));
     result.append(",");
 
     // digest-uri       = "uri" "=" digest-uri-value
     // digest-uri-value = request-uri   ; As specified by HTTP/1.1
     result.append("uri=");
-    result.append(quoteString(uri));
+    result.append(Rfc2616AbnfParser.quote(uri));
     result.append(",");
 
     // Response is defined in RFC 2617, Section 3.2.2 and 3.2.2.1
@@ -282,7 +282,7 @@ public class DigestChallengeResponse {
     // Must be present if qop is specified, must not if qop is unspecified
     // TODO: don't include if qop is unspecified
     result.append("cnonce=");
-    result.append(quoteString(clientNonce));
+    result.append(Rfc2616AbnfParser.quote(clientNonce));
     result.append(",");
 
     // Opaque and algorithm are explained in Section 3.2.2 of RFC 2617:
@@ -372,11 +372,6 @@ public class DigestChallengeResponse {
       result.append(Integer.toHexString((bytes[i] & 0x0f)));
     }
     return result.toString();
-  }
-
-  private String quoteString(String str) {
-    // TODO: implement properly
-    return "\"" + str + "\"";
   }
 
   private static String generateRandomNonce() {

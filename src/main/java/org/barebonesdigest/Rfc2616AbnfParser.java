@@ -1,5 +1,8 @@
 package org.barebonesdigest;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Parses strings with a grammar defined using the augmented BNF described
  * in <a href="https://tools.ietf.org/html/rfc2616#section-2.1">Section 2.1
@@ -26,10 +29,13 @@ package org.barebonesdigest;
  * String realm = parser.consumeQuotedString().get();
  * </blockquote></pre>
  */
-public final class Rfc2616AbnfParser {
+final class Rfc2616AbnfParser {
   // TOOD: create table and do lookup
   // Defined in RFC 2616, Section 2.2
-  private static final String ABNF_SEPARATOR_CHARACTERS = "()<>@,;:\\\"([]?={} \t";
+  private static final String ABNF_SEPARATOR_CHARACTERS = "()<>@,;:\\\"/[]?={} \t";
+
+  private static final Pattern QUOTE_PATTERN = Pattern.compile("[\"\\\\]");
+  private static final Pattern UNQUOTE_PATTERN = Pattern.compile("\\\\(.)");
 
   private String input;
   private int eltStart;
@@ -107,6 +113,10 @@ public final class Rfc2616AbnfParser {
     // CHAR           = <any US-ASCII character (octets 0 - 127)>
     // CTL            = <any US-ASCII control character
     //                  (octets 0 - 31) and DEL (127)>
+    // separators     = "(" | ")" | "<" | ">" | "@"
+    //                | "," | ";" | ":" | "\" | <">
+    //                | "/" | "[" | "]" | "?" | "="
+    //                | "{" | "}" | SP | HT
     if (c <= 31 || c > 126) {
       return false;
     }
@@ -123,25 +133,35 @@ public final class Rfc2616AbnfParser {
     // The backslash character ("\") MAY be used as a single-character
     // quoting mechanism only within quoted-string and comment constructs.
     //     quoted-pair    = "\" CHAR
-    // TODO: Handle quoted characters
-    int stringEnd = eltEnd;
-    if (stringEnd >= input.length() || input.charAt(stringEnd) != '"') {
+    int pos = eltEnd;
+    if (pos >= input.length() || input.charAt(pos) != '"') {
       throw new ParseException("Expected quoted string", this);
     }
 
-    stringEnd++;
-    while (stringEnd < input.length() && input.charAt(stringEnd) != '"') {
-      stringEnd++;
-    }
-    stringEnd++;
+    pos++;
 
-    if (stringEnd > input.length()) {
-      throw new ParseException("Expected quoted string", this);
+    boolean closingQuoteFound = false;
+    while (!closingQuoteFound) {
+      int nextQuote = input.indexOf("\"", pos);
+
+      if (nextQuote == -1) {
+        throw new ParseException("Expected quoted string", this);
+      }
+
+      int precedingBackslashes = 0;
+      while (input.charAt(nextQuote - precedingBackslashes - 1) == '\\') {
+        precedingBackslashes++;
+      }
+
+      if (precedingBackslashes % 2 == 0) {
+        closingQuoteFound = true;
+      }
+
+      pos = nextQuote + 1;
     }
 
     eltStart = eltEnd;
-    eltEnd = stringEnd;
-
+    eltEnd = pos;
     return this;
   }
 
@@ -155,6 +175,37 @@ public final class Rfc2616AbnfParser {
 
   public int getPos() {
     return eltEnd;
+  }
+
+  /**
+   * Quotes a string.
+   *
+   * Quoted strings are explained in
+   * <a href="https://tools.ietf.org/html/rfc2616#section-2.2">Section 2.2 of
+   * RFC 2616</a>:
+   *
+   * <dl>
+   * <dt>quoted-string</dt>
+   * <dd>A string of text is parsed as a single word if it is quoted using
+   * double-quote marks.
+   * <p><blockquote><pre>
+   * quoted-string  = ( &lt;"&gt; *(qdtext | quoted-pair ) &lt;"&gt; )
+   * qdtext         = &lt;any TEXT except &lt;"&gt;&gt;
+   * </blockquote></pre>
+   * The backslash character ("\") MAY be used as a single-character
+   * quoting mechanism only within quoted-string and comment
+   * constructs.
+   * <p><blockquote><pre>
+   * quoted-pair    = "\" CHAR
+   * </blockquote></pre></dd>
+   * </dl>
+   *
+   * @param str a string to quote
+   * @return the quoted string
+   */
+  public static String quote(String str) {
+    Matcher matcher = QUOTE_PATTERN.matcher(str);
+    return "\"" + matcher.replaceAll("\\\\$0") + "\"";
   }
 
   /**
@@ -180,27 +231,16 @@ public final class Rfc2616AbnfParser {
    * </blockquote></pre></dd>
    * </dl>
    *
-   * @param str the string to unqoute
+   * @param str a quoted string to unquote - if the string is not a valid quoted an undefined
+   *            non-null String is returned (no exception is thrown)
    * @return the unquoted string
    */
   public static String unquote(String str) {
-    // TODO: Handle malformed strings (missing quotes, strings ending in \)
-    if (str.indexOf('\\') == -1) {
-      return str.substring(1, str.length() - 1);
+    if (str.length() < 2) {
+      return str;
     }
-
-    StringBuffer result = new StringBuffer();
-
-    int index = 1;
-    while (index < str.length() - 1) {
-      char c = str.charAt(index);
-      if (c == '\\') {
-        c = str.charAt(++index);
-      }
-      result.append(c);
-    }
-
-    return result.toString();
+    Matcher matcher = UNQUOTE_PATTERN.matcher(str.substring(1, str.length() - 1));
+    return matcher.replaceAll("$1");
   }
 
   public static final class ParseException extends Exception {

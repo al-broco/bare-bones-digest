@@ -97,4 +97,3 @@ To implement HTTP digest with this library, do the following:
   header is currently left to the user of the library.
 * The MD5-sess algorithm is not supported.
 * Only `auth-int` quality of protection is not supported, only `auth`.
-* Quoting/unquoting of strings is not fully implemented.
