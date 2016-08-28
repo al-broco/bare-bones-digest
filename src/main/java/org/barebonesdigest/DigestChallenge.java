@@ -40,7 +40,7 @@ public class DigestChallenge {
       String realm = null;
       String nonce = null;
       String opaqueQuoted = null;
-      String algorithm = null;
+      String algorithm = "MD5";
       boolean stale = false;
 
       while (parser.containsMoreData()) {
@@ -141,7 +141,8 @@ public class DigestChallenge {
   }
 
   /**
-   * Returns the value of the <em>algorithm</em> directive, if present.
+   * Returns the value of the <em>algorithm</em> directive if present, or its default value "MD5" if
+   * not present.
    *
    * The algorithm directive is described in Section 3.2.1 of
    * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
@@ -156,8 +157,8 @@ public class DigestChallenge {
    * used, if there is more than one). [&hellip;]</dd>
    * </dl>
    *
-   * @return The value of the algorithm directive or {@code null} if the
-   * algorithm directive is not present in the header
+   * @return The value of the algorithm directive or the default value "MD5" if the algorithm
+   * directive is not present in the header
    */
   public String getAlgorithm() {
     return algorithm;
