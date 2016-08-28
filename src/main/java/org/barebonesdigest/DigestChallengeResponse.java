@@ -28,11 +28,11 @@ public class DigestChallengeResponse {
   private String username;
   private String password;
   private String clientNonce;
-  private String nonce;
+  private String quotedNonce;
   private int nonceCount;
   private String quotedOpaque;
   private String uri;
-  private String realm;
+  private String quotedRealm;
   private String requestMethod;
 
   public DigestChallengeResponse() {
@@ -56,7 +56,6 @@ public class DigestChallengeResponse {
   public static DigestChallengeResponse responseTo(DigestChallenge challenge) {
     return new DigestChallengeResponse().challenge(challenge);
   }
-
 
   /**
    * Sets the `algorithm` directive, which must be the same as the `algorithm` directive of the
@@ -119,14 +118,18 @@ public class DigestChallengeResponse {
    * <p/>
    * Setting the `nonce` directive resets the nonce count to one.
    *
-   * @param nonce the unquoted value of the nonce directive
+   * @param quotedNonce the quoted value of the nonce directive
    * @return this object so that setting directives can be easily chained
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse nonce(String nonce) {
-    this.nonce = nonce;
+  public DigestChallengeResponse quotedNonce(String quotedNonce) {
+    this.quotedNonce = quotedNonce;
     resetNonceCount();
     return this;
+  }
+
+  public DigestChallengeResponse nonce(String unquotedNonce) {
+    return quotedNonce(Rfc2616AbnfParser.quote(unquotedNonce));
   }
 
   /**
@@ -162,14 +165,22 @@ public class DigestChallengeResponse {
     return this;
   }
 
+  public DigestChallengeResponse opaque(String unquotedOpaque) {
+    return quotedOpaque(Rfc2616AbnfParser.quote(unquotedOpaque));
+  }
+
   public DigestChallengeResponse uri(String uri) {
     this.uri = uri;
     return this;
   }
 
-  public DigestChallengeResponse realm(String realm) {
-    this.realm = realm;
+  public DigestChallengeResponse quotedRealm(String quotedRealm) {
+    this.quotedRealm = quotedRealm;
     return this;
+  }
+
+  public DigestChallengeResponse realm(String unquotedRealm) {
+    return quotedRealm(Rfc2616AbnfParser.quote(unquotedRealm));
   }
 
   public DigestChallengeResponse requestMethod(String requestMethod) {
@@ -178,8 +189,8 @@ public class DigestChallengeResponse {
   }
 
   public DigestChallengeResponse challenge(DigestChallenge challenge) {
-    return nonce(challenge.getNonce()).quotedOpaque(challenge.getOpaqueQuoted())
-        .realm(challenge.getRealm())
+    return quotedNonce(challenge.getQuotedNonce()).quotedOpaque(challenge.getQuotedOpaque())
+        .quotedRealm(challenge.getQuotedRealm())
         .algorithm(challenge.getAlgorithm());
   }
 
@@ -207,8 +218,13 @@ public class DigestChallengeResponse {
     return clientNonce;
   }
 
+  public String getQuotedNonce() {
+    return quotedNonce;
+  }
+
   public String getNonce() {
-    return nonce;
+    // TODO: Cache since value is used each time a header is written
+    return Rfc2616AbnfParser.unquote(quotedNonce);
   }
 
   public int getNonceCount() {
@@ -227,12 +243,21 @@ public class DigestChallengeResponse {
     return quotedOpaque;
   }
 
+  public String getOpaque() {
+    return Rfc2616AbnfParser.unquote(quotedOpaque);
+  }
+
   public String getUri() {
     return uri;
   }
 
+  public String getQuotedRealm() {
+    return quotedRealm;
+  }
+
   public String getRealm() {
-    return realm;
+    // TODO: Cache since value is used each time a header is written
+    return Rfc2616AbnfParser.unquote(quotedRealm);
   }
 
   public String getRequestMethod() {
@@ -257,16 +282,14 @@ public class DigestChallengeResponse {
     // Realm is defined in RFC 2617, Section 1.2
     // realm       = "realm" "=" realm-value
     // realm-value = quoted-string
-    // TODO: Unnecessary to quote and then unquote string value
     result.append("realm=");
-    result.append(Rfc2616AbnfParser.quote(realm));
+    result.append(quotedRealm);
     result.append(",");
 
     // nonce             = "nonce" "=" nonce-value
     // nonce-value       = quoted-string
-    // TODO: Unnecessary to quote and then unquote string value
     result.append("nonce=");
-    result.append(Rfc2616AbnfParser.quote(nonce));
+    result.append(quotedNonce);
     result.append(",");
 
     // digest-uri       = "uri" "=" digest-uri-value
@@ -329,7 +352,7 @@ public class DigestChallengeResponse {
     String a2 = calculateA2();
 
     String secret = calculateMd5(a1);
-    String data = joinWithColon(nonce,
+    String data = joinWithColon(getNonce(),
         String.format("%08x", nonceCount),
         getClientNonce(),
         "auth",
@@ -341,7 +364,7 @@ public class DigestChallengeResponse {
   private String calculateA1() {
     // TODO: Below calculation is for if algorithm is MD5 or unspecified
     // TODO: Support MD5-sess algorithm
-    return joinWithColon(username, realm, password);
+    return joinWithColon(username, getRealm(), password);
   }
 
   private String calculateA2() {

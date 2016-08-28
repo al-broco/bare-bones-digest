@@ -12,34 +12,34 @@ public class DigestChallenge {
 
   private static final String HTTP_DIGEST_CHALLENGE_PREFIX = "digest";
 
-  private final String realm;
-  private final String nonce;
-  private final String opaqueQuoted;
+  private final String quotedRealm;
+  private final String quotedNonce;
+  private final String quotedOpaque;
   private final String algorithm;
   private final boolean stale;
 
   private DigestChallenge(String realm,
       String nonce,
-      String opaqueQuoted,
+      String quotedOpaque,
       String algorithm,
       boolean stale) {
-    this.realm = realm;
-    this.nonce = nonce;
-    this.opaqueQuoted = opaqueQuoted;
+    this.quotedRealm = realm;
+    this.quotedNonce = nonce;
+    this.quotedOpaque = quotedOpaque;
     this.algorithm = algorithm;
     this.stale = stale;
   }
 
-  public static DigestChallenge parse(String authenticateHeader) {
+  public static DigestChallenge parse(String challengeString) {
     // see https://tools.ietf.org/html/rfc7235#section-4.1
-    Rfc2616AbnfParser parser = new Rfc2616AbnfParser(authenticateHeader);
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser(challengeString);
     try {
       parser.consumeLiteral(HTTP_DIGEST_CHALLENGE_PREFIX);
       parser.consumeWhitespace();
 
-      String realm = null;
-      String nonce = null;
-      String opaqueQuoted = null;
+      String quotedRealm = null;
+      String quotedNonce = null;
+      String quotedOpaque = null;
       String algorithm = "MD5";
       boolean stale = false;
 
@@ -51,16 +51,16 @@ public class DigestChallenge {
           // Realm definition from RFC 2617, Section 1.2:
           // realm       = "realm" "=" realm-value
           // realm-value = quoted-string
-          realm = parser.unquote(parser.consumeQuotedString().get());
+          quotedRealm = parser.consumeQuotedString().get();
         } else if (token.equals("nonce")) {
           // Nonce definition from RFC 2617, Section 3.2.1:
           // nonce             = "nonce" "=" nonce-value
           // nonce-value       = quoted-string
-          nonce = parser.unquote(parser.consumeQuotedString().get());
+          quotedNonce = parser.consumeQuotedString().get();
         } else if (token.equals("opaque")) {
           // Opaque definition from RFC 2617, Section 3.2.1:
           // opaque            = "opaque" "=" quoted-string
-          opaqueQuoted = parser.consumeQuotedString().get();
+          quotedOpaque = parser.consumeQuotedString().get();
         } else if (token.equals("algorithm")) {
           // Algorithm definition from RFC 2617, Section 3.2.1:
           // algorithm         = "algorithm" "=" ( "MD5" | "MD5-sess" |
@@ -105,21 +105,22 @@ public class DigestChallenge {
         }
       }
 
-      if (realm == null) {
+      if (quotedRealm == null) {
         throw new Rfc2616AbnfParser.ParseException("Missing directive: realm");
       }
-      if (nonce == null) {
+      if (quotedNonce == null) {
         throw new Rfc2616AbnfParser.ParseException("Missing directive: nonce");
       }
 
-      return new DigestChallenge(realm, nonce, opaqueQuoted, algorithm, stale);
+      return new DigestChallenge(quotedRealm, quotedNonce, quotedOpaque, algorithm, stale);
     } catch (Rfc2616AbnfParser.ParseException e) {
       return null;
     }
   }
 
   /**
-   * Returns the value of the mandatory <em>realm</em> directive.
+   * Returns the {@code quoted-string} version of the mandatory <em>realm</em> directive, exactly as
+   * it appears in the challenge.
    *
    * The realm directive is described in Section 3.2.1 of
    * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
@@ -134,10 +135,32 @@ public class DigestChallenge {
    * might be "registered_users@gotham.news.com".</dd>
    * </dl>
    *
-   * @return The value of the realm directive
+   * @return The quoted value of the realm directive, exactly as it appears in the challenge
+   */
+  public String getQuotedRealm() {
+    return quotedRealm;
+  }
+
+  /**
+   * Returns the unquoted version of the mandatory <em>realm</em> directive.
+   *
+   * The realm directive is described in Section 3.2.1 of
+   * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
+   *
+   * <dl>
+   * <dt>realm</dt>
+   * <dd>A string to be displayed to users so they know which
+   * username and password to use.  This string should contain
+   * at least the name of the host performing the
+   * authentication and might additionally indicate the
+   * collection of users who might have access. An example
+   * might be "registered_users@gotham.news.com".</dd>
+   * </dl>
+   *
+   * @return The unquoted value of the realm directive
    */
   public String getRealm() {
-    return realm;
+    return Rfc2616AbnfParser.unquote(quotedRealm);
   }
 
   /**
@@ -165,7 +188,8 @@ public class DigestChallenge {
   }
 
   /**
-   * Returns the value of the mandatory <em>nonce</em> directive.
+   * Returns the {@code quoted-string} version of the mandatory <em>nonce</em> directive, exactly as
+   * it appears in the challenge.
    *
    * The nonce directive is described in Section 3.2.1 of
    * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
@@ -185,15 +209,43 @@ public class DigestChallenge {
    * The nonce is opaque to the client.</dd>
    * </dl>
    *
-   * @return the nonce as a string
+   * @return The quoted value of the nonce directive, exactly as it appears in the challenge
+   */
+  public String getQuotedNonce() {
+    return quotedNonce;
+  }
+
+  /**
+   *Returns the unquoted version of the mandatory <em>nonce</em> directive.
+   *
+   * The nonce directive is described in Section 3.2.1 of
+   * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
+   *
+   * <dl>
+   * <dt>nonce</dt>
+   *
+   * <dd>A server-specified data string which should be uniquely generated
+   * each time a 401 response is made. It is recommended that this
+   * string be base64 or hexadecimal data. Specifically, since the
+   * string is passed in the header lines as a quoted string, the
+   * double-quote character is not allowed.
+   * <p>
+   * The contents of the nonce are implementation dependent. The quality
+   * of the implementation depends on a good choice. [&hellip;]
+   * <p>
+   * The nonce is opaque to the client.</dd>
+   * </dl>
+   *
+   * @return the unquoted value of the nonce directive
    */
   public String getNonce() {
-    return nonce;
+    return Rfc2616AbnfParser.unquote(quotedNonce);
   }
 
   /**
    * Returns the {@code quoted-string} version of the <em>opaque</em>
-   * directive, if present in the header.
+   * directive exactly as it appears in the challenge, or {@code null} if the directive is not
+   * present.
    *
    * The nonce directive is described in Section 3.2.1 of
    * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
@@ -207,11 +259,34 @@ public class DigestChallenge {
    * base64 or hexadecimal data.</dd>
    * </dl>
    *
-   * @return the value of the opaque directive or {@code null} if the
+   * @return the quoted value of the opaque directive or {@code null} if the
    * opaque directive is not present in the header
    */
-  public String getOpaqueQuoted() {
-    return opaqueQuoted;
+  public String getQuotedOpaque() {
+    return quotedOpaque;
+  }
+
+  /**
+   * Returns the unquoted version of the <em>opaque</em> directive, or {@code null} if the directive
+   * is not present.
+   *
+   * The nonce directive is described in Section 3.2.1 of
+   * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>:
+   *
+   * <dl>
+   * <dt>opaque</dt>
+   * <dd>A string of data, specified by the server, which should
+   * be returned by the client unchanged in the Authorization
+   * header of subsequent requests with URIs in the same
+   * protection space. It is recommended that this string be
+   * base64 or hexadecimal data.</dd>
+   * </dl>
+   *
+   * @return the quoted value of the opaque directive or {@code null} if the
+   * opaque directive is not present in the header
+   */
+  public String getOpaque() {
+    return Rfc2616AbnfParser.unquote(quotedOpaque);
   }
 
   /**

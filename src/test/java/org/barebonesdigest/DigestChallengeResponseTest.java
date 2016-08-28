@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 public class DigestChallengeResponseTest {
   @Test
@@ -26,17 +27,21 @@ public class DigestChallengeResponseTest {
 
     DigestChallengeResponse response = new DigestChallengeResponse().username("Mufasa")
         .password("Circle Of Life")
-        .realm("testrealm@host.com")
-        .nonce("dcd98b7102dd2f0e8b11d0f600bfb0c093")
+        .quotedRealm("\"testrealm@host.com\"")
+        .quotedNonce("\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"")
         .uri("/dir/index.html")
         .requestMethod("GET")
         .nonceCount(1)
         .clientNonce("0a4f113b")
         .quotedOpaque("\"5ccc069c403ebaf9f0171e9517f40e41\"");
 
-    Set<String> expectedSubstrings = new HashSet<>(Arrays.asList(EXAMPLE.split(",")));
+    String generatedHeader = response.getHeaderValue();
+
+    assertTrue(generatedHeader.startsWith("Digest "));
+
+    Set<String> expectedSubstrings = new HashSet<>(Arrays.asList(EXAMPLE.substring("Digest ".length()).split(",")));
     Set<String> actualSubstrings =
-        new HashSet<>(Arrays.asList(response.getHeaderValue().split(",")));
+        new HashSet<>(Arrays.asList(generatedHeader.substring("Digest ".length()).split(",")));
 
     assertEquals(expectedSubstrings, actualSubstrings);
   }
