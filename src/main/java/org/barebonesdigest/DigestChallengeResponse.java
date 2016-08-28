@@ -14,9 +14,9 @@ import java.security.SecureRandom;
  */
 public class DigestChallengeResponse {
   /**
-   * The name of the HTTP request header ({@value #HTTP_HEADER__AUTHORIZATION}).
+   * The name of the HTTP request header ({@value #HTTP_HEADER_AUTHORIZATION}).
    */
-  public static final String HTTP_HEADER__AUTHORIZATION = "Authorization";
+  public static final String HTTP_HEADER_AUTHORIZATION = "Authorization";
 
   private static final int CLIENT_NONCE_BYTE_COUNT = 8;
   private static final SecureRandom RANDOM = new SecureRandom();
