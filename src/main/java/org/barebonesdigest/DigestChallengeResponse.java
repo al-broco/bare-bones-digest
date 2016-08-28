@@ -2,6 +2,7 @@ package org.barebonesdigest;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 /**
  * Describes an <code>Authorization</code> HTTP request header. Once the client has received a
@@ -16,6 +17,10 @@ public class DigestChallengeResponse {
    * The name of the HTTP request header ({@value #HTTP_HEADER__AUTHORIZATION}).
    */
   public static final String HTTP_HEADER__AUTHORIZATION = "Authorization";
+
+  private static final int CLIENT_NONCE_BYTE_COUNT = 8;
+  private static final SecureRandom RANDOM = new SecureRandom();
+  private static byte[] clientNonceByteBuffer = new byte[CLIENT_NONCE_BYTE_COUNT];
 
   private final MessageDigest md5;
 
@@ -282,7 +287,7 @@ public class DigestChallengeResponse {
     // Must be present if qop is specified, must not if qop is unspecified
     // TODO: don't include if qop is unspecified
     result.append("cnonce=");
-    result.append(Rfc2616AbnfParser.quote(clientNonce));
+    result.append(Rfc2616AbnfParser.quote(getClientNonce()));
     result.append(",");
 
     // Opaque and algorithm are explained in Section 3.2.2 of RFC 2617:
@@ -326,7 +331,7 @@ public class DigestChallengeResponse {
     String secret = calculateMd5(a1);
     String data = joinWithColon(nonce,
         String.format("%08x", nonceCount),
-        clientNonce,
+        getClientNonce(),
         "auth",
         calculateMd5(a2));
 
@@ -374,8 +379,8 @@ public class DigestChallengeResponse {
     return result.toString();
   }
 
-  private static String generateRandomNonce() {
-    // TODO implement
-    return "0a4f113b";
+  private static synchronized String generateRandomNonce() {
+    RANDOM.nextBytes(clientNonceByteBuffer);
+    return encodeHexString(clientNonceByteBuffer);
   }
 }
