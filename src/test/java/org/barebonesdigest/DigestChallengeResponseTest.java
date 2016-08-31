@@ -29,7 +29,7 @@ public class DigestChallengeResponseTest {
         .password("Circle Of Life")
         .quotedRealm("\"testrealm@host.com\"")
         .quotedNonce("\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"")
-        .uri("/dir/index.html")
+        .digestUri("/dir/index.html")
         .requestMethod("GET")
         .nonceCount(1)
         .clientNonce("0a4f113b")

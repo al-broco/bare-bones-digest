@@ -5,9 +5,48 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 /**
- * Describes an <code>Authorization</code> HTTP request header. Once the client has received a
- * HTTP Digest challenge from the server this header should be included in all subsequent requests
- * to authorize the client.
+ * Describes the contents of an {@code Authorization} HTTP request header. Once the client has
+ * received a HTTP Digest challenge from the server this header should be included in all subsequent
+ * requests to authorize the client.
+ * <p>
+ * Instances of this class is normally created as a response to an incoming challenge using
+ * {@link #responseTo(DigestChallenge)}. To generate the {@code Authorization} header, som
+ * additional values must be set:
+ * <ul>
+ * <li>The {@link #username(String) username} and {@link #password(String) password} for
+ * authentication.</li>
+ * <li>The {@link #digestUri(String) digestUri} used in the HTTP request.</li>
+ * <li>The {@link #requestMethod(String) request method} of the request, such as "GET" or "POST".
+ * </li>
+ * </ul>
+ * <p>
+ *
+ * Here is an example of how to create a response:
+ * <pre>
+ * {@code
+ * DigestChallengeResponse response = DigestChallengeResponse.responseTo(challenge)
+ *                                                           .username("user")
+ *                                                           .password("passwd")
+ *                                                           .digestUri("/example")
+ *                                                           .requestMethod("GET");
+ * }
+ * </pre>
+ *
+ * <h2>Challenge response reuse</h2>
+ *
+ * A challenge response from an earlier challenge can be reused in subsequent requests. If the
+ * server accepts the reused challenge this will cut down on unnecessary traffic.
+ * <p>
+ * Each time the challenge response is reused the nonce count must be increased by one, see
+ * {@link #incrementNonceCount()}.
+ *
+ * <h2>Limitations</h2>
+ *
+ * <ul>
+ * <li>Only the MD5 algorithm is supported, not MD5-sess.</li>
+ * <li>qop is always set to auth. THe value from the challenge is not used. auth-int qop is not
+ * supported.</li>
+ * </ul>
  *
  * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">RFC 2617, "HTTP Digest Access
  * Authentication", Section 3.2.2, "The Authorization Request Header"</a>
@@ -31,10 +70,13 @@ public class DigestChallengeResponse {
   private String quotedNonce;
   private int nonceCount;
   private String quotedOpaque;
-  private String uri;
+  private String digestUri;
   private String quotedRealm;
   private String requestMethod;
 
+  /**
+   * Creates an empty challenge response.
+   */
   public DigestChallengeResponse() {
     try {
       this.md5 = MessageDigest.getInstance("MD5");
@@ -47,8 +89,8 @@ public class DigestChallengeResponse {
   }
 
   /**
-   * Creates a digest challenge response, setting the ealm` and the values values of the `nonce`,
-   * `opaque`, and `algorithm` directives based on a challenge.
+   * Creates a digest challenge response, setting the {@code realm} and the values of the {@code
+   * nonce}, {@code opaque}, and {@code algorithm} directives based on a challenge.
    *
    * @param challenge the challenge
    * @return a response to the challenge.
@@ -58,11 +100,11 @@ public class DigestChallengeResponse {
   }
 
   /**
-   * Sets the `algorithm` directive, which must be the same as the `algorithm` directive of the
-   * challenge. The only value currently supported is "MD5".
+   * Sets the {@code algorithm} directive, which must be the same as the {@code algorithm} directive
+   * of the challenge. The only value currently supported is "MD5".
    *
    * @param algorithm the value of the algorithm directive
-   * @return this object so that setting directives can be easily chained
+   * @return this object so that setters can be chained
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public DigestChallengeResponse algorithm(String algorithm) {
@@ -75,9 +117,9 @@ public class DigestChallengeResponse {
   }
 
   /**
-   * Sets the `username` to use for authentication.
+   * Sets the username to use for authentication.
    *
-   * @return this object so that setting directives can be easily chained
+   * @return this object so that setters can be chained
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public DigestChallengeResponse username(String username) {
@@ -89,7 +131,7 @@ public class DigestChallengeResponse {
    * Sets the password to use for authentication.
    *
    * @param password the password
-   * @return this object so that setting directives can be easily chained
+   * @return this object so that setters can be chained
    */
   public DigestChallengeResponse password(String password) {
     this.password = password;
@@ -97,14 +139,14 @@ public class DigestChallengeResponse {
   }
 
   /**
-   * Sets the `cnonce` directive, which is a random string generated by the client that will be
-   * included in the challenge response hash.
+   * Sets the {@code cnonce} directive, which is a random string generated by the client that will
+   * be included in the challenge response hash.
    * <p/>
    * There is normally no need to manually set the client nonce since it will have a default value
    * of a randomly generated string.
    *
-   * @param clientNonce the unquoted value of the `cnonce`directive
-   * @return this object so that setting directives can be easily chained
+   * @param clientNonce the unquoted value of the cnoncedirective
+   * @return this object so that setters can be chained
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public DigestChallengeResponse clientNonce(String clientNonce) {
@@ -113,14 +155,15 @@ public class DigestChallengeResponse {
   }
 
   /**
-   * Sets the `nonce` directive, which must be the same as the `nonce` directive of the
+   * Sets the {@code nonce} directive, which must be the same as the nonce directive of the
    * challenge.
    * <p/>
-   * Setting the `nonce` directive resets the nonce count to one.
+   * Setting the {@code nonce} directive resets the nonce count to one.
    *
    * @param quotedNonce the quoted value of the nonce directive
-   * @return this object so that setting directives can be easily chained
+   * @return this object so that setters can be chained
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
+   * @see #nonce(String)
    */
   public DigestChallengeResponse quotedNonce(String quotedNonce) {
     this.quotedNonce = quotedNonce;
@@ -128,20 +171,31 @@ public class DigestChallengeResponse {
     return this;
   }
 
+  /**
+   * Sets the {@code nonce} directive, which must be the same as the {@code nonce} directive of the
+   * challenge.
+   * <p/>
+   * Setting the nonce directive resets the nonce count to one.
+   *
+   * @param unquotedNonce the unquoted value of the nonce directive
+   * @return this object so that setters can be chained
+   * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
+   * @see #quotedNonce(String)
+   */
   public DigestChallengeResponse nonce(String unquotedNonce) {
     return quotedNonce(Rfc2616AbnfParser.quote(unquotedNonce));
   }
 
   /**
-   * Sets the integer representation of the `nonce-count` directive, which indicates how many times
-   * this a challenge response with this nonce has been used.
+   * Sets the integer representation of the {@code nonce-count} directive, which indicates how many
+   * times this a challenge response with this nonce has been used.
    * <p>
    * This is useful when using a challenge response from a previous challenge when sending a
    * request. For each time a challenge response is used, the nonce count should be increased by
    * one.
    *
-   * @param nonceCount integer representation of the `nonce-count`directive
-   * @return this object so that setting directives can be easily chained
+   * @param nonceCount integer representation of the {@code nonce-count} directive
+   * @return this object so that setters can be chained
    * @see #resetNonceCount()
    * @see #incrementNonceCount()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
@@ -152,25 +206,69 @@ public class DigestChallengeResponse {
   }
 
   /**
-   * Sets the `opaque` directive, which must be the same as the `opaque` directive of the
-   * challenge.
+   * Sets the {@code opaque} directive, which must be the same as the {@code opaque} directive of
+   * the challenge.
    *
-   * @param quotedOpaque the quoted value of the `opaque` directive, or {@code null} if no
-   *                     `opaque` directive should be included in the challenge response
-   * @return this object so that setting directives can be easily chained
+   * @param quotedOpaque the quoted value of the opaque directive, or {@code null} if no
+   *                     opaque directive should be included in the challenge response
+   * @return this object so that setters can be chained
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
+   * @see #opaque(String)
    */
   public DigestChallengeResponse quotedOpaque(String quotedOpaque) {
     this.quotedOpaque = quotedOpaque;
     return this;
   }
 
+  /**
+   * Sets the {@code opaque} directive, which must be the same as the {@code opaque} directive of
+   * the challenge.
+   * <p>
+   * Note: Since the value of the {@code opaque} directive is always received from a challenge
+   * quoted it is normally better to use the {@link #quotedOpaque(String)} method to avoid
+   * unnecessary quoting/unquoting.
+   *
+   * @param unquotedOpaque the unquoted value of the opaque directive, or {@code null} if no
+   *                       opaque directive should be included in the challenge response
+   * @return this object so that setters can be chained
+   * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
+   * @see #quotedOpaque
+   */
   public DigestChallengeResponse opaque(String unquotedOpaque) {
     return quotedOpaque(Rfc2616AbnfParser.quote(unquotedOpaque));
   }
 
-  public DigestChallengeResponse uri(String uri) {
-    this.uri = uri;
+  /**
+   * Sets the {@code digest-uri} directive, which must be exactly the same as the
+   * {@code Request-URI} of the {@code Request-Line} of the HTTP request.
+   * <p>
+   * The digest URI is explained in
+   * <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>,
+   * and refers to the explanation of Request-URI found in
+   * <a href="https://tools.ietf.org/html/rfc2616#section-5.1.2">Section 5.1.2 of RFC 2616</a>.
+   * <p>
+   * Examples: If the {@code Request-Line} is
+   * <pre>
+   * GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1
+   * </pre>
+   * the {@code Request-URI} (and {@code digest-uri}) is "{@code
+   * http://www.w3.org/pub/WWW/TheProject.html}". If {@code Request-Line} is
+   * <pre>
+   * GET /pub/WWW/TheProject.html HTTP/1.1
+   * </pre>
+   * the {@code Request-URI} is "{@code /pub/WWW/TheProject.html}".
+   * <p>
+   * This can be problematic since depending on the HTTP stack being used the {@code Request-Line}
+   * and {@code Request-URI} values may not be accessible. If in doubt, a sensible guess is to set
+   * the {@code digest-uri} to the path part of the URL being requested, for instance using
+   * <a href="https://developer.android.com/reference/java/net/URL.html#getPath()">
+   * <code>getPath()</code> in the <code>URL</code> class</a>.
+   *
+   * @param digestUri the value of the digest-uri directive
+   * @return this object so that setters can be chained
+   */
+  public DigestChallengeResponse digestUri(String digestUri) {
+    this.digestUri = digestUri;
     return this;
   }
 
@@ -188,6 +286,13 @@ public class DigestChallengeResponse {
     return this;
   }
 
+  /**
+   * Sets the {@code realm} and the values of the {@code nonce}, {@code opaque}, and
+   * {@code algorithm} directives based on a challenge.
+   *
+   * @param challenge the challenge
+   * @return this object so that setters can be chained
+   */
   public DigestChallengeResponse challenge(DigestChallenge challenge) {
     return quotedNonce(challenge.getQuotedNonce()).quotedOpaque(challenge.getQuotedOpaque())
         .quotedRealm(challenge.getQuotedRealm())
@@ -247,8 +352,8 @@ public class DigestChallengeResponse {
     return Rfc2616AbnfParser.unquote(quotedOpaque);
   }
 
-  public String getUri() {
-    return uri;
+  public String getDigestUri() {
+    return digestUri;
   }
 
   public String getQuotedRealm() {
@@ -295,7 +400,7 @@ public class DigestChallengeResponse {
     // digest-uri       = "uri" "=" digest-uri-value
     // digest-uri-value = request-uri   ; As specified by HTTP/1.1
     result.append("uri=");
-    result.append(Rfc2616AbnfParser.quote(uri));
+    result.append(Rfc2616AbnfParser.quote(digestUri));
     result.append(",");
 
     // Response is defined in RFC 2617, Section 3.2.2 and 3.2.2.1
@@ -370,7 +475,7 @@ public class DigestChallengeResponse {
   private String calculateA2() {
     // TODO: Below calculation if if qop is auth or unspecified
     // TODO: Support auth-int qop
-    return joinWithColon(requestMethod, uri);
+    return joinWithColon(requestMethod, digestUri);
   }
 
   private String joinWithColon(String... parts) {
