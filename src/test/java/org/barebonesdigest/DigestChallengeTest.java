@@ -1,6 +1,5 @@
 package org.barebonesdigest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
@@ -81,6 +80,20 @@ public class DigestChallengeTest {
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
         "algorithm=MD5-sess";
+
+    DigestChallenge header = DigestChallenge.parse(CHALLENGE);
+
+    assertNotNull(header);
+    assertEquals("MD5-sess", header.getAlgorithm());
+  }
+
+  @Test
+  public void testQuotedAlgorithm() throws Exception {
+    // This is not a valid challenge but parsing is intentionally lenient
+    String CHALLENGE = "Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
+        "algorithm=\"MD5-sess\"";
 
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
@@ -177,6 +190,20 @@ public class DigestChallengeTest {
   }
 
   @Test
+  public void testQuotedStale() {
+    // This is not a valid challenge but parsing is intentionally lenient
+    String CHALLENGE = "Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
+        "stale=\"true\"";
+
+    DigestChallenge header = DigestChallenge.parse(CHALLENGE);
+
+    assertNotNull(header);
+    assertTrue(header.isStale());
+  }
+
+  @Test
   public void testStaleUnrecognizedValue() {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
@@ -236,7 +263,20 @@ public class DigestChallengeTest {
     assertNotNull(header);
   }
 
-  @Ignore
+  @Test
+  public void testQopNotQuoted() {
+    // This is not a valid challenge, but some server implementations fail to quote the qop so
+    // parsing is intentionally lenient
+    String CHALLENGE = "Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
+        "qop=auth";
+
+    DigestChallenge header = DigestChallenge.parse(CHALLENGE);
+
+    assertNotNull(header);
+  }
+
   @Test
   public void testUnrecognizedDirectiveWithTokenValue() {
     String CHALLENGE = "Digest " +
@@ -249,7 +289,6 @@ public class DigestChallengeTest {
     assertNotNull(header);
   }
 
-  @Ignore
   @Test
   public void testUnrecognizedDirectiveWithQuotedValue() {
     String CHALLENGE = "Digest " +

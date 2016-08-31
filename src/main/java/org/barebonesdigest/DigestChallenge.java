@@ -25,8 +25,6 @@ package org.barebonesdigest;
  *
  * <ul>
  * <li>The values of the {@code qop} and {@code realm} directives are parsed but not stored.</li>
- * <li>Non-standard directives are not ignored as the spec dictates. Parsing fails on
- * unrecognized parameters.</li>
  * </ul>
  *
  * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">RFC 2617, Section 3.2.1, The
@@ -114,7 +112,8 @@ public class DigestChallenge {
             // Algorithm definition from RFC 2617, Section 3.2.1:
             // algorithm         = "algorithm" "=" ( "MD5" | "MD5-sess" |
             //                     token )
-            algorithm = parser.consumeToken().get();
+            algorithm =
+                Rfc2616AbnfParser.unquoteIfQuoted(parser.consumeQuotedStringOrToken().get());
             break;
 
           case "qop":
@@ -123,7 +122,7 @@ public class DigestChallenge {
             // qop-value         = "auth" | "auth-int" | token
             // TODO: deal with malformed qop
             // TODO store qop
-            parser.consumeQuotedString();
+            parser.consumeQuotedStringOrToken();
             break;
 
           case "domain":
@@ -136,7 +135,8 @@ public class DigestChallenge {
           case "stale":
             // Stale definition from RFC 2617, Section 3.2.1:
             // stale             = "stale" "=" ( "true" | "false" )
-            String staleToken = parser.consumeToken().get();
+            String staleToken =
+                Rfc2616AbnfParser.unquoteIfQuoted(parser.consumeQuotedStringOrToken().get());
             // TRUE (case-insensitive) means stale, any other value (or stale
             // directive not present) means false. From RFC 2617, Section 3.2.1:
             // [...] If stale is TRUE (case-insensitive), the client may wish to simply retry the
@@ -150,8 +150,8 @@ public class DigestChallenge {
             // Any other directive can be included (and MUST be ignored).
             // Definition of auth-param from RFC 2617, Section 1.2;
             // auth-param     = token "=" ( token | quoted-string )
-            // TODO: Ignore unrecognized auth-params
-            throw new Rfc2616AbnfParser.ParseException("Unrecognized auth-param: " + token, parser);
+            parser.consumeQuotedStringOrToken();
+            break;
         }
 
         parser.consumeWhitespace();

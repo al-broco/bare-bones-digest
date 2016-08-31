@@ -22,9 +22,28 @@ public class Rfc2116AbnfParserTest {
   }
 
   @Test(expected = Rfc2616AbnfParser.ParseException.class)
-  public void testConsumeLiteralNoMatch() throws Exception {
-    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("literal");
-    parser.consumeLiteral("misatch");
+  public void testConsumeLiteralNoMatchLookingForShorterString() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("mismatch");
+    parser.consumeLiteral("literal");
+  }
+
+  @Test(expected = Rfc2616AbnfParser.ParseException.class)
+  public void testConsumeLiteralNoMatchLookingForLongerString() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("mismatch");
+    parser.consumeLiteral("long literal text");
+  }
+
+  @Test(expected = Rfc2616AbnfParser.ParseException.class)
+  public void testConsumeLiteralEmptySourceString() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("");
+    parser.consumeLiteral("mismatch");
+  }
+
+  @Test
+  public void testConsumeLiteralEmptyLiteral() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("");
+    parser.consumeLiteral("");
+    assertEquals("", parser.get());
   }
 
   @Test
@@ -130,6 +149,18 @@ public class Rfc2116AbnfParserTest {
   }
 
   @Test(expected = Rfc2616AbnfParser.ParseException.class)
+  public void testConsumeQuotedStringNoLeadingQuote() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("string");
+    parser.consumeQuotedString();
+  }
+
+  @Test(expected = Rfc2616AbnfParser.ParseException.class)
+  public void testConsumeQuotedStringEmptyString() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("");
+    parser.consumeQuotedString();
+  }
+
+  @Test(expected = Rfc2616AbnfParser.ParseException.class)
   public void testConsumeQuotedStringNoEndQuoteEndsInQuotedQuoteCharacter() throws Exception {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser("\"string\\\"");
     parser.consumeQuotedString();
@@ -160,6 +191,32 @@ public class Rfc2116AbnfParserTest {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser("\"\\\\\"");
     parser.consumeQuotedString();
     assertEquals("\"\\\\\"", parser.get());
+  }
+
+  @Test
+  public void testConsumeQuotedStringOrTokenStringIsToken() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("token");
+    parser.consumeQuotedStringOrToken();
+    assertEquals("token", parser.get());
+  }
+
+  @Test
+  public void testConsumeQuotedStringOrTokenStringIsQuotedString() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("\"quoted\"");
+    parser.consumeQuotedStringOrToken();
+    assertEquals("\"quoted\"", parser.get());
+  }
+
+  @Test(expected = Rfc2616AbnfParser.ParseException.class)
+  public void testConsumeQuotedStringOrTokenStringIsMalformed() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser(" ");
+    parser.consumeQuotedStringOrToken();
+  }
+
+  @Test(expected = Rfc2616AbnfParser.ParseException.class)
+  public void testConsumeQuotedStringOrTokenStringIsEmpty() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("");
+    parser.consumeQuotedStringOrToken();
   }
 
   @Test
@@ -215,6 +272,21 @@ public class Rfc2116AbnfParserTest {
   @Test
   public void testUnquoteInvalidStringEndsInBackslash() throws Exception {
     assertNotNull(Rfc2616AbnfParser.unquote("\"string\\"));
+  }
+
+  @Test
+  public void testUnquoteIfQuotedInputIsQuoted() throws Exception {
+    assertEquals("string", Rfc2616AbnfParser.unquoteIfQuoted("\"string\""));
+  }
+
+  @Test
+  public void testUnquoteIfQuotedInputIsAToken() throws Exception {
+    assertEquals("string", Rfc2616AbnfParser.unquoteIfQuoted("string"));
+  }
+
+  @Test
+  public void testUnquoteIfQuotedInputIsEmpty() throws Exception {
+    assertEquals("", Rfc2616AbnfParser.unquoteIfQuoted(""));
   }
 
   @Test

@@ -165,6 +165,18 @@ final class Rfc2616AbnfParser {
     return this;
   }
 
+  public Rfc2616AbnfParser consumeQuotedStringOrToken() throws ParseException {
+    if (eltEnd >= input.length()) {
+      throw new ParseException("Expected token or quoted string", this);
+    }
+
+    if (input.charAt(eltEnd) == '\"') {
+      return consumeQuotedString();
+    }
+
+    return consumeToken();
+  }
+
   public String getRemainingInput() {
     return input.substring(eltEnd);
   }
@@ -241,6 +253,21 @@ final class Rfc2616AbnfParser {
     }
     Matcher matcher = UNQUOTE_PATTERN.matcher(str.substring(1, str.length() - 1));
     return matcher.replaceAll("$1");
+  }
+
+  /**
+   * Given either a token or a quoted string (e.g. the result of
+   * {@link #consumeQuotedStringOrToken()}), unquotes the string if it is quoted and returns the
+   * result.
+   *
+   * @param str either a quoted string or a token
+   * @return the string, unquoted if it was quoted
+   */
+  public static String unquoteIfQuoted(String str) {
+    if (str.startsWith("\"")) {
+      return unquote(str);
+    }
+    return str;
   }
 
   public static final class ParseException extends Exception {
