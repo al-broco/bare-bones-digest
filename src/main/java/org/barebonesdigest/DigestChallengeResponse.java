@@ -59,7 +59,7 @@ public class DigestChallengeResponse {
 
   private static final int CLIENT_NONCE_BYTE_COUNT = 8;
   private static final SecureRandom RANDOM = new SecureRandom();
-  private static byte[] clientNonceByteBuffer = new byte[CLIENT_NONCE_BYTE_COUNT];
+  private static final byte[] clientNonceByteBuffer = new byte[CLIENT_NONCE_BYTE_COUNT];
 
   private final MessageDigest md5;
 
@@ -314,6 +314,7 @@ public class DigestChallengeResponse {
    */
   public DigestChallengeResponse resetNonceCount() {
     nonceCount(1);
+    return this;
   }
 
   /**
@@ -698,9 +699,9 @@ public class DigestChallengeResponse {
 
   private static String encodeHexString(byte[] bytes) {
     StringBuilder result = new StringBuilder(bytes.length * 2);
-    for (int i = 0; i < bytes.length; i++) {
-      result.append(Integer.toHexString((bytes[i] & 0xf0) >> 4));
-      result.append(Integer.toHexString((bytes[i] & 0x0f)));
+    for (byte b : bytes) {
+      result.append(Integer.toHexString((b & 0xf0) >> 4));
+      result.append(Integer.toHexString((b & 0x0f)));
     }
     return result.toString();
   }

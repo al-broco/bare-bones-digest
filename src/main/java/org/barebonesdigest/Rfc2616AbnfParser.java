@@ -37,7 +37,7 @@ final class Rfc2616AbnfParser {
   private static final Pattern QUOTE_PATTERN = Pattern.compile("[\"\\\\]");
   private static final Pattern UNQUOTE_PATTERN = Pattern.compile("\\\\(.)");
 
-  private String input;
+  private final String input;
   private int eltStart;
   private int eltEnd;
 
@@ -69,7 +69,7 @@ final class Rfc2616AbnfParser {
     return this;
   }
 
-  public Rfc2616AbnfParser consumeWhitespace() throws ParseException {
+  public Rfc2616AbnfParser consumeWhitespace() {
     // Definition from RFC 2616, Section 2.2:
     // LWS            = [CRLF] 1*( SP | HT )
     // CRLF           = CR LF
