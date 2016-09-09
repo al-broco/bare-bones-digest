@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  * </blockquote></pre>
  */
 final class Rfc2616AbnfParser {
-  // TOOD: create table and do lookup
+  // TODO: create table and do lookup
   // Defined in RFC 2616, Section 2.2
   private static final String ABNF_SEPARATOR_CHARACTERS = "()<>@,;:\\\"/[]?={} \t";
 
