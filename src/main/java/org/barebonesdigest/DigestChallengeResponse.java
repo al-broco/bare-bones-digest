@@ -1,5 +1,7 @@
 package org.barebonesdigest;
 
+import android.annotation.SuppressLint;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -58,6 +60,7 @@ public class DigestChallengeResponse {
   public static final String HTTP_HEADER_AUTHORIZATION = "Authorization";
 
   private static final int CLIENT_NONCE_BYTE_COUNT = 8;
+  @SuppressLint("TrulyRandom")
   private static final SecureRandom RANDOM = new SecureRandom();
   private static final byte[] clientNonceByteBuffer = new byte[CLIENT_NONCE_BYTE_COUNT];
 
