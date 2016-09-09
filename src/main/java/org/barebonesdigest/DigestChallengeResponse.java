@@ -86,6 +86,7 @@ public class DigestChallengeResponse {
     }
 
     this.nonceCount(1);
+    this.clientNonce(generateRandomNonce());
   }
 
   /**
@@ -109,7 +110,7 @@ public class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public DigestChallengeResponse algorithm(String algorithm) {
-    if (!"MD5".equals(algorithm)) {
+    if (algorithm != null && !"MD5".equals(algorithm)) {
       throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
     }
 
@@ -179,7 +180,7 @@ public class DigestChallengeResponse {
    * There is normally no need to manually set the client nonce since it will have a default value
    * of a randomly generated string.
    *
-   * @param clientNonce the unquoted value of the {@code cnonce} directive
+   * @param clientNonce The unquoted value of the {@code cnonce} directive.
    * @return this object so that setters can be chained
    * @see #getClientNonce()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
@@ -199,14 +200,6 @@ public class DigestChallengeResponse {
    * @see #clientNonce(String)
    */
   public String getClientNonce() {
-    if (clientNonce == null) {
-      synchronized (this) {
-        if (clientNonce == null) {
-          clientNonce = generateRandomNonce();
-        }
-      }
-    }
-
     return clientNonce;
   }
 
@@ -255,6 +248,9 @@ public class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public DigestChallengeResponse nonce(String unquotedNonce) {
+    if (unquotedNonce == null) {
+      return quotedNonce(null);
+    }
     return quotedNonce(Rfc2616AbnfParser.quote(unquotedNonce));
   }
 
@@ -268,6 +264,10 @@ public class DigestChallengeResponse {
    */
   public String getNonce() {
     // TODO: Cache since value is used each time a header is written
+    if (quotedNonce == null) {
+      return null;
+    }
+
     return Rfc2616AbnfParser.unquote(quotedNonce);
   }
 
@@ -377,6 +377,9 @@ public class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public DigestChallengeResponse opaque(String unquotedOpaque) {
+    if (unquotedOpaque == null) {
+      return quotedOpaque(null);
+    }
     return quotedOpaque(Rfc2616AbnfParser.quote(unquotedOpaque));
   }
 
@@ -390,6 +393,9 @@ public class DigestChallengeResponse {
    * @see #getQuotedOpaque()
    */
   public String getOpaque() {
+    if (quotedOpaque == null) {
+      return null;
+    }
     return Rfc2616AbnfParser.unquote(quotedOpaque);
   }
 
@@ -480,6 +486,9 @@ public class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public DigestChallengeResponse realm(String unquotedRealm) {
+    if (unquotedRealm == null) {
+      return quotedRealm(null);
+    }
     return quotedRealm(Rfc2616AbnfParser.quote(unquotedRealm));
   }
 
@@ -493,6 +502,9 @@ public class DigestChallengeResponse {
    */
   public String getRealm() {
     // TODO: Cache since value is used each time a header is written
+    if (quotedRealm == null) {
+      return null;
+    }
     return Rfc2616AbnfParser.unquote(quotedRealm);
   }
 
@@ -548,10 +560,14 @@ public class DigestChallengeResponse {
    *
    * @return the string to set in the {@code Authorization} HTTP request header
    * @throws IllegalStateException if any of the mandatory directives and values listed above has
-   * not been set
+   *                               not been set
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public String getHeaderValue() {
+    // TODO Get qop from challenge
+    // TODO Also support auth-int, no qop
+    String qop = "auth";
+
     if (username == null) {
       throw new IllegalStateException("Mandatory username not set");
     }
@@ -569,6 +585,9 @@ public class DigestChallengeResponse {
     }
     if (requestMethod == null) {
       throw new IllegalStateException("Mandatory Method not set");
+    }
+    if (clientNonce == null && qop != null) {
+      throw new IllegalStateException("Client nonce must be set when qop is set");
     }
 
     String response = calculateResponse();
@@ -612,10 +631,11 @@ public class DigestChallengeResponse {
     // cnonce           = "cnonce" "=" cnonce-value
     // cnonce-value     = nonce-value
     // Must be present if qop is specified, must not if qop is unspecified
-    // TODO: don't include if qop is unspecified
-    result.append("cnonce=");
-    result.append(Rfc2616AbnfParser.quote(getClientNonce()));
-    result.append(",");
+    if (qop != null) {
+      result.append("cnonce=");
+      result.append(Rfc2616AbnfParser.quote(getClientNonce()));
+      result.append(",");
+    }
 
     // Opaque and algorithm are explained in Section 3.2.2 of RFC 2617:
     // "The values of the opaque and algorithm fields must be those supplied
@@ -634,17 +654,20 @@ public class DigestChallengeResponse {
       result.append(",");
     }
 
-    // TODO Verify that server supports auth
-    // TODO Also support auth-int
-    result.append("qop=auth");
-    result.append(",");
+    if (qop != null) {
+      result.append("qop=");
+      result.append(qop);
+      result.append(",");
+    }
 
     // Nonce count is defined in RFC 2617, Section 3.2.2
     // nonce-count      = "nc" "=" nc-value
     // nc-value         = 8LHEX (lower case hex)
     // Must be present if qop is specified, must not if qop is unspecified
-    result.append("nc=");
-    result.append(String.format("%08x", nonceCount));
+    if (qop != null) {
+      result.append("nc=");
+      result.append(String.format("%08x", nonceCount));
+    }
 
     return result.toString();
   }
