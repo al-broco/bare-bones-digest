@@ -98,8 +98,11 @@ public class DigestChallengeResponse {
    *
    * @param challenge the challenge
    * @return a response to the challenge.
+   * @throws UnsupportedAlgorithmHttpDigestException if the challenge uses an algorithm that is
+   * not supported
    */
-  public static DigestChallengeResponse responseTo(DigestChallenge challenge) {
+  public static DigestChallengeResponse responseTo(DigestChallenge challenge) throws
+      UnsupportedAlgorithmHttpDigestException {
     return new DigestChallengeResponse().challenge(challenge);
   }
 
@@ -109,12 +112,14 @@ public class DigestChallengeResponse {
    *
    * @param algorithm the value of the {@code algorithm} directive
    * @return this object so that setters can be chained
+   * @throws UnsupportedAlgorithmHttpDigestException if the algorithm is not supported
    * @see #getAlgorithm()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse algorithm(String algorithm) {
+  public DigestChallengeResponse algorithm(String algorithm) throws
+      UnsupportedAlgorithmHttpDigestException {
     if (algorithm != null && !"MD5".equals(algorithm)) {
-      throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
+      throw new UnsupportedAlgorithmHttpDigestException("Unsupported algorithm: " + algorithm);
     }
 
     this.algorithm = algorithm;
@@ -540,8 +545,11 @@ public class DigestChallengeResponse {
    *
    * @param challenge the challenge
    * @return this object so that setters can be chained
+   * @throws UnsupportedAlgorithmHttpDigestException if the challenge uses an algorithm that is
+   *                                                 not supported
    */
-  public DigestChallengeResponse challenge(DigestChallenge challenge) {
+  public DigestChallengeResponse challenge(DigestChallenge challenge) throws
+      UnsupportedAlgorithmHttpDigestException {
     return quotedNonce(challenge.getQuotedNonce()).quotedOpaque(challenge.getQuotedOpaque())
         .quotedRealm(challenge.getQuotedRealm())
         .algorithm(challenge.getAlgorithm());

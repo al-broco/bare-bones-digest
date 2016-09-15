@@ -12,13 +12,13 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 public class DigestChallengeResponseTest {
-  @Test(expected = IllegalArgumentException.class)
-  public void testSetUnsupportedAlgorithm() {
+  @Test(expected = UnsupportedAlgorithmHttpDigestException.class)
+  public void testSetUnsupportedAlgorithm() throws Exception {
     new DigestChallengeResponse().algorithm("illegal");
   }
 
   @Test
-  public void testGetAndSetMd5Algorithm() {
+  public void testGetAndSetMd5Algorithm() throws Exception {
     assertEquals("MD5", new DigestChallengeResponse().algorithm("MD5").getAlgorithm());
   }
 
@@ -28,7 +28,7 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
-  public void testUnsetAlgorithm() {
+  public void testUnsetAlgorithm() throws Exception {
     assertNull(new DigestChallengeResponse().algorithm("MD5").algorithm(null).getAlgorithm());
   }
 
