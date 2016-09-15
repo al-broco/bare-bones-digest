@@ -1,4 +1,4 @@
-# Bare bones http digest for Android
+# Bare bones digest for Android
 
 This project is a partial implementation of the [HTTP
 Digest](https://en.wikipedia.org/wiki/Digest_access_authentication)
