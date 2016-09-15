@@ -78,11 +78,10 @@ To implement HTTP digest with this library, do the following:
 - Check the response, if the status code is 401 examine the
   headers. The `WWW-Authenticate` header, if present, contains one or
   more challenges. If the header contains a single challenge you can
-  pass it to `DigestChallenge.parse()` which will return non-`null` if
-  the challenge is a valid HTTP digest challenge. If the header
+  pass it to `DigestChallenge.isDigestChallenge()` to check its type
+  and then `DigestChallenge.parse()` to parse it. If the header
   contains multiple challenges you need to do some work here to
-  extract the digest challenge before passing it to
-  `DigestChallenge.parse()`.
+  extract the digest challenge before parsing it.
 - Generate a response using `DigestChallengeResponse.responseTo`. Add
   the credentials (by calling `username` and `password`) and fill in
   details about the request (`uri` and `requestMethod`).

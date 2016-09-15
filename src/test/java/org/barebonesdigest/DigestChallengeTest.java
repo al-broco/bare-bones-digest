@@ -10,6 +10,40 @@ import static junit.framework.Assert.assertTrue;
 
 public class DigestChallengeTest {
   @Test
+  public void testIsDigestChallengeEmptyString() {
+    assertFalse(DigestChallenge.isDigestChallenge(""));
+  }
+
+  @Test
+  public void testIsDigestChallengeCorrectPrefixNoSpace() {
+    assertFalse(DigestChallenge.isDigestChallenge("Digest"));
+  }
+
+  @Test
+  public void testIsDigestChallengeCorrectPrefix() {
+    String CHALLENGE = "Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
+    assertTrue(DigestChallenge.isDigestChallenge(CHALLENGE));
+  }
+
+  @Test
+  public void testIsDigestChallengeLowerCase() {
+    String CHALLENGE = "digest " +
+        "realm=\"testrealm@host.com\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
+    assertTrue(DigestChallenge.isDigestChallenge(CHALLENGE));
+  }
+
+  @Test
+  public void testIsDigestChallengeUpperCase() {
+    String CHALLENGE = "DIGEST " +
+        "realm=\"testrealm@host.com\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
+    assertTrue(DigestChallenge.isDigestChallenge(CHALLENGE));
+  }
+
+  @Test
   public void testMinimalChallenge() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
@@ -21,7 +55,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testRealm() {
+  public void testRealm() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
@@ -34,7 +68,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testNonce() {
+  public void testNonce() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
@@ -47,7 +81,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testOpaque() {
+  public void testOpaque() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "qop=\"auth,auth-int\", " +
@@ -127,7 +161,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testDomain() {
+  public void testDomain() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
@@ -139,7 +173,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testStaleSetToTrue() {
+  public void testStaleSetToTrue() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
@@ -152,7 +186,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testStaleSetToFalse() {
+  public void testStaleSetToFalse() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
@@ -165,7 +199,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testStaleCaseInsensitive() {
+  public void testStaleCaseInsensitive() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
@@ -178,7 +212,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testStaleDirectiveMissing() {
+  public void testStaleDirectiveMissing() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
@@ -190,7 +224,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testQuotedStale() {
+  public void testQuotedStale() throws Exception {
     // This is not a valid challenge but parsing is intentionally lenient
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
@@ -204,7 +238,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testStaleUnrecognizedValue() {
+  public void testStaleUnrecognizedValue() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
@@ -217,7 +251,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testQopSetToAuth() {
+  public void testQopSetToAuth() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
@@ -229,7 +263,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testQopSetToAuthInt() {
+  public void testQopSetToAuthInt() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
@@ -241,7 +275,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testQopSetToAuthAndAuthInt() {
+  public void testQopSetToAuthAndAuthInt() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
@@ -253,7 +287,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testQopMissing() {
+  public void testQopMissing() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
@@ -264,7 +298,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testQopNotQuoted() {
+  public void testQopNotQuoted() throws Exception {
     // This is not a valid challenge, but some server implementations fail to quote the qop so
     // parsing is intentionally lenient
     String CHALLENGE = "Digest " +
@@ -278,7 +312,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testUnrecognizedDirectiveWithTokenValue() {
+  public void testUnrecognizedDirectiveWithTokenValue() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
@@ -290,7 +324,7 @@ public class DigestChallengeTest {
   }
 
   @Test
-  public void testUnrecognizedDirectiveWithQuotedValue() {
+  public void testUnrecognizedDirectiveWithQuotedValue() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
@@ -320,22 +354,38 @@ public class DigestChallengeTest {
     assertEquals("MD5", header.getAlgorithm());
   }
 
-  @Test
+  @Test(expected=HttpDigestChallengeParseException.class)
   public void testMalformedChallengeMissingRealm() throws Exception {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
-    String CHALLENGE = "Digest " +
-        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
+    String CHALLENGE = "Digest " + "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
 
     assertNull(DigestChallenge.parse(CHALLENGE));
   }
 
-  @Test
+  @Test(expected=HttpDigestChallengeParseException.class)
   public void testMalformedChallengeMissingNonce() throws Exception {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
-    String CHALLENGE = "Digest " +
-        "realm=\"testrealm@host.com\"";
+    String CHALLENGE = "Digest " + "realm=\"testrealm@host.com\"";
+
+    assertNull(DigestChallenge.parse(CHALLENGE));
+  }
+
+  @Test(expected=HttpDigestChallengeParseException.class)
+  public void testMalformedChallengeWrongType() throws Exception {
+    // The example below is from Section 3.5 of RC 2617,
+    // https://tools.ietf.org/html/rfc2617#section-3.5
+    String CHALLENGE = "Basic realm=\"WallyWorld\"";
+
+    assertNull(DigestChallenge.parse(CHALLENGE));
+  }
+
+  @Test(expected=HttpDigestChallengeParseException.class)
+  public void testMalformedChallengeWrongSyntax() throws Exception {
+    // The example below is from Section 3.5 of RC 2617,
+    // https://tools.ietf.org/html/rfc2617#section-3.5
+    String CHALLENGE = "digest nonce,realm=\"WallyWorld\"";
 
     assertNull(DigestChallenge.parse(CHALLENGE));
   }

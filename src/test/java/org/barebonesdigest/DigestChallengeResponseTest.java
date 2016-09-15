@@ -281,7 +281,7 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
-  public void testSetChallenge() {
+  public void testSetChallenge() throws Exception {
     DigestChallenge challenge = DigestChallenge.parse("Digest " +
         "realm=\"testrealm@host.com\", " +
         "qop=\"auth,auth-int\", " +
@@ -297,7 +297,7 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
-  public void testCreateFromChallenge() {
+  public void testCreateFromChallenge() throws Exception {
     DigestChallenge challenge = DigestChallenge.parse("Digest " +
         "realm=\"testrealm@host.com\", " +
         "qop=\"auth,auth-int\", " +

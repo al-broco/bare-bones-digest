@@ -1,5 +1,7 @@
 package org.barebonesdigest;
 
+import java.util.regex.Pattern;
+
 /**
  * Represents a HTTP digest challenge, as sent from the server to the client in a {@code
  * WWW-Authenticate} HTTP header.
@@ -43,6 +45,9 @@ public class DigestChallenge {
 
   private static final String HTTP_DIGEST_CHALLENGE_PREFIX = "digest";
 
+  private static final Pattern HTTP_DIGEST_CHALLENGE_REGEXP =
+      Pattern.compile("digest\\s", Pattern.CASE_INSENSITIVE);
+
   private final String quotedRealm;
   private final String quotedNonce;
   private final String quotedOpaque;
@@ -62,15 +67,32 @@ public class DigestChallenge {
   }
 
   /**
+   * Returns {@code true} if a string represents a HTTP Digest challenge (which may or may not be
+   * valid).
+   * <p>
+   * This method just checks that the string starts with the HTTP challenge prefix, it does not
+   * verify that the challenge is correct. The prefix identifies the challenge type (basic, digest,
+   * etc.), so if this method returns {@code true} the string is either a valid HTTP digest
+   * challenge or not a valid challenge of any type.
+   *
+   * @param challenge the string to check
+   * @return {@code true} if the string is a HTTP digest challenge
+   */
+  public static boolean isDigestChallenge(String challenge) {
+    return HTTP_DIGEST_CHALLENGE_REGEXP.matcher(challenge).lookingAt();
+  }
+
+  /**
    * Parses a HTTP Digest challenge.
    *
    * @param challengeString the challenge as a string
-   * @return the parsed challenge, or {@code null} if the string does not contain a challenge or it
-   * could not be parsed
+   * @return the parsed challenge
+   * @throws HttpDigestChallengeParseException if the challenge is malformed
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">RFC 2617, Section 3.2.1, The
    * WWW-Authenticate Response Header</a>
    */
-  public static DigestChallenge parse(String challengeString) {
+  public static DigestChallenge parse(String challengeString) throws
+      HttpDigestChallengeParseException {
     // see https://tools.ietf.org/html/rfc7235#section-4.1
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser(challengeString);
     try {
@@ -161,15 +183,17 @@ public class DigestChallenge {
       }
 
       if (quotedRealm == null) {
-        throw new Rfc2616AbnfParser.ParseException("Missing directive: realm");
+        throw new HttpDigestChallengeParseException(
+            "Missing directive 'realm' for challenge: " + challengeString);
       }
       if (quotedNonce == null) {
-        throw new Rfc2616AbnfParser.ParseException("Missing directive: nonce");
+        throw new HttpDigestChallengeParseException(
+            "Missing directive 'nonce' for challenge: " + challengeString);
       }
 
       return new DigestChallenge(quotedRealm, quotedNonce, quotedOpaque, algorithm, stale);
     } catch (Rfc2616AbnfParser.ParseException e) {
-      return null;
+      throw new HttpDigestChallengeParseException("Malformed challenge: " + challengeString, e);
     }
   }
 

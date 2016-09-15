@@ -55,12 +55,12 @@ final class Rfc2616AbnfParser {
     //    Quotation marks surround literal text. Unless stated otherwise,
     //    the text is case-insensitive.
     if (input.length() < eltEnd + literal.length()) {
-      throw new ParseException("Expected literal " + literal, this);
+      throw new ParseException("Expected literal '" + literal + "'", this);
     }
 
     String substring = input.substring(eltEnd, eltEnd + literal.length());
     if (!substring.equalsIgnoreCase(literal)) {
-      throw new ParseException("Expected literal " + literal, this);
+      throw new ParseException("Expected literal '" + literal + "'", this);
     }
 
     eltStart = eltEnd;
