@@ -8,7 +8,7 @@ android:
     - extra
 
 script:
-   - ./gradlew build test
+   - ./gradlew build test generateRelease
 
 branches:
   only:
