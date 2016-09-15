@@ -1,4 +1,4 @@
-package org.barebonesdigest;
+package com.albroco.barebonesdigest;
 
 import java.util.regex.Pattern;
 

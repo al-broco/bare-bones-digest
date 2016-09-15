@@ -1,4 +1,4 @@
-package org.barebonesdigest;
+package com.albroco.barebonesdigest;
 
 /**
  * Indicates that a HTTP digest challenge could not be parsed because it is malformed.
