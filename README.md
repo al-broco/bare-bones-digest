@@ -41,6 +41,16 @@ trouble.
 
 ## How?
 
+`bare-bones-digest` is available from jcenter, include it as a dependency in
+your project's `build.gradle`:
+
+    dependencies {
+        compile 'com.albroco:bare-bones-digest:0.0.1'
+    }
+
+Versioning follows [semver](http://semver.org). Use an exact version number
+since the library is pre-1.0.0 and the API is not stable between versions.
+
 ### Digest Authentication at a glance
 
 HTTP Digest is defined in [RFC
