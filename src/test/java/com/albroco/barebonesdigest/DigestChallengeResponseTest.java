@@ -94,6 +94,14 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
+  public void testGenerateClientNonce() {
+    String cnonce =
+        new DigestChallengeResponse().clientNonce(null).randomizeClientNonce().getClientNonce();
+    assertNotNull(cnonce);
+    assertTrue("Client nonce too short", cnonce.length() > 0);
+  }
+
+  @Test
   public void tesSetQuotedNonceResetsNonceCount() {
     assertEquals(1,
         new DigestChallengeResponse().nonceCount(10).quotedNonce("\"nonce\"").getNonceCount());

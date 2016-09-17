@@ -40,7 +40,8 @@ import java.security.SecureRandom;
  * server accepts the reused challenge this will cut down on unnecessary traffic.
  * <p>
  * Each time the challenge response is reused the nonce count must be increased by one, see
- * {@link #incrementNonceCount()}.
+ * {@link #incrementNonceCount()}. It is also a good idea to generate a new random client nonce with
+ * {@link #randomizeClientNonce()}.
  *
  * <h2>Limitations</h2>
  *
@@ -88,8 +89,8 @@ public class DigestChallengeResponse {
       throw new RuntimeException(e);
     }
 
-    this.nonceCount(1);
-    this.clientNonce(generateRandomNonce());
+    nonceCount(1);
+    randomizeClientNonce();
   }
 
   /**
@@ -191,6 +192,7 @@ public class DigestChallengeResponse {
    * @param clientNonce The unquoted value of the {@code cnonce} directive.
    * @return this object so that setters can be chained
    * @see #getClientNonce()
+   * @see #randomizeClientNonce()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public DigestChallengeResponse clientNonce(String clientNonce) {
@@ -209,6 +211,14 @@ public class DigestChallengeResponse {
    */
   public String getClientNonce() {
     return clientNonce;
+  }
+
+  /**
+   * Sets the {@code cnonce} directive to a random value.
+   * @return this object so that setters can be chained
+   */
+  public DigestChallengeResponse randomizeClientNonce() {
+    return clientNonce(generateRandomNonce());
   }
 
   /**
