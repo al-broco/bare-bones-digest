@@ -424,10 +424,7 @@ public class DigestChallengeResponseTest {
   @Test
   public void testMissingClientNonceWhenQopIsDefault() {
     // CLient nonce need not be specified if qop is not specified
-    createChallengeFromRfc2617Example().supportedQopTypes(EnumSet.of
-        (UNSPECIFIED_RFC2069_COMPATIBLE))
-        .clientNonce(null)
-        .getHeaderValue();
+    createChallengeFromRfc2069Example().clientNonce(null).getHeaderValue();
   }
 
   @Test(expected = IllegalStateException.class)
@@ -770,6 +767,28 @@ public class DigestChallengeResponseTest {
     assertHeadersEqual(expectedHeader, response.getHeaderValue());
   }
 
+  @Test
+  public void testExampleFromRfc2069() throws Exception {
+    // The example below is from Section 2.4 of RC 2069,
+    // https://tools.ietf.org/html/rfc2069#section-2.4
+
+    DigestChallengeResponse response = createChallengeFromRfc2069Example();
+
+    // Note: According to the errate, the example is wrong and gives the wrong response, I have
+    // updated with the response from here:
+    // https://www.rfc-editor.org/errata_search.php?rfc=2069
+
+    String expectedHeader = "Digest username=\"Mufasa\"," +
+        "realm=\"testrealm@host.com\"," +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"," +
+        "uri=\"/dir/index.html\"," +
+        "response=\"1949323746fe6a43ef61f9606e7febea\"," +
+        "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
+
+    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  }
+
+
   private void assertHeadersEqual(String expectedHeader, String generatedHeader) {
     assertTrue(generatedHeader.startsWith("Digest "));
 
@@ -794,6 +813,21 @@ public class DigestChallengeResponseTest {
         .clientNonce("0a4f113b")
         .supportedQopTypes(EnumSet.of(AUTH, AUTH_INT))
         .quotedOpaque("\"5ccc069c403ebaf9f0171e9517f40e41\"");
+
+    return response;
+  }
+
+  private DigestChallengeResponse createChallengeFromRfc2069Example() {
+    // The example below is from Section 2.4 of RC 2069,
+    // https://tools.ietf.org/html/rfc2069#section-2.4
+    DigestChallengeResponse response = new DigestChallengeResponse().username("Mufasa")
+        .password("CircleOfLife")
+        .realm("testrealm@host.com")
+        .nonce("dcd98b7102dd2f0e8b11d0f600bfb0c093")
+        .digestUri("/dir/index.html")
+        .requestMethod("GET")
+        .supportedQopTypes(EnumSet.of(UNSPECIFIED_RFC2069_COMPATIBLE))
+        .opaque("5ccc069c403ebaf9f0171e9517f40e41");
 
     return response;
   }
