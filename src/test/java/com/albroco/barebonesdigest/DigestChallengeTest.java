@@ -2,6 +2,11 @@ package com.albroco.barebonesdigest;
 
 import org.junit.Test;
 
+import java.util.Collections;
+import java.util.EnumSet;
+
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH;
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH_INT;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
@@ -260,6 +265,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
+    assertEquals(EnumSet.of(AUTH), header.getSupportedQualityOfProtectionTypes());
   }
 
   @Test
@@ -272,6 +278,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
+    assertEquals(EnumSet.of(AUTH_INT), header.getSupportedQualityOfProtectionTypes());
   }
 
   @Test
@@ -284,6 +291,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
+    assertEquals(EnumSet.of(AUTH, AUTH_INT), header.getSupportedQualityOfProtectionTypes());
   }
 
   @Test
@@ -295,6 +303,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
+    assertEquals(Collections.emptySet(), header.getSupportedQualityOfProtectionTypes());
   }
 
   @Test
@@ -309,6 +318,33 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
+    assertEquals(EnumSet.of(AUTH), header.getSupportedQualityOfProtectionTypes());
+  }
+
+  @Test
+  public void testQopUnknownQop() throws Exception {
+    String CHALLENGE = "Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
+        "qop=\"future_extension\"";
+
+    DigestChallenge header = DigestChallenge.parse(CHALLENGE);
+
+    assertNotNull(header);
+    assertEquals(Collections.emptySet(), header.getSupportedQualityOfProtectionTypes());
+  }
+
+  @Test
+  public void testQopMalformedDirective() throws Exception {
+    String CHALLENGE = "Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
+        "qop=\",, , auth\"";
+
+    DigestChallenge header = DigestChallenge.parse(CHALLENGE);
+
+    assertNotNull(header);
+    assertEquals(EnumSet.of(AUTH), header.getSupportedQualityOfProtectionTypes());
   }
 
   @Test
@@ -354,7 +390,7 @@ public class DigestChallengeTest {
     assertEquals("MD5", header.getAlgorithm());
   }
 
-  @Test(expected=ChallengeParseHttpDigestException.class)
+  @Test(expected = ChallengeParseHttpDigestException.class)
   public void testMalformedChallengeMissingRealm() throws Exception {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
@@ -363,7 +399,7 @@ public class DigestChallengeTest {
     assertNull(DigestChallenge.parse(CHALLENGE));
   }
 
-  @Test(expected=ChallengeParseHttpDigestException.class)
+  @Test(expected = ChallengeParseHttpDigestException.class)
   public void testMalformedChallengeMissingNonce() throws Exception {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
@@ -372,7 +408,7 @@ public class DigestChallengeTest {
     assertNull(DigestChallenge.parse(CHALLENGE));
   }
 
-  @Test(expected=ChallengeParseHttpDigestException.class)
+  @Test(expected = ChallengeParseHttpDigestException.class)
   public void testMalformedChallengeWrongType() throws Exception {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
@@ -381,7 +417,7 @@ public class DigestChallengeTest {
     assertNull(DigestChallenge.parse(CHALLENGE));
   }
 
-  @Test(expected=ChallengeParseHttpDigestException.class)
+  @Test(expected = ChallengeParseHttpDigestException.class)
   public void testMalformedChallengeWrongSyntax() throws Exception {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5

@@ -1,5 +1,8 @@
 package com.albroco.barebonesdigest;
 
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -25,8 +28,13 @@ import java.util.regex.Pattern;
  *
  * <h2>Limitations</h2>
  *
+ * All values are parsed but not all values are stored. In particular, the following is not stored:
+ *
  * <ul>
- * <li>The values of the {@code qop} and {@code realm} directives are parsed but not stored.</li>
+ * <li>The values of the {@code realm} directive.</li>
+ * <li>Unrecognized directives.</li>
+ * <li>Supported "quality of protection" values except for the standard ones, "auth" and
+ * "auth-int".</li>
  * </ul>
  *
  * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">RFC 2617, Section 3.2.1, The
@@ -43,6 +51,37 @@ public class DigestChallenge {
    */
   public static final String HTTP_HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
 
+  /**
+   * Enumeration of the various types of quality of protection.
+   */
+  public enum QualityOfProtection {
+    /**
+     * Indicates authentication ({@code auth}) quality of protection.
+     */
+    AUTH("auth"),
+
+    /**
+     * Indicates authentication with integrity protection ({@code auth-int}) quality of protection.
+     */
+    AUTH_INT("auth-int");
+
+    private String qopValue;
+
+    QualityOfProtection(String qopValue) {
+      this.qopValue = qopValue;
+    }
+
+    /**
+     * Returns the "qop-value" of the quality of protection, that is, the short name that appears
+     * in digest messages, such as "auth" or "auth-int".
+     *
+     * @return the qop-value
+     */
+    public String getQopValue() {
+      return qopValue;
+    }
+  }
+
   private static final String HTTP_DIGEST_CHALLENGE_PREFIX = "digest";
 
   private static final Pattern HTTP_DIGEST_CHALLENGE_REGEXP =
@@ -52,17 +91,20 @@ public class DigestChallenge {
   private final String quotedNonce;
   private final String quotedOpaque;
   private final String algorithm;
+  private final Set<QualityOfProtection> supportedQops;
   private final boolean stale;
 
   private DigestChallenge(String realm,
       String nonce,
       String quotedOpaque,
       String algorithm,
+      Set<QualityOfProtection> supportedQops,
       boolean stale) {
     this.quotedRealm = realm;
     this.quotedNonce = nonce;
     this.quotedOpaque = quotedOpaque;
     this.algorithm = algorithm;
+    this.supportedQops = supportedQops;
     this.stale = stale;
   }
 
@@ -91,7 +133,8 @@ public class DigestChallenge {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">RFC 2617, Section 3.2.1, The
    * WWW-Authenticate Response Header</a>
    */
-  public static DigestChallenge parse(String challengeString) throws ChallengeParseHttpDigestException {
+  public static DigestChallenge parse(String challengeString) throws
+      ChallengeParseHttpDigestException {
     // see https://tools.ietf.org/html/rfc7235#section-4.1
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser(challengeString);
     try {
@@ -102,6 +145,7 @@ public class DigestChallenge {
       String quotedNonce = null;
       String quotedOpaque = null;
       String algorithm = "MD5";
+      String qopOptions = null;
       boolean stale = false;
 
       while (parser.containsMoreData()) {
@@ -141,9 +185,8 @@ public class DigestChallenge {
             // Qop definition from RFC 2617, Section 3.2.1:
             // qop-options       = "qop" "=" <"> 1#qop-value <">
             // qop-value         = "auth" | "auth-int" | token
-            // TODO: deal with malformed qop
-            // TODO store qop
-            parser.consumeQuotedStringOrToken();
+            qopOptions =
+                Rfc2616AbnfParser.unquoteIfQuoted(parser.consumeQuotedStringOrToken().get());
             break;
 
           case "domain":
@@ -190,10 +233,31 @@ public class DigestChallenge {
             "Missing directive 'nonce' for challenge: " + challengeString);
       }
 
-      return new DigestChallenge(quotedRealm, quotedNonce, quotedOpaque, algorithm, stale);
+      return new DigestChallenge(quotedRealm,
+          quotedNonce,
+          quotedOpaque,
+          algorithm,
+          parseSupportedQopsFromQopOptions(qopOptions),
+          stale);
     } catch (Rfc2616AbnfParser.ParseException e) {
       throw new ChallengeParseHttpDigestException("Malformed challenge: " + challengeString, e);
     }
+  }
+
+  private static Set<QualityOfProtection> parseSupportedQopsFromQopOptions(String qopOptions) {
+    if (qopOptions == null) {
+      return Collections.emptySet();
+    }
+
+    Set<QualityOfProtection> result = EnumSet.noneOf(QualityOfProtection.class);
+    for (String supportedQop : qopOptions.split(",")) {
+      if (supportedQop.trim().equals("auth")) {
+        result.add(QualityOfProtection.AUTH);
+      } else if (supportedQop.trim().equals("auth-int")) {
+        result.add(QualityOfProtection.AUTH_INT);
+      }
+    }
+    return result;
   }
 
   /**
@@ -249,8 +313,8 @@ public class DigestChallenge {
    *
    * <dd>A string indicating a pair of algorithms used to produce the digest and a checksum. If
    * this is not present it is assumed to be "MD5".  If the algorithm is not understood, the
-   * challenge should be ignored (and a different one used, if there is more than one). [&hellip;
-   * ]</dd>
+   * challenge should be ignored (and a different one used, if there is more than one). [&hellip;]
+   * </dd>
    * </dl>
    *
    * @return The value of the algorithm directive or the default value "MD5" if the algorithm
@@ -355,6 +419,19 @@ public class DigestChallenge {
    */
   public String getOpaque() {
     return Rfc2616AbnfParser.unquote(quotedOpaque);
+  }
+
+  /**
+   * Returns the types of "quality of protection" listed in the challenge as supported by the
+   * server.
+   * <p>
+   * Only the two standard quality of protection types ("auth" and "auth-int") are included in the
+   * result, other non-standard qop types are ignored.
+   *
+   * @return the supported quality of protection types
+   */
+  public Set<QualityOfProtection> getSupportedQualityOfProtectionTypes() {
+    return supportedQops;
   }
 
   /**
