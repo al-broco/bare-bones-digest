@@ -10,6 +10,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertNotEquals;
 
 public class DigestChallengeResponseTest {
   @Test(expected = UnsupportedAlgorithmHttpDigestException.class)
@@ -20,6 +21,11 @@ public class DigestChallengeResponseTest {
   @Test
   public void testGetAndSetMd5Algorithm() throws Exception {
     assertEquals("MD5", new DigestChallengeResponse().algorithm("MD5").getAlgorithm());
+  }
+
+  @Test
+  public void testGetAndSetMd5SessAlgorithm() throws Exception {
+    assertEquals("MD5-sess", new DigestChallengeResponse().algorithm("MD5-sess").getAlgorithm());
   }
 
   @Test
@@ -85,6 +91,34 @@ public class DigestChallengeResponseTest {
   public void testClientNonceDoesNotChange() {
     DigestChallengeResponse response = new DigestChallengeResponse();
     assertEquals(response.getClientNonce(), response.getClientNonce());
+  }
+
+  @Test
+  public void testGetAndSetFirstRequestClientNonce() {
+    assertEquals("cnonce",
+        new DigestChallengeResponse().firstRequestClientNonce("cnonce")
+            .getFirstRequestClientNonce());
+  }
+
+  @Test
+  public void testFirstRequestClientNonceDefaultValue() {
+    DigestChallengeResponse response = new DigestChallengeResponse();
+    assertEquals(response.getClientNonce(), response.getFirstRequestClientNonce());
+  }
+
+  @Test
+  public void testFirstRequestClientNonceDoesNotChangeIfClientNonceChanges() {
+    DigestChallengeResponse response = new DigestChallengeResponse();
+    String firstRequestClientNonce = response.getFirstRequestClientNonce();
+    response.clientNonce("overridden client nonce");
+    assertEquals(firstRequestClientNonce, response.getFirstRequestClientNonce());
+  }
+
+  @Test
+  public void testUnsetFirstRequestClientNonce() {
+    assertNull(new DigestChallengeResponse().firstRequestClientNonce("cnonce")
+        .firstRequestClientNonce(null)
+        .getFirstRequestClientNonce());
   }
 
   @Test
@@ -351,8 +385,15 @@ public class DigestChallengeResponseTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void testMissingClientNonceWHenQopIsSet() {
+  public void testMissingClientNonceWhenQopIsSet() {
     createChallengeFromRfc2617Example().clientNonce(null).getHeaderValue();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testMissingFirstRequestClientNonceWithMd5SessAlgorithm() throws Exception {
+    createChallengeFromRfc2617Example().firstRequestClientNonce(null)
+        .algorithm("MD5-sess")
+        .getHeaderValue();
   }
 
   @Test
@@ -363,7 +404,8 @@ public class DigestChallengeResponseTest {
         .nonce("nonce")
         .digestUri("/uri")
         .requestMethod("GET")
-        .clientNonce("cnonce");
+        .clientNonce("cnonce")
+        .firstRequestClientNonce("cnonce");
 
     String expectedHeader = "Digest username=\"usr\"," +
         "realm=\"realm\"," +
@@ -378,7 +420,7 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
-  public void testQopAuthHeaderWithAlgorithm() throws Exception {
+  public void testQopAuthHeaderWithMd5Algorithm() throws Exception {
     DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
         .password("pwd")
         .realm("realm")
@@ -386,6 +428,7 @@ public class DigestChallengeResponseTest {
         .digestUri("/uri")
         .requestMethod("GET")
         .clientNonce("cnonce")
+        .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
     String expectedHeader = "Digest username=\"usr\"," +
@@ -399,6 +442,216 @@ public class DigestChallengeResponseTest {
         "algorithm=MD5";
 
     assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  }
+
+  @Test
+  public void testQopAuthHeaderWithMd5SessAlgorithm() throws Exception {
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("GET")
+        .clientNonce("cnonce")
+        .firstRequestClientNonce("cnonce")
+        .algorithm("MD5-sess");
+
+    String expectedHeader = "Digest username=\"usr\"," +
+        "realm=\"realm\"," +
+        "nonce=\"nonce\"," +
+        "uri=\"/uri\"," +
+        "qop=auth," +
+        "response=\"e9d2f4f7939312353ee18da867fb4ec2\"," +
+        "nc=00000001," +
+        "cnonce=\"cnonce\"," +
+        "algorithm=MD5-sess";
+
+    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  }
+
+  @Test
+  public void testResponseChangesIfAlgorithmChanges() throws Exception {
+    // This might seem redundant but tests that A1 (and other values) is not cached too aggressively
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("GET")
+        .clientNonce("cnonce")
+        .firstRequestClientNonce("cnonce")
+        .algorithm("MD5");
+
+    response.getHeaderValue();
+
+    response.algorithm("MD5-sess");
+
+    String expectedHeader = "Digest username=\"usr\"," +
+        "realm=\"realm\"," +
+        "nonce=\"nonce\"," +
+        "uri=\"/uri\"," +
+        "qop=auth," +
+        "response=\"e9d2f4f7939312353ee18da867fb4ec2\"," +
+        "nc=00000001," +
+        "cnonce=\"cnonce\"," +
+        "algorithm=MD5-sess";
+
+    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  }
+
+  @Test
+  public void testResponseChangesIfUsernameChanges() throws Exception {
+    // This might seem redundant but tests that A1 (and other values) is not cached too aggressively
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("GET")
+        .clientNonce("cnonce")
+        .firstRequestClientNonce("cnonce")
+        .algorithm("MD5");
+
+    response.getHeaderValue();
+
+    response.username("new user");
+
+    String expectedHeader = "Digest username=\"new user\"," +
+        "realm=\"realm\"," +
+        "nonce=\"nonce\"," +
+        "uri=\"/uri\"," +
+        "qop=auth," +
+        "response=\"82bc97801cb7ef79b8f5606fc1f62fc6\"," +
+        "nc=00000001," +
+        "cnonce=\"cnonce\"," +
+        "algorithm=MD5";
+
+    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  }
+
+  @Test
+  public void testResponseChangesIfPasswordChanges() throws Exception {
+    // This might seem redundant but tests that A1 (and other values) is not cached too aggressively
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("GET")
+        .clientNonce("cnonce")
+        .firstRequestClientNonce("cnonce")
+        .algorithm("MD5");
+
+    response.getHeaderValue();
+
+    response.password("new password");
+
+    String expectedHeader = "Digest username=\"usr\"," +
+        "realm=\"realm\"," +
+        "nonce=\"nonce\"," +
+        "uri=\"/uri\"," +
+        "qop=auth," +
+        "response=\"f8227f462d3661a0c4f0c76c449ef453\"," +
+        "nc=00000001," +
+        "cnonce=\"cnonce\"," +
+        "algorithm=MD5";
+
+    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  }
+
+  @Test
+  public void testMd5ResponseChangesIfClientNonceChanges() throws Exception {
+    // This might seem redundant but tests that A1 (and other values) is not cached too aggressively
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("GET")
+        .clientNonce("cnonce")
+        .firstRequestClientNonce("cnonce")
+        .algorithm("MD5");
+
+    response.getHeaderValue();
+
+    response.clientNonce("changed cnonce").firstRequestClientNonce("changed cnonce");
+
+    String expectedHeader = "Digest username=\"usr\"," +
+        "realm=\"realm\"," +
+        "nonce=\"nonce\"," +
+        "uri=\"/uri\"," +
+        "qop=auth," +
+        "response=\"60ac57635a413e9eee16345af309d76f\"," +
+        "nc=00000001," +
+        "cnonce=\"changed cnonce\"," +
+        "algorithm=MD5";
+
+    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  }
+
+  @Test
+  public void testMd5SessResponseChangesIfClientNonceChanges() throws Exception {
+    // This might seem redundant but tests that A1 (and other values) is not cached too aggressively
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("GET")
+        .clientNonce("cnonce")
+        .firstRequestClientNonce("cnonce")
+        .algorithm("MD5-sess");
+
+    response.getHeaderValue();
+
+    response.clientNonce("changed cnonce").firstRequestClientNonce("changed cnonce");
+
+    String expectedHeader = "Digest username=\"usr\"," +
+        "realm=\"realm\"," +
+        "nonce=\"nonce\"," +
+        "uri=\"/uri\"," +
+        "qop=auth," +
+        "response=\"29ff1aeb8a555477e872cc6cfac3a187\"," +
+        "nc=00000001," +
+        "cnonce=\"changed cnonce\"," +
+        "algorithm=MD5-sess";
+
+    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  }
+
+  @Test
+  public void testMd5ResponseDoesNotChangeIfFirstRequestClientNonceChanges() throws Exception {
+    // This might seem redundant but tests that A1 (and other values) is not cached too aggressively
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("GET")
+        .clientNonce("cnonce")
+        .firstRequestClientNonce("cnonce")
+        .algorithm("MD5");
+
+    String headerValue = response.getHeaderValue();
+    assertEquals(headerValue, response.firstRequestClientNonce("changed cnonce").getHeaderValue());
+  }
+
+  @Test
+  public void testMd5SessResponseChangesIfFirstRequestClientNonceChanges() throws Exception {
+    // This might seem redundant but tests that A1 (and other values) is not cached too aggressively
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("GET")
+        .clientNonce("cnonce")
+        .firstRequestClientNonce("cnonce")
+        .algorithm("MD5-sess");
+
+    String headerValue = response.getHeaderValue();
+    assertNotEquals(headerValue,
+        response.firstRequestClientNonce("changed cnonce").getHeaderValue());
   }
 
   @Test

@@ -90,19 +90,18 @@ To implement HTTP digest with this library, do the following:
   `DigestChallengeResponse.getHeaderValue`.
 - Done. Optionally save the `DigestChallengeResponse` instance and use
   it to generate `Authorization` headers for future request. Before
-  each use, call `incrementNonceCount` to increment a counter in the
-  header or the server will reject the request.
+  each use, call `incrementNonceCount` and (optionally)
+  `randomizeClientNonce` to correctly configure.
 
 ## Limitations
 
 * The implementation is based on [RFC
   2617](https://tools.ietf.org/html/rfc2617). Features from [RFC
   7616](https://tools.ietf.org/html/rfc7616) (which obsoletes RFC
-  2617) are not implemented. In particular, MD5 is the only supported
-  algorithm, even though RFC 7616 [recommends against using
-  it](https://tools.ietf.org/html/rfc7616#section-3.2).
+  2617) are not implemented. In particular, MD5 and MD5-sess are the
+  only supported algorithms, even though RFC 7616 [recommends against
+  using it](https://tools.ietf.org/html/rfc7616#section-3.2).
 * `WWW-Authenticate` headers containing multiple challenges is poorly
   supported. Extracting the HTTP digest challenge, if any, from such a
   header is currently left to the user of the library.
-* The MD5-sess algorithm is not supported.
 * Only `auth-int` quality of protection is not supported, only `auth`.
