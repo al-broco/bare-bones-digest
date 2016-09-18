@@ -7,6 +7,8 @@ import java.util.EnumSet;
 
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH_INT;
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
+    .UNSPECIFIED_RFC2069_COMPATIBLE;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
@@ -303,7 +305,8 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
-    assertEquals(Collections.emptySet(), header.getSupportedQualityOfProtectionTypes());
+    assertEquals(EnumSet.of(UNSPECIFIED_RFC2069_COMPATIBLE),
+        header.getSupportedQualityOfProtectionTypes());
   }
 
   @Test

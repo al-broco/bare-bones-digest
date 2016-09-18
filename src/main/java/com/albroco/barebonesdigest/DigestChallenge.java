@@ -1,6 +1,5 @@
 package com.albroco.barebonesdigest;
 
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -63,7 +62,13 @@ public class DigestChallenge {
     /**
      * Indicates authentication with integrity protection ({@code auth-int}) quality of protection.
      */
-    AUTH_INT("auth-int");
+    AUTH_INT("auth-int"),
+
+    /**
+     * A nameless quality of protection compatible with RFC 2069. Used when the server does not
+     * specify a qop.
+     */
+    UNSPECIFIED_RFC2069_COMPATIBLE(null);
 
     private String qopValue;
 
@@ -246,7 +251,7 @@ public class DigestChallenge {
 
   private static Set<QualityOfProtection> parseSupportedQopsFromQopOptions(String qopOptions) {
     if (qopOptions == null) {
-      return Collections.emptySet();
+      return EnumSet.of(QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE);
     }
 
     Set<QualityOfProtection> result = EnumSet.noneOf(QualityOfProtection.class);
