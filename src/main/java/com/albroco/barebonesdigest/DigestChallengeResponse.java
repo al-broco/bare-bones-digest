@@ -2,9 +2,15 @@ package com.albroco.barebonesdigest;
 
 import android.annotation.SuppressLint;
 
+import com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.EnumSet;
+import java.util.Set;
+
+;
 
 /**
  * Describes the contents of an {@code Authorization} HTTP request header. Once the client has
@@ -61,8 +67,7 @@ import java.security.SecureRandom;
  * <h2>Limitations</h2>
  *
  * <ul>
- * <li>{@code qop} is always set to {@code auth}. The value from the challenge is not used.
- * {@code auth-int} {@code qop} is not supported.</li>
+ * <li>Quality of protection (qop) {@code auth-int} is not supported.</li>
  * </ul>
  *
  * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">RFC 2617, "HTTP Digest Access
@@ -89,6 +94,7 @@ public class DigestChallengeResponse {
   private String quotedNonce;
   private int nonceCount;
   private String quotedOpaque;
+  private Set<DigestChallenge.QualityOfProtection> supportedQopTypes;
   private String digestUri;
   private String quotedRealm;
   private String requestMethod;
@@ -108,12 +114,14 @@ public class DigestChallengeResponse {
       throw new RuntimeException(e);
     }
 
+    supportedQopTypes = EnumSet.noneOf(QualityOfProtection.class);
     nonceCount(1).randomizeClientNonce().firstRequestClientNonce(getClientNonce());
   }
 
   /**
    * Creates a digest challenge response, setting the values of the {@code realm}, {@code nonce},
-   * {@code opaque}, and {@code algorithm} directives based on a challenge.
+   * {@code opaque}, and {@code algorithm} directives and the supported quality of protection
+   * types based on a challenge.
    *
    * @param challenge the challenge
    * @return a response to the challenge.
@@ -505,6 +513,41 @@ public class DigestChallengeResponse {
   }
 
   /**
+   * Sets the type of "quality of protection" that can be used when responding to the request.
+   * <p>
+   * Normally, this value is sent by the server in the challenge, but setting it manually can be
+   * used to force a particular qop type. Actual qop type in the response is chosen as follows:
+   * <ol>
+   * <li>If {@link QualityOfProtection#AUTH} is supported it is used.</li>
+   * <li>Otherwise, if {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE} is supported it
+   * is used.</li>
+   * <li>Otherwise, there is no way to generate a response to the challenge without violating the
+   * standard. As a fallback, use {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE}.</li>
+   * </ol>
+   * Note that {@link QualityOfProtection#AUTH_INT} is not yet supported.
+   *
+   * @param supportedQopTypes the types of quality of protection that the server supports
+   * @return this object so that setters can be chained
+   * @see #getSupportedQopTypes()
+   */
+  public DigestChallengeResponse supportedQopTypes(Set<QualityOfProtection> supportedQopTypes) {
+    this.supportedQopTypes.clear();
+    this.supportedQopTypes.addAll(supportedQopTypes);
+    return this;
+  }
+
+  /**
+   * Returns the type of "quality of protection" that can be used when responding to the request.
+   *
+   * @return the types of quality of protection that the server supports
+   * @see #supportedQopTypes(Set)
+   */
+  public Set<QualityOfProtection> getSupportedQopTypes() {
+    return supportedQopTypes;
+  }
+
+
+  /**
    * Sets the {@code digest-uri} directive, which must be exactly the same as the
    * {@code Request-URI} of the {@code Request-Line} of the HTTP request.
    * <p>
@@ -639,7 +682,7 @@ public class DigestChallengeResponse {
 
   /**
    * Sets the values of the {@code realm}, {@code nonce}, {@code opaque}, and {@code algorithm}
-   * directives based on a challenge.
+   * directives and the supported quality of protection types based on a challenge.
    *
    * @param challenge the challenge
    * @return this object so that setters can be chained
@@ -650,7 +693,8 @@ public class DigestChallengeResponse {
       UnsupportedAlgorithmHttpDigestException {
     return quotedNonce(challenge.getQuotedNonce()).quotedOpaque(challenge.getQuotedOpaque())
         .quotedRealm(challenge.getQuotedRealm())
-        .algorithm(challenge.getAlgorithm());
+        .algorithm(challenge.getAlgorithm())
+        .supportedQopTypes(challenge.getSupportedQopTypes());
   }
 
   /**
@@ -673,9 +717,7 @@ public class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public String getHeaderValue() {
-    // TODO Get qop from challenge
-    // TODO Also support auth-int, no qop
-    String qop = "auth";
+    QualityOfProtection qop = selectQop();
 
     if (username == null) {
       throw new IllegalStateException("Mandatory username not set");
@@ -695,7 +737,7 @@ public class DigestChallengeResponse {
     if (requestMethod == null) {
       throw new IllegalStateException("Mandatory Method not set");
     }
-    if (clientNonce == null && qop != null) {
+    if (clientNonce == null && qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
       throw new IllegalStateException("Client nonce must be set when qop is set");
     }
     if ("MD5-sess".equals(getAlgorithm()) && getFirstRequestClientNonce() == null) {
@@ -703,7 +745,7 @@ public class DigestChallengeResponse {
           "First request client nonce must be set when algorithm is MD5-sess");
     }
 
-    String response = calculateResponse();
+    String response = calculateResponse(qop);
 
     StringBuilder result = new StringBuilder();
     result.append("Digest ");
@@ -744,7 +786,7 @@ public class DigestChallengeResponse {
     // cnonce           = "cnonce" "=" cnonce-value
     // cnonce-value     = nonce-value
     // Must be present if qop is specified, must not if qop is unspecified
-    if (qop != null) {
+    if (qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
       result.append("cnonce=");
       result.append(Rfc2616AbnfParser.quote(getClientNonce()));
       result.append(",");
@@ -767,9 +809,9 @@ public class DigestChallengeResponse {
       result.append(",");
     }
 
-    if (qop != null) {
+    if (qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
       result.append("qop=");
-      result.append(qop);
+      result.append(qop.getQopValue());
       result.append(",");
     }
 
@@ -777,7 +819,7 @@ public class DigestChallengeResponse {
     // nonce-count      = "nc" "=" nc-value
     // nc-value         = 8LHEX (lower case hex)
     // Must be present if qop is specified, must not if qop is unspecified
-    if (qop != null) {
+    if (qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
       result.append("nc=");
       result.append(String.format("%08x", nonceCount));
     }
@@ -785,20 +827,45 @@ public class DigestChallengeResponse {
     return result.toString();
   }
 
-  private String calculateResponse() {
-    // TODO: Below calculation is for the case where qop is present, if not qop is calculated
-    // differently
+  private QualityOfProtection selectQop() {
+    if (supportedQopTypes.contains(QualityOfProtection.AUTH)) {
+      return QualityOfProtection.AUTH;
+    }
+
+    if (supportedQopTypes.contains(QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE)) {
+      return QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE;
+    }
+
+    // Note: As a fallback, use the unspecified, RFC2069 qop. The server has specified which qops it
+    // supports, but the list does not include any qop we recognize. If the server specified a qop,
+    // we SHOULD include a qop directive but it MUST be from the list of specified qops. Given the
+    // choice we violate the SHOULD directive insted of the MUST, see the description of qop in
+    // Section 3.2.2 of RFC 2617: https://tools.ietf.org/html/rfc2617#section-3.2.2
+    return QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE;
+  }
+
+  private String calculateResponse(QualityOfProtection qop) {
     String a1 = getA1();
     String a2 = calculateA2();
+    String secret = H(a1);
+    String data = "";
 
-    String secret = calculateMd5(a1);
-    String data = joinWithColon(getNonce(),
-        String.format("%08x", nonceCount),
-        getClientNonce(),
-        "auth",
-        calculateMd5(a2));
+    switch (qop) {
+      case AUTH:
+      case AUTH_INT:
+        data = joinWithColon(getNonce(),
+            String.format("%08x", nonceCount),
+            getClientNonce(),
+            "auth",
+            H(a2));
+        break;
+      case UNSPECIFIED_RFC2069_COMPATIBLE: {
+        data = joinWithColon(getNonce(), H(a2));
+        break;
+      }
+    }
 
-    return "\"" + calculateMd5(secret + ":" + data) + "\"";
+    return "\"" + KD(secret, data) + "\"";
   }
 
   private String getA1() {
@@ -812,7 +879,7 @@ public class DigestChallengeResponse {
     if (getAlgorithm() == null || "MD5".equals(getAlgorithm())) {
       return joinWithColon(username, getRealm(), password);
     } else if ("MD5-sess".equals(getAlgorithm())) {
-      return joinWithColon(calculateMd5(joinWithColon(username, getRealm(), password)),
+      return joinWithColon(H(joinWithColon(username, getRealm(), password)),
           getNonce(),
           getFirstRequestClientNonce());
     } else {
@@ -843,11 +910,41 @@ public class DigestChallengeResponse {
     return result.toString();
   }
 
-  private String calculateMd5(String string) {
+  /**
+   * Calculates the function H for some string, as per the description of algorithm in
+   * <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">Section 3.2.1 in RFC 2617.</a>
+   * <p>
+   * <blockquote>
+   * For the "MD5" and "MD5-sess" algorithms
+   *
+   * H(data) = MD5(data)
+   * </blockquote>
+   *
+   * @param string the string
+   * @return the value of <em>H(string)</em>
+   */
+  private String H(String string) {
     md5.reset();
     // TODO find out which encoding to use
     md5.update(string.getBytes());
     return encodeHexString(md5.digest());
+  }
+
+  /**
+   * Calculates the function KD for some secret and data, as per the description of algorithm in
+   * <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">Section 3.2.1 in RFC 2617.</a>
+   * <p>
+   * For MD5:
+   * <blockquote>
+   * KD(secret, data) = H(concat(secret, ":", data))
+   * </blockquote>
+   *
+   * @param secret the secret
+   * @param data   the data
+   * @return the value of <em>KD(secret, data)</em>
+   */
+  private String KD(String secret, String data) {
+    return H(secret + ":" + data);
   }
 
   private static String encodeHexString(byte[] bytes) {

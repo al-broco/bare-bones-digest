@@ -435,7 +435,7 @@ public class DigestChallenge {
    *
    * @return the supported quality of protection types
    */
-  public Set<QualityOfProtection> getSupportedQualityOfProtectionTypes() {
+  public Set<QualityOfProtection> getSupportedQopTypes() {
     return supportedQops;
   }
 

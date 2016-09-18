@@ -1,11 +1,18 @@
 package com.albroco.barebonesdigest;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH;
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH_INT;
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
+    .UNSPECIFIED_RFC2069_COMPATIBLE;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
@@ -306,6 +313,21 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
+  public void testGetAndSetSupportedQopTypes() {
+    assertEquals(EnumSet.of(AUTH),
+        new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH)).getSupportedQopTypes());
+    assertEquals(EnumSet.of(AUTH_INT),
+        new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH))
+            .supportedQopTypes(EnumSet.of(AUTH_INT))
+            .getSupportedQopTypes());
+  }
+
+  @Test
+  public void testSupportedQopTypesDefaultValue() {
+    assertEquals(Collections.emptySet(), new DigestChallengeResponse().getSupportedQopTypes());
+  }
+
+  @Test
   public void testGetAndSetRequestMethod() {
     assertEquals("GET", new DigestChallengeResponse().requestMethod("GET").getRequestMethod());
   }
@@ -385,8 +407,27 @@ public class DigestChallengeResponseTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void testMissingClientNonceWhenQopIsSet() {
-    createChallengeFromRfc2617Example().clientNonce(null).getHeaderValue();
+  public void testMissingClientNonceWhenQopIsAuth() {
+    createChallengeFromRfc2617Example().supportedQopTypes(EnumSet.of(AUTH))
+        .clientNonce(null)
+        .getHeaderValue();
+  }
+
+  @Ignore
+  @Test(expected = IllegalStateException.class)
+  public void testMissingClientNonceWhenQopIsAuthInt() {
+    createChallengeFromRfc2617Example().supportedQopTypes(EnumSet.of(AUTH_INT))
+        .clientNonce(null)
+        .getHeaderValue();
+  }
+
+  @Test
+  public void testMissingClientNonceWhenQopIsDefault() {
+    // CLient nonce need not be specified if qop is not specified
+    createChallengeFromRfc2617Example().supportedQopTypes(EnumSet.of
+        (UNSPECIFIED_RFC2069_COMPATIBLE))
+        .clientNonce(null)
+        .getHeaderValue();
   }
 
   @Test(expected = IllegalStateException.class)
@@ -394,6 +435,27 @@ public class DigestChallengeResponseTest {
     createChallengeFromRfc2617Example().firstRequestClientNonce(null)
         .algorithm("MD5-sess")
         .getHeaderValue();
+  }
+
+  @Test
+  public void testMinimalMissingQopHeader() throws Exception {
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("GET")
+        .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(UNSPECIFIED_RFC2069_COMPATIBLE))
+        .firstRequestClientNonce("cnonce");
+
+    String expectedHeader = "Digest username=\"usr\"," +
+        "realm=\"realm\"," +
+        "nonce=\"nonce\"," +
+        "uri=\"/uri\"," +
+        "response=\"adba5ae6d43ec9d90bae975312318549\"";
+
+    assertHeadersEqual(expectedHeader, response.getHeaderValue());
   }
 
   @Test
@@ -405,6 +467,7 @@ public class DigestChallengeResponseTest {
         .digestUri("/uri")
         .requestMethod("GET")
         .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH))
         .firstRequestClientNonce("cnonce");
 
     String expectedHeader = "Digest username=\"usr\"," +
@@ -420,6 +483,30 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
+  public void testMinimalUnknownQopHeader() throws Exception {
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("GET")
+        .clientNonce("cnonce")
+        .supportedQopTypes(Collections.<DigestChallenge.QualityOfProtection>emptySet())
+        .firstRequestClientNonce("cnonce");
+
+    // Note: If qop is specified but none of the supported qops listed is auth or auth-int,
+    // fallback to RFC 2069 authentication
+
+    String expectedHeader = "Digest username=\"usr\"," +
+        "realm=\"realm\"," +
+        "nonce=\"nonce\"," +
+        "uri=\"/uri\"," +
+        "response=\"adba5ae6d43ec9d90bae975312318549\"";
+
+    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  }
+
+  @Test
   public void testQopAuthHeaderWithMd5Algorithm() throws Exception {
     DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
         .password("pwd")
@@ -428,6 +515,7 @@ public class DigestChallengeResponseTest {
         .digestUri("/uri")
         .requestMethod("GET")
         .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH))
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
@@ -453,6 +541,7 @@ public class DigestChallengeResponseTest {
         .digestUri("/uri")
         .requestMethod("GET")
         .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH))
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5-sess");
 
@@ -479,6 +568,7 @@ public class DigestChallengeResponseTest {
         .digestUri("/uri")
         .requestMethod("GET")
         .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH))
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
@@ -509,6 +599,7 @@ public class DigestChallengeResponseTest {
         .digestUri("/uri")
         .requestMethod("GET")
         .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH))
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
@@ -539,6 +630,7 @@ public class DigestChallengeResponseTest {
         .digestUri("/uri")
         .requestMethod("GET")
         .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH))
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
@@ -569,6 +661,7 @@ public class DigestChallengeResponseTest {
         .digestUri("/uri")
         .requestMethod("GET")
         .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH))
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
@@ -599,6 +692,7 @@ public class DigestChallengeResponseTest {
         .digestUri("/uri")
         .requestMethod("GET")
         .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH))
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5-sess");
 
@@ -629,6 +723,7 @@ public class DigestChallengeResponseTest {
         .digestUri("/uri")
         .requestMethod("GET")
         .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH))
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
@@ -646,6 +741,7 @@ public class DigestChallengeResponseTest {
         .digestUri("/uri")
         .requestMethod("GET")
         .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH))
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5-sess");
 
@@ -688,7 +784,7 @@ public class DigestChallengeResponseTest {
   private DigestChallengeResponse createChallengeFromRfc2617Example() {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
-    return new DigestChallengeResponse().username("Mufasa")
+    DigestChallengeResponse response = new DigestChallengeResponse().username("Mufasa")
         .password("Circle Of Life")
         .quotedRealm("\"testrealm@host.com\"")
         .quotedNonce("\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"")
@@ -696,6 +792,9 @@ public class DigestChallengeResponseTest {
         .requestMethod("GET")
         .nonceCount(1)
         .clientNonce("0a4f113b")
+        .supportedQopTypes(EnumSet.of(AUTH, AUTH_INT))
         .quotedOpaque("\"5ccc069c403ebaf9f0171e9517f40e41\"");
+
+    return response;
   }
 }

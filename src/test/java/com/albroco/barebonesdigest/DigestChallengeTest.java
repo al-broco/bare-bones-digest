@@ -267,7 +267,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
-    assertEquals(EnumSet.of(AUTH), header.getSupportedQualityOfProtectionTypes());
+    assertEquals(EnumSet.of(AUTH), header.getSupportedQopTypes());
   }
 
   @Test
@@ -280,7 +280,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
-    assertEquals(EnumSet.of(AUTH_INT), header.getSupportedQualityOfProtectionTypes());
+    assertEquals(EnumSet.of(AUTH_INT), header.getSupportedQopTypes());
   }
 
   @Test
@@ -293,7 +293,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
-    assertEquals(EnumSet.of(AUTH, AUTH_INT), header.getSupportedQualityOfProtectionTypes());
+    assertEquals(EnumSet.of(AUTH, AUTH_INT), header.getSupportedQopTypes());
   }
 
   @Test
@@ -306,7 +306,7 @@ public class DigestChallengeTest {
 
     assertNotNull(header);
     assertEquals(EnumSet.of(UNSPECIFIED_RFC2069_COMPATIBLE),
-        header.getSupportedQualityOfProtectionTypes());
+        header.getSupportedQopTypes());
   }
 
   @Test
@@ -321,7 +321,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
-    assertEquals(EnumSet.of(AUTH), header.getSupportedQualityOfProtectionTypes());
+    assertEquals(EnumSet.of(AUTH), header.getSupportedQopTypes());
   }
 
   @Test
@@ -334,7 +334,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
-    assertEquals(Collections.emptySet(), header.getSupportedQualityOfProtectionTypes());
+    assertEquals(Collections.emptySet(), header.getSupportedQopTypes());
   }
 
   @Test
@@ -347,7 +347,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
-    assertEquals(EnumSet.of(AUTH), header.getSupportedQualityOfProtectionTypes());
+    assertEquals(EnumSet.of(AUTH), header.getSupportedQopTypes());
   }
 
   @Test
