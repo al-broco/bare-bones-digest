@@ -151,7 +151,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
-    assertEquals("MD5", header.getAlgorithm());
+    assertEquals(null, header.getAlgorithm());
   }
 
   @Test
@@ -372,25 +372,6 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
-  }
-
-  @Test
-  public void testExampleFromRfc2617() throws Exception {
-    // The example below is from Section 3.5 of RC 2617,
-    // https://tools.ietf.org/html/rfc2617#section-3.5
-    String EXAMPLE = "Digest " +
-        "realm=\"testrealm@host.com\", " +
-        "qop=\"auth,auth-int\", " +
-        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
-        "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
-
-    DigestChallenge header = DigestChallenge.parse(EXAMPLE);
-
-    assertNotNull(header);
-    assertEquals("\"testrealm@host.com\"", header.getQuotedRealm());
-    assertEquals("\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"", header.getQuotedNonce());
-    assertEquals("\"5ccc069c403ebaf9f0171e9517f40e41\"", header.getQuotedOpaque());
-    assertEquals("MD5", header.getAlgorithm());
   }
 
   @Test(expected = ChallengeParseHttpDigestException.class)

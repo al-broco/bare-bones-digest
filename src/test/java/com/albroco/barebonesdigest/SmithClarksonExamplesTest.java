@@ -19,9 +19,11 @@ import static junit.framework.Assert.assertTrue;
  */
 public class SmithClarksonExamplesTest {
 
-  @Ignore("Implementation add algorithm=MD5 even if challenge does not specify algorithm")
   @Test
   public void testExampleFromSection3_1AlgorithmAndQopNotSpecified() throws Exception {
+    // Note: Response directive wrong in example, value copied from Section 3.1.3, digest generation
+    // Note: cnonce and nc directives have been removed from the example since they must not be
+    // included if the server did not include a qop in the challenge
     DigestChallenge challenge = DigestChallenge.parse("Digest\n" +
         "           realm=\"biloxi.com\",\n" +
         "           nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\",\n" +
@@ -31,8 +33,8 @@ public class SmithClarksonExamplesTest {
         "           realm=\"biloxi.com\",\n" +
         "           nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\",\n" +
         "           uri=\"sip:bob@biloxi.com\",\n" +
-        "           nc=00000001,\n" +
-        "           cnonce=\"0a4f113b\",\n" +
+        //"           nc=00000001,\n" +
+        //"           cnonce=\"0a4f113b\",\n" +
         //"           response=\"89eb0059246c02b2f6ee02c7961d5ea3\",\n" +
         "           response=\"bf57e4e0d0bffc0fbaedce64d59add5e\",\n" +
         "           opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"";
@@ -46,7 +48,6 @@ public class SmithClarksonExamplesTest {
     assertHeadersEqual(expectedResponse, response.getHeaderValue());
   }
 
-  @Ignore("Implementation add algorithm=MD5 even if challenge does not specify algorithm")
   @Test
   public void testExampleFromSection3_2AuthAndAlgorithmUnspecified() throws Exception {
     DigestChallenge challenge = DigestChallenge.parse("Digest\n" +

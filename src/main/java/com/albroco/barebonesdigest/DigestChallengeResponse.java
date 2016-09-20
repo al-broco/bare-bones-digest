@@ -137,7 +137,8 @@ public class DigestChallengeResponse {
    * Sets the {@code algorithm} directive, which must be the same as the {@code algorithm} directive
    * of the challenge. The only values currently supported are "MD5" and "MD5-sess".
    *
-   * @param algorithm the value of the {@code algorithm} directive
+   * @param algorithm the value of the {@code algorithm} directive or {@code null} to not include an
+   *                  algorithm in the response
    * @return this object so that setters can be chained
    * @throws UnsupportedAlgorithmHttpDigestException if the algorithm is not supported
    * @see #getAlgorithm()

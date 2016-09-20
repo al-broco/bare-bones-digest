@@ -354,7 +354,7 @@ public class DigestChallengeResponseTest {
 
     DigestChallengeResponse response = new DigestChallengeResponse().challenge(challenge);
 
-    assertEquals("MD5", response.getAlgorithm());
+    assertEquals(null, response.getAlgorithm());
     assertEquals("dcd98b7102dd2f0e8b11d0f600bfb0c093", response.getNonce());
     assertEquals("5ccc069c403ebaf9f0171e9517f40e41", response.getOpaque());
     assertEquals("testrealm@host.com", response.getRealm());
@@ -370,7 +370,7 @@ public class DigestChallengeResponseTest {
 
     DigestChallengeResponse response = DigestChallengeResponse.responseTo(challenge);
 
-    assertEquals("MD5", response.getAlgorithm());
+    assertEquals(null, response.getAlgorithm());
     assertEquals("dcd98b7102dd2f0e8b11d0f600bfb0c093", response.getNonce());
     assertEquals("5ccc069c403ebaf9f0171e9517f40e41", response.getOpaque());
     assertEquals("testrealm@host.com", response.getRealm());

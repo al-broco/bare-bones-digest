@@ -1,6 +1,5 @@
 package com.albroco.barebonesdigest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -17,7 +16,6 @@ import static junit.framework.Assert.assertTrue;
  */
 public class Rfc2617ExamplesTest {
 
-  @Ignore("Implementation add algorithm=MD5 even if challenge does not specify algorithm")
   @Test
   public void testExampleFromRfc2069() throws Exception {
     DigestChallenge challenge = DigestChallenge.parse("Digest\n" +

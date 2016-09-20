@@ -149,7 +149,7 @@ public class DigestChallenge {
       String quotedRealm = null;
       String quotedNonce = null;
       String quotedOpaque = null;
-      String algorithm = "MD5";
+      String algorithm = null;
       String qopOptions = null;
       boolean stale = false;
 
@@ -307,8 +307,7 @@ public class DigestChallenge {
   }
 
   /**
-   * Returns the value of the <em>algorithm</em> directive if present, or its default value "MD5" if
-   * not present.
+   * Returns the value of the <em>algorithm</em> directive if present.
    *
    * The algorithm directive is described in
    * <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">Section 3.2.1 of RFC 2617</a>:
@@ -322,8 +321,8 @@ public class DigestChallenge {
    * </dd>
    * </dl>
    *
-   * @return The value of the algorithm directive or the default value "MD5" if the algorithm
-   * directive is not present in the header
+   * @return The value of the algorithm directive or {@code null} if the algorithm directive is
+   * not present in the header
    */
   public String getAlgorithm() {
     return algorithm;
