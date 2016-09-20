@@ -141,9 +141,8 @@ public class SmithClarksonExamplesTest {
     assertHeadersEqual(expectedResponse, response.getHeaderValue());
   }
 
-  @Ignore("auth-int qop not supported")
   @Test
-  public void Section3_5AuthIntAndMd5() throws Exception {
+  public void testExampleFromSection3_5AuthIntAndMd5() throws Exception {
     // Note: Response directive wrong in example, value copied from Section 3.5.3, digest generation
     DigestChallenge challenge = DigestChallenge.parse("Digest\n" +
         "           realm=\"biloxi.com\",\n" +
@@ -182,14 +181,14 @@ public class SmithClarksonExamplesTest {
         .username("bob")
         .password("zanzibar")
         .digestUri("sip:bob@biloxi.com")
-        .requestMethod("INVITE");
+        .requestMethod("INVITE")
+        .entityBody(entityBody.getBytes());
 
     assertHeadersEqual(expectedResponse, response.getHeaderValue());
   }
 
-  @Ignore("auth-int qop not supported")
   @Test
-  public void Section3_6AuthIntAndMd5Sess() throws Exception {
+  public void testExampleFromSection3_6AuthIntAndMd5Sess() throws Exception {
     // Note: Response directive wrong in example, value copied from Section 3.5.3, digest generation
     DigestChallenge challenge = DigestChallenge.parse("Digest\n" +
         "           realm=\"biloxi.com\",\n" +
@@ -228,7 +227,8 @@ public class SmithClarksonExamplesTest {
         .username("bob")
         .password("zanzibar")
         .digestUri("sip:bob@biloxi.com")
-        .requestMethod("INVITE");
+        .requestMethod("INVITE")
+        .entityBody(entityBody.getBytes());
 
     assertHeadersEqual(expectedResponse, response.getHeaderValue());
   }

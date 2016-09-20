@@ -1,6 +1,5 @@
 package com.albroco.barebonesdigest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -17,6 +16,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotEquals;
 
 public class DigestChallengeResponseTest {
@@ -345,6 +345,55 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
+  public void testGetAndSetEntityBodyDigest() {
+    assertArrayEquals(new byte[]{1, 2, 3},
+        new DigestChallengeResponse().entityBodyDigest(new byte[]{1, 2, 3}).getEntityBodyDigest());
+  }
+
+  @Test
+  public void testEntityBodyDigestDefaultValue() {
+    assertNull(new DigestChallengeResponse().getEntityBodyDigest());
+  }
+
+  @Test
+  public void testUnsetEntityBodyDigest() {
+    assertNull(new DigestChallengeResponse().entityBodyDigest(new byte[3])
+        .entityBodyDigest(null)
+        .getEntityBodyDigest());
+  }
+
+  @Test
+  public void testEntityBodyDigestReturnedIsNotInternalRepresentation() {
+    DigestChallengeResponse response = new DigestChallengeResponse();
+    byte[] bytes = response.entityBodyDigest(new byte[]{1, 2, 3}).getEntityBodyDigest();
+    bytes[0]++;
+    assertArrayEquals(new byte[]{1, 2, 3}, response.getEntityBodyDigest());
+  }
+
+  @Test
+  public void testEntityBodyDigestSetMakesACopy() {
+    byte[] bytes = new byte[]{1, 2, 3};
+    DigestChallengeResponse response = new DigestChallengeResponse();
+    response.entityBodyDigest(bytes);
+    bytes[0]++;
+    assertArrayEquals(new byte[]{1, 2, 3}, response.getEntityBodyDigest());
+  }
+
+  @Test
+  public void testSetEntityBodyGetEntityBodyDigest() {
+    assertArrayEquals(new byte[]{82, -119, -33, 115, 125, -11, 115, 38, -4, -35, 34, 89, 122, -5,
+            31, -84},
+        new DigestChallengeResponse().entityBody(new byte[]{1, 2, 3}).getEntityBodyDigest());
+  }
+
+  @Test
+  public void testUnsetEntityBody() {
+    assertNull(new DigestChallengeResponse().entityBodyDigest(new byte[3])
+        .entityBody(null)
+        .getEntityBodyDigest());
+  }
+
+  @Test
   public void testSetChallenge() throws Exception {
     DigestChallenge challenge = DigestChallenge.parse("Digest " +
         "realm=\"testrealm@host.com\", " +
@@ -413,10 +462,10 @@ public class DigestChallengeResponseTest {
         .getHeaderValue();
   }
 
-  @Ignore
   @Test(expected = IllegalStateException.class)
   public void testMissingClientNonceWhenQopIsAuthInt() {
     createChallengeFromRfc2617Example().supportedQopTypes(EnumSet.of(AUTH_INT))
+        .entityBody(new byte[0])
         .clientNonce(null)
         .getHeaderValue();
   }
@@ -477,6 +526,62 @@ public class DigestChallengeResponseTest {
         "cnonce=\"cnonce\"";
 
     assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  }
+
+  @Test
+  public void testMinimalQopAuthIntHeader() throws Exception {
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("POST")
+        .entityBody(new byte[0])
+        .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH_INT))
+        .firstRequestClientNonce("cnonce");
+
+    String expectedHeader = "Digest username=\"usr\"," +
+        "realm=\"realm\"," +
+        "nonce=\"nonce\"," +
+        "uri=\"/uri\"," +
+        "qop=auth-int," +
+        "response=\"47679b2a05a94bdd675fb8503dab1910\"," +
+        "nc=00000001," +
+        "cnonce=\"cnonce\"";
+
+    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  }
+
+  @Test
+  public void testPreferAuthIntOverAuthIfEntityBodyIsSpecified() throws Exception {
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("POST")
+        .entityBody(new byte[0])
+        .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH, AUTH_INT))
+        .firstRequestClientNonce("cnonce");
+
+    assertEquals("auth-int", directiveFromHeader(response.getHeaderValue(), "qop"));
+  }
+
+  @Test
+  public void testPreferAuthOverAuthIntIfEntityBodyIsNotSpecified() throws Exception {
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("POST")
+        .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH, AUTH_INT))
+        .firstRequestClientNonce("cnonce");
+
+    assertEquals("auth", directiveFromHeader(response.getHeaderValue(), "qop"));
   }
 
   @Test
@@ -569,21 +674,12 @@ public class DigestChallengeResponseTest {
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
-    response.getHeaderValue();
+    String responseBeforeChange = directiveFromHeader(response.getHeaderValue(), "response");
 
     response.algorithm("MD5-sess");
 
-    String expectedHeader = "Digest username=\"usr\"," +
-        "realm=\"realm\"," +
-        "nonce=\"nonce\"," +
-        "uri=\"/uri\"," +
-        "qop=auth," +
-        "response=\"e9d2f4f7939312353ee18da867fb4ec2\"," +
-        "nc=00000001," +
-        "cnonce=\"cnonce\"," +
-        "algorithm=MD5-sess";
-
-    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+    assertNotEquals(responseBeforeChange,
+        directiveFromHeader(response.getHeaderValue(), "response"));
   }
 
   @Test
@@ -600,21 +696,12 @@ public class DigestChallengeResponseTest {
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
-    response.getHeaderValue();
+    String responseBeforeChange = directiveFromHeader(response.getHeaderValue(), "response");
 
     response.username("new user");
 
-    String expectedHeader = "Digest username=\"new user\"," +
-        "realm=\"realm\"," +
-        "nonce=\"nonce\"," +
-        "uri=\"/uri\"," +
-        "qop=auth," +
-        "response=\"82bc97801cb7ef79b8f5606fc1f62fc6\"," +
-        "nc=00000001," +
-        "cnonce=\"cnonce\"," +
-        "algorithm=MD5";
-
-    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+    assertNotEquals(responseBeforeChange,
+        directiveFromHeader(response.getHeaderValue(), "response"));
   }
 
   @Test
@@ -631,21 +718,12 @@ public class DigestChallengeResponseTest {
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
-    response.getHeaderValue();
+    String responseBeforeChange = directiveFromHeader(response.getHeaderValue(), "response");
 
     response.password("new password");
 
-    String expectedHeader = "Digest username=\"usr\"," +
-        "realm=\"realm\"," +
-        "nonce=\"nonce\"," +
-        "uri=\"/uri\"," +
-        "qop=auth," +
-        "response=\"f8227f462d3661a0c4f0c76c449ef453\"," +
-        "nc=00000001," +
-        "cnonce=\"cnonce\"," +
-        "algorithm=MD5";
-
-    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+    assertNotEquals(responseBeforeChange,
+        directiveFromHeader(response.getHeaderValue(), "response"));
   }
 
   @Test
@@ -662,21 +740,12 @@ public class DigestChallengeResponseTest {
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
-    response.getHeaderValue();
+    String responseBeforeChange = directiveFromHeader(response.getHeaderValue(), "response");
 
     response.clientNonce("changed cnonce").firstRequestClientNonce("changed cnonce");
 
-    String expectedHeader = "Digest username=\"usr\"," +
-        "realm=\"realm\"," +
-        "nonce=\"nonce\"," +
-        "uri=\"/uri\"," +
-        "qop=auth," +
-        "response=\"60ac57635a413e9eee16345af309d76f\"," +
-        "nc=00000001," +
-        "cnonce=\"changed cnonce\"," +
-        "algorithm=MD5";
-
-    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+    assertNotEquals(responseBeforeChange,
+        directiveFromHeader(response.getHeaderValue(), "response"));
   }
 
   @Test
@@ -693,21 +762,33 @@ public class DigestChallengeResponseTest {
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5-sess");
 
-    response.getHeaderValue();
+    String responseBeforeChange = directiveFromHeader(response.getHeaderValue(), "response");
 
     response.clientNonce("changed cnonce").firstRequestClientNonce("changed cnonce");
 
-    String expectedHeader = "Digest username=\"usr\"," +
-        "realm=\"realm\"," +
-        "nonce=\"nonce\"," +
-        "uri=\"/uri\"," +
-        "qop=auth," +
-        "response=\"29ff1aeb8a555477e872cc6cfac3a187\"," +
-        "nc=00000001," +
-        "cnonce=\"changed cnonce\"," +
-        "algorithm=MD5-sess";
+    assertNotEquals(responseBeforeChange,
+        directiveFromHeader(response.getHeaderValue(), "response"));
+  }
 
-    assertHeadersEqual(expectedHeader, response.getHeaderValue());
+  @Test
+  public void testMd5SessResponseChangesIfNonceChanges() throws Exception {
+    // This might seem redundant but tests that A1 (and other values) is not cached too aggressively
+    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
+        .password("pwd")
+        .realm("realm")
+        .nonce("nonce")
+        .digestUri("/uri")
+        .requestMethod("GET")
+        .clientNonce("cnonce")
+        .supportedQopTypes(EnumSet.of(AUTH))
+        .firstRequestClientNonce("cnonce")
+        .algorithm("MD5-sess");
+
+    response.nonce("changed cnonce");
+    // Note: Check the actual value to make sure A1 has not been cached and it is computed in thw
+    // wrong way
+    assertEquals("\"9a5f5b2b54591dec14ef57762dfa1131\"",
+        directiveFromHeader(response.getHeaderValue(), "response"));
   }
 
   @Test
@@ -724,8 +805,11 @@ public class DigestChallengeResponseTest {
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5");
 
-    String headerValue = response.getHeaderValue();
-    assertEquals(headerValue, response.firstRequestClientNonce("changed cnonce").getHeaderValue());
+    String responseBeforeChange = directiveFromHeader(response.getHeaderValue(), "response");
+
+    response.firstRequestClientNonce("changed cnonce");
+
+    assertEquals(responseBeforeChange, directiveFromHeader(response.getHeaderValue(), "response"));
   }
 
   @Test
@@ -742,20 +826,12 @@ public class DigestChallengeResponseTest {
         .firstRequestClientNonce("cnonce")
         .algorithm("MD5-sess");
 
-    String headerValue = response.getHeaderValue();
-    assertNotEquals(headerValue,
-        response.firstRequestClientNonce("changed cnonce").getHeaderValue());
-  }
+    String responseBeforeChange = directiveFromHeader(response.getHeaderValue(), "response");
 
-  private void assertHeadersEqual(String expectedHeader, String generatedHeader) {
-    assertTrue(generatedHeader.startsWith("Digest "));
+    response.firstRequestClientNonce("changed cnonce");
 
-    Set<String> expectedSubstrings =
-        new HashSet<>(Arrays.asList(expectedHeader.substring("Digest ".length()).split(",")));
-    Set<String> actualSubstrings =
-        new HashSet<>(Arrays.asList(generatedHeader.substring("Digest ".length()).split(",")));
-
-    assertEquals(expectedSubstrings, actualSubstrings);
+    assertNotEquals(responseBeforeChange,
+        directiveFromHeader(response.getHeaderValue(), "response"));
   }
 
   private DigestChallengeResponse createChallengeFromRfc2617Example() {
@@ -788,5 +864,25 @@ public class DigestChallengeResponseTest {
         .opaque("5ccc069c403ebaf9f0171e9517f40e41");
 
     return response;
+  }
+
+  private void assertHeadersEqual(String expectedHeader, String generatedHeader) {
+    assertEquals(directiveAssignmentsFromHeader(expectedHeader),
+        directiveAssignmentsFromHeader(generatedHeader));
+  }
+
+  private String directiveFromHeader(String header, String directive) {
+    String prefix = directive + "=";
+    for (String assingment : directiveAssignmentsFromHeader(header)) {
+      if (assingment.startsWith(prefix)) {
+        return assingment.substring(prefix.length());
+      }
+    }
+    return null;
+  }
+
+  private Set<String> directiveAssignmentsFromHeader(String header) {
+    assertTrue(header.startsWith("Digest "));
+    return new HashSet<>(Arrays.asList(header.substring("Digest ".length()).split(",")));
   }
 }

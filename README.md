@@ -104,4 +104,4 @@ To implement HTTP digest with this library, do the following:
 * `WWW-Authenticate` headers containing multiple challenges is poorly
   supported. Extracting the HTTP digest challenge, if any, from such a
   header is currently left to the user of the library.
-* Only `auth-int` quality of protection is not supported, only `auth`.
+

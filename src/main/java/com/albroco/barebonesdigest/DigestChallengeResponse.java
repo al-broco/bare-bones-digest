@@ -7,6 +7,7 @@ import com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -23,12 +24,9 @@ import java.util.Set;
  * <ul>
  * <li>The {@link #username(String) username} and {@link #password(String) password} for
  * authentication.</li>
- * <li>The {@link #digestUri(String) digestUri} used in the HTTP request.</li>
+ * <li>The {@link #digestUri(String) digest-uri} used in the HTTP request.</li>
  * <li>The {@link #requestMethod(String) request method} of the request, such as "GET" or "POST".
- * </li>
  * </ul>
- * <p>
- *
  * Here is an example of how to create a response:
  * <pre>
  * {@code
@@ -54,6 +52,15 @@ import java.util.Set;
  * }
  * </pre>
  *
+ * <h2>Supporting {@code auth-int} quality of protection (optional, rarely used)</h2>
+ *
+ * With {@code auth-int} quality of protection the challenge response includes a hash of the
+ * request's {@code entity-body}, which provides some protection from man-in-the-middle attacks.
+ * Not all requests include an {@code entity-body}, PUT and POST do but GET does not. To support
+ * {@code auth-int}, you must set either the MD5 hash of the {@code entity-body} (using
+ * {@link #entityBodyDigest(byte[])}) or the {@code entity-body} itself (using
+ * {@link #entityBody(byte[])}).
+ *
  * <h2>Overriding the default client nonce (not recommended)</h2>
  *
  * The client nonce is a random string set by the client that is included in the challenge response.
@@ -63,12 +70,6 @@ import java.util.Set;
  * If you still for some reason need to override the default client nonce you can set it using
  * {@link #clientNonce(String)}. You may also have to call {@link #firstRequestClientNonce(String)},
  * see the documentation of thet method for details.
- *
- * <h2>Limitations</h2>
- *
- * <ul>
- * <li>Quality of protection (qop) {@code auth-int} is not supported.</li>
- * </ul>
  *
  * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">RFC 2617, "HTTP Digest Access
  * Authentication", Section 3.2.2, "The Authorization Request Header"</a>
@@ -98,6 +99,7 @@ public class DigestChallengeResponse {
   private String digestUri;
   private String quotedRealm;
   private String requestMethod;
+  private byte[] entityBodyDigest;
   private String A1;
 
   /**
@@ -519,7 +521,10 @@ public class DigestChallengeResponse {
    * Normally, this value is sent by the server in the challenge, but setting it manually can be
    * used to force a particular qop type. Actual qop type in the response is chosen as follows:
    * <ol>
-   * <li>If {@link QualityOfProtection#AUTH} is supported it is used.</li>
+   * <li>If {@link QualityOfProtection#AUTH_INT} is supported and the digest of the
+   * {@code entity-body} has been set (see {@link #entityBodyDigest(byte[])} and
+   * {@link #entityBody(byte[])}), {@link QualityOfProtection#AUTH_INT} is used.</li>
+   * <li>Otherwise, if {@link QualityOfProtection#AUTH} is supported it is used.</li>
    * <li>Otherwise, if {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE} is supported it
    * is used.</li>
    * <li>Otherwise, there is no way to generate a response to the challenge without violating the
@@ -682,6 +687,88 @@ public class DigestChallengeResponse {
   }
 
   /**
+   * Sets the {@code entity-body} of the request, which is only used for the "auth-int" quality of
+   * protection.
+   * <p>
+   * With "auth-int" quality of protection, the whole {@code entity-body} of the message is
+   * hashed and included in the response, providing some protection against tampering.
+   * <p>
+   * The {@code entity-body} is not the same as the {@code message-body} as explained in
+   * <a href="https://tools.ietf.org/html/rfc2616#section-7.2">RFC 2616, Section 7.2:</a>
+   * <blockquote>
+   * [&hellip;]The entity-body is obtained from the message-body by decoding any
+   * Transfer-Encoding that might have been applied to ensure safe and proper transfer of the
+   * message.
+   * </blockquote>
+   * So if, for example, {@code Transfer-Encoding} is {@code gzip}, the {@code entity-body} is the
+   * unzipped message and the {@code message-body} is the gzipped message.
+   * <p>
+   * Not all requests include an {@code entity-body}, as explained in
+   * <a href="https://tools.ietf.org/html/rfc2616#section-4.3">RFC 2616, Section 4.3:</a>
+   * <blockquote>
+   * [&hellip;]The presence of a message-body in a request is signaled by the inclusion of a
+   * Content-Length or Transfer-Encoding header field in the request's message-headers.[&hellip;]
+   * </blockquote>
+   * In particular, PUT and POST requests include an {@code entity-body} (although it may be of
+   * zero length), GET requests do not.
+   *
+   * @param entityBody the {@code entity-body}
+   * @return this object so that setters can be chained
+   * @see #entityBodyDigest(byte[])
+   */
+  public DigestChallengeResponse entityBody(byte[] entityBody) {
+    if (entityBody != null) {
+      entityBodyDigest = calculateChecksum(entityBody);
+    } else {
+      entityBodyDigest = null;
+    }
+
+    return this;
+  }
+
+  /**
+   * Sets the MD5 digest of the {@code entity-body} of the request, which is only used for the
+   * "auth-int" quality of protection.
+   * <p>
+   * Note that the {@code entity-body} is not the same as the {@code message-body}. See
+   * {@link #entityBody(byte[])} for details.
+   * <p>
+   * Here is an example of how to compute the MD5 digest of an entity body:
+   * <pre>
+   * {@code
+   * MessageDigest digest = MessageDigest.getInstance("MD5");
+   * md5.update(entityBody);
+   * byte[] digest = md5.digest();
+   * }
+   * </pre>
+   *
+   * @param entityBodyDigest the MD5 checksum of the {@code entity-body}
+   * @return this object so that setters can be chained
+   * @see #entityBody(byte[])
+   */
+  public DigestChallengeResponse entityBodyDigest(byte[] entityBodyDigest) {
+    if (entityBodyDigest != null) {
+      this.entityBodyDigest = Arrays.copyOf(entityBodyDigest, entityBodyDigest.length);
+    } else {
+      this.entityBodyDigest = null;
+    }
+
+    return this;
+  }
+
+  /**
+   * Returns the MD5 digest of the {@code entity-body}.
+   *
+   * @return the MD5 digest of the {@code entity-body}
+   */
+  public byte[] getEntityBodyDigest() {
+    if (entityBodyDigest == null) {
+      return null;
+    }
+    return Arrays.copyOf(entityBodyDigest, entityBodyDigest.length);
+  }
+
+  /**
    * Sets the values of the {@code realm}, {@code nonce}, {@code opaque}, and {@code algorithm}
    * directives and the supported quality of protection types based on a challenge.
    *
@@ -829,6 +916,10 @@ public class DigestChallengeResponse {
   }
 
   private QualityOfProtection selectQop() {
+    if (supportedQopTypes.contains(QualityOfProtection.AUTH_INT) && this.entityBodyDigest != null) {
+      return QualityOfProtection.AUTH_INT;
+    }
+
     if (supportedQopTypes.contains(QualityOfProtection.AUTH)) {
       return QualityOfProtection.AUTH;
     }
@@ -847,7 +938,7 @@ public class DigestChallengeResponse {
 
   private String calculateResponse(QualityOfProtection qop) {
     String a1 = getA1();
-    String a2 = calculateA2();
+    String a2 = calculateA2(qop);
     String secret = H(a1);
     String data = "";
 
@@ -857,7 +948,7 @@ public class DigestChallengeResponse {
         data = joinWithColon(getNonce(),
             String.format("%08x", nonceCount),
             getClientNonce(),
-            "auth",
+            qop.getQopValue(),
             H(a2));
         break;
       case UNSPECIFIED_RFC2069_COMPATIBLE: {
@@ -892,9 +983,11 @@ public class DigestChallengeResponse {
     A1 = null;
   }
 
-  private String calculateA2() {
-    // TODO: Below calculation if if qop is auth or unspecified
-    // TODO: Support auth-int qop
+  private String calculateA2(QualityOfProtection qop) {
+    if (qop == QualityOfProtection.AUTH_INT) {
+      return joinWithColon(requestMethod, digestUri, encodeHexString(entityBodyDigest));
+    }
+
     return joinWithColon(requestMethod, digestUri);
   }
 
@@ -925,10 +1018,14 @@ public class DigestChallengeResponse {
    * @return the value of <em>H(string)</em>
    */
   private String H(String string) {
-    md5.reset();
     // TODO find out which encoding to use
-    md5.update(string.getBytes());
-    return encodeHexString(md5.digest());
+    return encodeHexString(calculateChecksum(string.getBytes()));
+  }
+
+  private byte[] calculateChecksum(byte[] data) {
+    md5.reset();
+    md5.update(data);
+    return md5.digest();
   }
 
   /**
