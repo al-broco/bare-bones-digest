@@ -528,7 +528,6 @@ public class DigestChallengeResponse {
    * <li>Otherwise, there is no way to generate a response to the challenge without violating the
    * standard. As a fallback, use {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE}.</li>
    * </ol>
-   * Note that {@link QualityOfProtection#AUTH_INT} is not yet supported.
    *
    * @param supportedQopTypes the types of quality of protection that the server supports
    * @return this object so that setters can be chained
