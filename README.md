@@ -34,10 +34,9 @@ anyway here are some possible approaches:
   digest, but you can use a third-party authenticator such as
   [okhttp-digest](https://github.com/rburgst/okhttp-digest).
 
-If you only need basic HTTP digest functionality the approaches above
-may be overkill. This library can help you implement HTTP digest on
-top of `HttpURLConnection` (or some other HTTP stack) without too much
-trouble.
+If none of the approaches above suit your needs you can use this
+library to implement HTTP digest on top of `HttpURLConnection` (or
+some other HTTP stack) without too much trouble.
 
 ## How?
 
