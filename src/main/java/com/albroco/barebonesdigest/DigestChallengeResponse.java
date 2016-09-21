@@ -71,6 +71,11 @@ import java.util.Set;
  * {@link #clientNonce(String)}. You may also have to call {@link #firstRequestClientNonce(String)},
  * see the documentation of thet method for details.
  *
+ * <h2>Thread safety</h2>
+ *
+ * This class is not thread safe. Manipulating an instance from different threads will result in
+ * undefined behaviour.
+ *
  * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">RFC 2617, "HTTP Digest Access
  * Authentication", Section 3.2.2, "The Authorization Request Header"</a>
  */

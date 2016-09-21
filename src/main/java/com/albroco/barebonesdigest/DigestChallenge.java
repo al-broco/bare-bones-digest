@@ -25,6 +25,10 @@ import java.util.regex.Pattern;
  * and surrounding quotes removed). Quoting is defined in
  * <a href="https://tools.ietf.org/html/rfc2616#section-2.2"> RFC 2616, Section 2.2</a>.
  *
+ * <h2>Thread safety</h2>
+ *
+ * This class is not thread safe.
+ *
  * <h2>Limitations</h2>
  *
  * All values are parsed but not all values are stored. In particular, the following is not stored:
