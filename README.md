@@ -93,6 +93,13 @@ To implement HTTP digest with this library, do the following:
   each use, call `incrementNonceCount` and (optionally)
   `randomizeClientNonce` to correctly configure.
 
+## Features
+
+* Supports `MD5` and `MD5-sess` algorithms.
+* Supports `auth`, `auth-int` and RFC2069 quality of protection.
+* Somewhat lenient parsing, where common server mistakes (such as not
+  quoting the `qop` directive) does not cause the parsing to fail.
+
 ## Limitations
 
 * The implementation is based on [RFC
@@ -104,4 +111,3 @@ To implement HTTP digest with this library, do the following:
 * `WWW-Authenticate` headers containing multiple challenges is poorly
   supported. Extracting the HTTP digest challenge, if any, from such a
   header is currently left to the user of the library.
-
