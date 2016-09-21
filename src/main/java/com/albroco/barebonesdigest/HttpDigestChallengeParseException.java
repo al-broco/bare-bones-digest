@@ -3,14 +3,14 @@ package com.albroco.barebonesdigest;
 /**
  * Indicates that a HTTP digest challenge could not be parsed because it is malformed.
  */
-public class ChallengeParseHttpDigestException extends HttpDigestException {
+public class HttpDigestChallengeParseException extends HttpDigestException {
   /**
-   * Constructs a new {@code ChallengeParseHttpDigestException} with its stack trace and detail
+   * Constructs a new {@code HttpDigestChallengeParseException} with its stack trace and detail
    * message filled in.
    *
    * @param detailMessage the detail message for this exception.
    */
-  public ChallengeParseHttpDigestException(String detailMessage) {
+  public HttpDigestChallengeParseException(String detailMessage) {
     super(detailMessage);
   }
 
@@ -20,7 +20,7 @@ public class ChallengeParseHttpDigestException extends HttpDigestException {
    * @param message The detail message for the exception.
    * @param cause   The detail cause for the exception.
    */
-  public ChallengeParseHttpDigestException(String message, Throwable cause) {
+  public HttpDigestChallengeParseException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -29,7 +29,7 @@ public class ChallengeParseHttpDigestException extends HttpDigestException {
    *
    * @param cause The detail cause for the exception.
    */
-  public ChallengeParseHttpDigestException(Throwable cause) {
+  public HttpDigestChallengeParseException(Throwable cause) {
     super(cause);
   }
 }

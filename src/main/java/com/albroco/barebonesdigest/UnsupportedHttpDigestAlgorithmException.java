@@ -4,14 +4,14 @@ package com.albroco.barebonesdigest;
  * Indicates that no response can be generated to a challenge since the challenge uses an
  * unsupported algorithm.
  */
-public class UnsupportedAlgorithmHttpDigestException extends HttpDigestException {
+public class UnsupportedHttpDigestAlgorithmException extends HttpDigestException {
   /**
-   * Constructs a new {@code UnsupportedAlgorithmHttpDigestException} with its stack trace and
+   * Constructs a new {@code UnsupportedHttpDigestAlgorithmException} with its stack trace and
    * detail message filled in.
    *
    * @param detailMessage the detail message for this exception.
    */
-  public UnsupportedAlgorithmHttpDigestException(String detailMessage) {
+  public UnsupportedHttpDigestAlgorithmException(String detailMessage) {
     super(detailMessage);
   }
 
@@ -21,7 +21,7 @@ public class UnsupportedAlgorithmHttpDigestException extends HttpDigestException
    * @param message The detail message for the exception.
    * @param cause   The detail cause for the exception.
    */
-  public UnsupportedAlgorithmHttpDigestException(String message, Throwable cause) {
+  public UnsupportedHttpDigestAlgorithmException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -30,7 +30,7 @@ public class UnsupportedAlgorithmHttpDigestException extends HttpDigestException
    *
    * @param cause The detail cause for the exception.
    */
-  public UnsupportedAlgorithmHttpDigestException(Throwable cause) {
+  public UnsupportedHttpDigestAlgorithmException(Throwable cause) {
     super(cause);
   }
 }

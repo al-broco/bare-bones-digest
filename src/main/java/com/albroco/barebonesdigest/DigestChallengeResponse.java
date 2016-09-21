@@ -127,11 +127,10 @@ public class DigestChallengeResponse {
    *
    * @param challenge the challenge
    * @return a response to the challenge.
-   * @throws UnsupportedAlgorithmHttpDigestException if the challenge uses an algorithm that is
+   * @throws UnsupportedHttpDigestAlgorithmException if the challenge uses an algorithm that is
    *                                                 not supported
    */
-  public static DigestChallengeResponse responseTo(DigestChallenge challenge) throws
-      UnsupportedAlgorithmHttpDigestException {
+  public static DigestChallengeResponse responseTo(DigestChallenge challenge) throws UnsupportedHttpDigestAlgorithmException {
     return new DigestChallengeResponse().challenge(challenge);
   }
 
@@ -142,14 +141,13 @@ public class DigestChallengeResponse {
    * @param algorithm the value of the {@code algorithm} directive or {@code null} to not include an
    *                  algorithm in the response
    * @return this object so that setters can be chained
-   * @throws UnsupportedAlgorithmHttpDigestException if the algorithm is not supported
+   * @throws UnsupportedHttpDigestAlgorithmException if the algorithm is not supported
    * @see #getAlgorithm()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse algorithm(String algorithm) throws
-      UnsupportedAlgorithmHttpDigestException {
+  public DigestChallengeResponse algorithm(String algorithm) throws UnsupportedHttpDigestAlgorithmException {
     if (algorithm != null && !"MD5".equals(algorithm) && !"MD5-sess".equals(algorithm)) {
-      throw new UnsupportedAlgorithmHttpDigestException("Unsupported algorithm: " + algorithm);
+      throw new UnsupportedHttpDigestAlgorithmException("Unsupported algorithm: " + algorithm);
     }
 
     this.algorithm = algorithm;
@@ -774,11 +772,10 @@ public class DigestChallengeResponse {
    *
    * @param challenge the challenge
    * @return this object so that setters can be chained
-   * @throws UnsupportedAlgorithmHttpDigestException if the challenge uses an algorithm that is
+   * @throws UnsupportedHttpDigestAlgorithmException if the challenge uses an algorithm that is
    *                                                 not supported
    */
-  public DigestChallengeResponse challenge(DigestChallenge challenge) throws
-      UnsupportedAlgorithmHttpDigestException {
+  public DigestChallengeResponse challenge(DigestChallenge challenge) throws UnsupportedHttpDigestAlgorithmException {
     return quotedNonce(challenge.getQuotedNonce()).quotedOpaque(challenge.getQuotedOpaque())
         .quotedRealm(challenge.getQuotedRealm())
         .algorithm(challenge.getAlgorithm())

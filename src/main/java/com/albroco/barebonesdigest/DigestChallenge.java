@@ -134,12 +134,11 @@ public class DigestChallenge {
    *
    * @param challengeString the challenge as a string
    * @return the parsed challenge
-   * @throws ChallengeParseHttpDigestException if the challenge is malformed
+   * @throws HttpDigestChallengeParseException if the challenge is malformed
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">RFC 2617, Section 3.2.1, The
    * WWW-Authenticate Response Header</a>
    */
-  public static DigestChallenge parse(String challengeString) throws
-      ChallengeParseHttpDigestException {
+  public static DigestChallenge parse(String challengeString) throws HttpDigestChallengeParseException {
     // see https://tools.ietf.org/html/rfc7235#section-4.1
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser(challengeString);
     try {
@@ -230,11 +229,11 @@ public class DigestChallenge {
       }
 
       if (quotedRealm == null) {
-        throw new ChallengeParseHttpDigestException(
+        throw new HttpDigestChallengeParseException(
             "Missing directive 'realm' for challenge: " + challengeString);
       }
       if (quotedNonce == null) {
-        throw new ChallengeParseHttpDigestException(
+        throw new HttpDigestChallengeParseException(
             "Missing directive 'nonce' for challenge: " + challengeString);
       }
 
@@ -245,7 +244,7 @@ public class DigestChallenge {
           parseSupportedQopsFromQopOptions(qopOptions),
           stale);
     } catch (Rfc2616AbnfParser.ParseException e) {
-      throw new ChallengeParseHttpDigestException("Malformed challenge: " + challengeString, e);
+      throw new HttpDigestChallengeParseException("Malformed challenge: " + challengeString, e);
     }
   }
 
