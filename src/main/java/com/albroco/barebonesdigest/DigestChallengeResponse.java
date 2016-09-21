@@ -11,8 +11,6 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
-;
-
 /**
  * Describes the contents of an {@code Authorization} HTTP request header. Once the client has
  * received a HTTP Digest challenge from the server this header should be included in all subsequent
