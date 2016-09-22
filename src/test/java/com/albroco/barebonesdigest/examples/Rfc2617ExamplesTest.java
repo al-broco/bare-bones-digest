@@ -1,4 +1,7 @@
-package com.albroco.barebonesdigest;
+package com.albroco.barebonesdigest.examples;
+
+import com.albroco.barebonesdigest.DigestChallenge;
+import com.albroco.barebonesdigest.DigestChallengeResponse;
 
 import org.junit.Test;
 
