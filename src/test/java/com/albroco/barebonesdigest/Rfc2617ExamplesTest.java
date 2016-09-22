@@ -2,13 +2,7 @@ package com.albroco.barebonesdigest;
 
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static com.albroco.barebonesdigest.DigestTestUtils.assertHeadersEqual;
 
 /**
  * Tests the example from <a href="https://tools.ietf.org/html/rfc2617#section-3.5">Section 3.5 of
@@ -43,20 +37,5 @@ public class Rfc2617ExamplesTest {
         .requestMethod("GET");
 
     assertHeadersEqual(expectedResponse, response.getHeaderValue());
-  }
-
-  private void assertHeadersEqual(String expectedHeader, String generatedHeader) {
-    assertTrue(generatedHeader.startsWith("Digest "));
-
-    // Remove redundant newlines and spaces
-    expectedHeader =
-        Pattern.compile("\n *", Pattern.MULTILINE).matcher(expectedHeader).replaceAll("");
-
-    Set<String> expectedSubstrings =
-        new HashSet<>(Arrays.asList(expectedHeader.substring("Digest ".length()).split(",")));
-    Set<String> actualSubstrings =
-        new HashSet<>(Arrays.asList(generatedHeader.substring("Digest ".length()).split(",")));
-
-    assertEquals(expectedSubstrings, actualSubstrings);
   }
 }

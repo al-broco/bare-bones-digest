@@ -842,41 +842,35 @@ public class DigestChallengeResponse {
     // username-value   = quoted-string
     result.append("username=");
     result.append(Rfc2616AbnfParser.quote(username));
-    result.append(",");
 
     // Realm is defined in RFC 2617, Section 1.2
     // realm       = "realm" "=" realm-value
     // realm-value = quoted-string
-    result.append("realm=");
+    result.append(",realm=");
     result.append(quotedRealm);
-    result.append(",");
 
     // nonce             = "nonce" "=" nonce-value
     // nonce-value       = quoted-string
-    result.append("nonce=");
+    result.append(",nonce=");
     result.append(quotedNonce);
-    result.append(",");
 
     // digest-uri       = "uri" "=" digest-uri-value
     // digest-uri-value = request-uri   ; As specified by HTTP/1.1
-    result.append("uri=");
+    result.append(",uri=");
     result.append(Rfc2616AbnfParser.quote(digestUri));
-    result.append(",");
 
     // Response is defined in RFC 2617, Section 3.2.2 and 3.2.2.1
     // response         = "response" "=" request-digest
-    result.append("response=");
+    result.append(",response=");
     result.append(response);
-    result.append(",");
 
     // cnonce is defined in RFC 2617, Section 3.2.2
     // cnonce           = "cnonce" "=" cnonce-value
     // cnonce-value     = nonce-value
     // Must be present if qop is specified, must not if qop is unspecified
     if (qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
-      result.append("cnonce=");
+      result.append(",cnonce=");
       result.append(Rfc2616AbnfParser.quote(getClientNonce()));
-      result.append(",");
     }
 
     // Opaque and algorithm are explained in Section 3.2.2 of RFC 2617:
@@ -885,21 +879,18 @@ public class DigestChallengeResponse {
     // requested."
 
     if (quotedOpaque != null) {
-      result.append("opaque=");
+      result.append(",opaque=");
       result.append(quotedOpaque);
-      result.append(",");
     }
 
     if (algorithm != null) {
-      result.append("algorithm=");
+      result.append(",algorithm=");
       result.append(algorithm);
-      result.append(",");
     }
 
     if (qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
-      result.append("qop=");
+      result.append(",qop=");
       result.append(qop.getQopValue());
-      result.append(",");
     }
 
     // Nonce count is defined in RFC 2617, Section 3.2.2
@@ -907,7 +898,7 @@ public class DigestChallengeResponse {
     // nc-value         = 8LHEX (lower case hex)
     // Must be present if qop is specified, must not if qop is unspecified
     if (qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
-      result.append("nc=");
+      result.append(",nc=");
       result.append(String.format("%08x", nonceCount));
     }
 

@@ -2,12 +2,11 @@ package com.albroco.barebonesdigest;
 
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Set;
 
+import static com.albroco.barebonesdigest.DigestTestUtils.assertHeadersEqual;
+import static com.albroco.barebonesdigest.DigestTestUtils.directiveFromHeader;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH_INT;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
@@ -864,25 +863,5 @@ public class DigestChallengeResponseTest {
         .opaque("5ccc069c403ebaf9f0171e9517f40e41");
 
     return response;
-  }
-
-  private void assertHeadersEqual(String expectedHeader, String generatedHeader) {
-    assertEquals(directiveAssignmentsFromHeader(expectedHeader),
-        directiveAssignmentsFromHeader(generatedHeader));
-  }
-
-  private String directiveFromHeader(String header, String directive) {
-    String prefix = directive + "=";
-    for (String assingment : directiveAssignmentsFromHeader(header)) {
-      if (assingment.startsWith(prefix)) {
-        return assingment.substring(prefix.length());
-      }
-    }
-    return null;
-  }
-
-  private Set<String> directiveAssignmentsFromHeader(String header) {
-    assertTrue(header.startsWith("Digest "));
-    return new HashSet<>(Arrays.asList(header.substring("Digest ".length()).split(",")));
   }
 }

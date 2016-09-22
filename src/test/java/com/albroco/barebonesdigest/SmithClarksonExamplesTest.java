@@ -1,15 +1,8 @@
 package com.albroco.barebonesdigest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static com.albroco.barebonesdigest.DigestTestUtils.assertHeadersEqual;
 
 /**
  * Tests based on examples found in
@@ -231,20 +224,5 @@ public class SmithClarksonExamplesTest {
         .entityBody(entityBody.getBytes());
 
     assertHeadersEqual(expectedResponse, response.getHeaderValue());
-  }
-
-  private void assertHeadersEqual(String expectedHeader, String generatedHeader) {
-    assertTrue(generatedHeader.startsWith("Digest "));
-
-    // Remove redundant newlines and spaces
-    expectedHeader =
-        Pattern.compile("\n *", Pattern.MULTILINE).matcher(expectedHeader).replaceAll("");
-
-    Set<String> expectedSubstrings =
-        new HashSet<>(Arrays.asList(expectedHeader.substring("Digest ".length()).split(",")));
-    Set<String> actualSubstrings =
-        new HashSet<>(Arrays.asList(generatedHeader.substring("Digest ".length()).split(",")));
-
-    assertEquals(expectedSubstrings, actualSubstrings);
   }
 }
