@@ -322,6 +322,6 @@ public class Rfc2116AbnfParserTest {
     assertEquals("\"5ccc069c403ebaf9f0171e9517f40e41\"",
         parser.consumeWhitespace().consumeQuotedString().get());
 
-    assertFalse(parser.consumeWhitespace().containsMoreData());
+    assertFalse(parser.consumeWhitespace().hasMoreData());
   }
 }

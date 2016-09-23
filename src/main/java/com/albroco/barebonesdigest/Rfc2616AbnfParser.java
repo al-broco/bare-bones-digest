@@ -30,9 +30,8 @@ import java.util.regex.Pattern;
  * </blockquote></pre>
  */
 final class Rfc2616AbnfParser {
-  // TODO: create table and do lookup
-  // Defined in RFC 2616, Section 2.2
-  private static final String ABNF_SEPARATOR_CHARACTERS = "()<>@,;:\\\"/[]?={} \t";
+  private static final boolean[] VALID_TOKEN_CHARS = new boolean[127];
+  private static final boolean[] VALID_TOKEN68_CHARS_EXCLUDING_EQUALS = new boolean[127];
 
   private static final Pattern QUOTE_PATTERN = Pattern.compile("[\"\\\\]");
   private static final Pattern UNQUOTE_PATTERN = Pattern.compile("\\\\(.)");
@@ -40,6 +39,38 @@ final class Rfc2616AbnfParser {
   private final String input;
   private int eltStart;
   private int eltEnd;
+
+  static {
+    // Definition from RFC 2616, Section 2.2:
+    // token          = 1*<any CHAR except CTLs or separators>
+    // CHAR           = <any US-ASCII character (octets 0 - 127)>
+    // CTL            = <any US-ASCII control character
+    //                  (octets 0 - 31) and DEL (127)>
+    // separators     = "(" | ")" | "<" | ">" | "@"
+    //                | "," | ";" | ":" | "\" | <">
+    //                | "/" | "[" | "]" | "?" | "="
+    //                | "{" | "}" | SP | HT
+
+    String separators = "()<>@,;:\\\"/[]?={} \t";
+
+    for (char c = 0; c < VALID_TOKEN_CHARS.length; ++c) {
+      VALID_TOKEN_CHARS[c] = c >= 32 && c < 127 && separators.indexOf((char) c) == -1;
+    }
+  }
+
+  static {
+    // Definition from RFC 7235, Section 2.1:
+    // token68        = 1*( ALPHA / DIGIT / "-" / "." / "_" / "~" / "+" / "/" ) *"="
+    // Definitions from RFC 5234, Section B.1:
+    // ALPHA          =  %x41-5A / %x61-7A   ; A-Z / a-z
+    // DIGIT          =  %x30-39 ; 0-9
+
+    String token68Chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~+/";
+
+    for (char c = 0; c < VALID_TOKEN68_CHARS_EXCLUDING_EQUALS.length; ++c) {
+      VALID_TOKEN68_CHARS_EXCLUDING_EQUALS[c] = token68Chars.indexOf(c) != -1;
+    }
+  }
 
   public Rfc2616AbnfParser(String input) {
     this.input = input;
@@ -49,17 +80,41 @@ final class Rfc2616AbnfParser {
     return input.substring(eltStart, eltEnd);
   }
 
-  public Rfc2616AbnfParser consumeLiteral(String literal) throws ParseException {
+  public String getInput() {
+    return input;
+  }
+
+  public String getRemainingInput() {
+    return input.substring(eltEnd);
+  }
+
+  public int getPos() {
+    return eltEnd;
+  }
+
+  public void setPos(int pos) {
+    this.eltStart = this.eltEnd = pos;
+  }
+
+  public boolean hasMoreData() {
+    return eltEnd < input.length();
+  }
+
+  public boolean isLookingAtLiteral(String literal) {
     // Definition from RFC 2616, Section 2.1:
     // "literal"
     //    Quotation marks surround literal text. Unless stated otherwise,
     //    the text is case-insensitive.
     if (input.length() < eltEnd + literal.length()) {
-      throw new ParseException("Expected literal '" + literal + "'", this);
+      return false;
     }
 
     String substring = input.substring(eltEnd, eltEnd + literal.length());
-    if (!substring.equalsIgnoreCase(literal)) {
+    return substring.equalsIgnoreCase(literal);
+  }
+
+  public Rfc2616AbnfParser consumeLiteral(String literal) throws ParseException {
+    if (!isLookingAtLiteral(literal)) {
       throw new ParseException("Expected literal '" + literal + "'", this);
     }
 
@@ -79,7 +134,7 @@ final class Rfc2616AbnfParser {
     // HT             = <US-ASCII HT, horizontal-tab (9)>
     // TODO make more efficient
     eltStart = eltEnd;
-    while (containsMoreData() && (input.charAt(eltEnd) == ' ' ||
+    while (hasMoreData() && (input.charAt(eltEnd) == ' ' ||
         input.charAt(eltEnd) == '\t' ||
         input.charAt(eltEnd) == '\r' ||
         input.charAt(eltEnd) == '\n')) {
@@ -108,21 +163,33 @@ final class Rfc2616AbnfParser {
   }
 
   private boolean isValidTokenChar(char c) {
-    // Definition from RFC 2616, Section 2.2:
-    // token          = 1*<any CHAR except CTLs or separators>
-    // CHAR           = <any US-ASCII character (octets 0 - 127)>
-    // CTL            = <any US-ASCII control character
-    //                  (octets 0 - 31) and DEL (127)>
-    // separators     = "(" | ")" | "<" | ">" | "@"
-    //                | "," | ";" | ":" | "\" | <">
-    //                | "/" | "[" | "]" | "?" | "="
-    //                | "{" | "}" | SP | HT
-    if (c <= 31 || c > 126) {
-      return false;
+    return c >= 0 && c < VALID_TOKEN_CHARS.length && VALID_TOKEN_CHARS[c];
+  }
+
+  public Rfc2616AbnfParser consumeToken68() throws ParseException {
+    int tokenEnd = eltEnd;
+    while (tokenEnd < input.length() && isValidToken68CharExcludingEquals(input.charAt(tokenEnd))) {
+      ++tokenEnd;
+    }
+    while (tokenEnd < input.length() && input.charAt(tokenEnd) == '=') {
+      ++tokenEnd;
     }
 
-    return ABNF_SEPARATOR_CHARACTERS.indexOf(c) == -1;
+    if (eltEnd == tokenEnd) {
+      throw new ParseException("Expected token68", this);
+    }
+
+    eltStart = eltEnd;
+    eltEnd = tokenEnd;
+
+    return this;
   }
+
+  private boolean isValidToken68CharExcludingEquals(char c) {
+    return c >= 0 && c < VALID_TOKEN68_CHARS_EXCLUDING_EQUALS.length &&
+        VALID_TOKEN68_CHARS_EXCLUDING_EQUALS[c];
+  }
+
 
   public Rfc2616AbnfParser consumeQuotedString() throws ParseException {
     // Definition from RFC 2616, Section 2.2:
@@ -175,18 +242,6 @@ final class Rfc2616AbnfParser {
     }
 
     return consumeToken();
-  }
-
-  public String getRemainingInput() {
-    return input.substring(eltEnd);
-  }
-
-  public boolean containsMoreData() {
-    return eltEnd < input.length();
-  }
-
-  public int getPos() {
-    return eltEnd;
   }
 
   /**

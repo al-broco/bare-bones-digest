@@ -47,14 +47,6 @@ import java.util.regex.Pattern;
  */
 public class DigestChallenge {
   /**
-   * Name of the HTTP response header containing the challenge.
-   *
-   * @see <a href="https://tools.ietf.org/html/rfc2616#section-14.47">RFC 7235, Section 14.47,
-   * WWW-Authenticate</a>
-   */
-  public static final String HTTP_HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
-
-  /**
    * Enumeration of the various types of quality of protection.
    */
   public enum QualityOfProtection {
@@ -156,7 +148,7 @@ public class DigestChallenge {
       String qopOptions = null;
       boolean stale = false;
 
-      while (parser.containsMoreData()) {
+      while (parser.hasMoreData()) {
         String token = parser.consumeToken().get();
         parser.consumeWhitespace().consumeLiteral("=").consumeWhitespace();
 
@@ -227,7 +219,7 @@ public class DigestChallenge {
         }
 
         parser.consumeWhitespace();
-        if (parser.containsMoreData()) {
+        if (parser.hasMoreData()) {
           parser.consumeLiteral(",").consumeWhitespace();
         }
       }
