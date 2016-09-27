@@ -1,7 +1,6 @@
 package com.albroco.barebonesdigest;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +20,7 @@ public class WwwAuthenticateHeader {
   /**
    * TODO document
    */
-  public static <T extends Collection<String>> List<String> extractChallenges(Map<String, T>
+  public static <T extends Iterable<String>> List<String> extractChallenges(Map<String, T>
       headers) throws HttpDigestChallengeParseException {
     if (headers.containsKey(HTTP_HEADER_WWW_AUTHENTICATE)) {
       return extractChallenges(headers.get(HTTP_HEADER_WWW_AUTHENTICATE));
@@ -39,7 +38,7 @@ public class WwwAuthenticateHeader {
   /**
    * TODO document
    */
-  public static List<String> extractChallenges(Collection<String> wwwAuthenticateHeaders) throws
+  public static List<String> extractChallenges(Iterable<String> wwwAuthenticateHeaders) throws
       HttpDigestChallengeParseException {
     List<String> result = new ArrayList<>();
     for (String header : wwwAuthenticateHeaders) {
