@@ -4,8 +4,10 @@ import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DigestAuthentication {
   private List<DigestChallenge> challenges;
@@ -14,8 +16,41 @@ public class DigestAuthentication {
   private String password;
   private boolean firstResponse = true;
 
+  public static final Comparator<DigestChallenge> DEFAULT_CHALLENGE_COMPARATOR =
+      new Comparator<DigestChallenge>() {
+        @Override
+        public int compare(DigestChallenge lhs, DigestChallenge rhs) {
+          return score(rhs) - score(lhs);
+        }
+
+        private int score(DigestChallenge challenge) {
+          Set<DigestChallenge.QualityOfProtection> supportedQopTypes =
+              challenge.getSupportedQopTypes();
+          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH_INT) &&
+              supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH)) {
+            return 0;
+          }
+
+          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH)) {
+            return -1;
+          }
+
+          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH_INT)) {
+            return -2;
+          }
+
+          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection
+              .UNSPECIFIED_RFC2069_COMPATIBLE)) {
+            return -3;
+          }
+
+          return -4;
+        }
+      };
+
   private DigestAuthentication(List<DigestChallenge> challenges) {
     this.challenges = challenges;
+    Collections.sort(this.challenges, DEFAULT_CHALLENGE_COMPARATOR);
   }
 
   public static DigestAuthentication fromResponse(HttpURLConnection connection) throws
@@ -62,6 +97,12 @@ public class DigestAuthentication {
 
   public static DigestAuthentication fromDigestChallenge(DigestChallenge challenge) {
     return new DigestAuthentication(Collections.singletonList(challenge));
+  }
+
+  public DigestAuthentication challengeOrdering(Comparator<? super DigestChallenge>
+      orderingComparator) {
+    Collections.sort(this.challenges, orderingComparator);
+    return this;
   }
 
   /**
