@@ -105,9 +105,8 @@ public class WwwAuthenticateHeader {
       if (!firstAuthParam) {
         parser.consumeLiteral(",").consumeWhitespace();
       }
-      firstAuthParam = false;
       parser.consumeToken().consumeWhitespace();
-      if (parser.isLookingAtLiteral("=")) {
+      if (firstAuthParam || parser.isLookingAtLiteral("=")) {
         parser.consumeLiteral("=")
             .consumeWhitespace()
             .consumeQuotedStringOrToken()
@@ -116,6 +115,7 @@ public class WwwAuthenticateHeader {
         parser.setPos(possibleEndOfChallenge);
         return;
       }
+      firstAuthParam = false;
     }
   }
 }
