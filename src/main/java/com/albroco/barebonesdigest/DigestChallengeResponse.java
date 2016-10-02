@@ -562,21 +562,15 @@ public class DigestChallengeResponse {
    * Sets the type of "quality of protection" that can be used when responding to the request.
    * <p>
    * Normally, this value is sent by the server in the challenge, but setting it manually can be
-   * used to force a particular qop type. Actual qop type in the response is chosen as follows:
-   * <ol>
-   * <li>If {@link QualityOfProtection#AUTH_INT} is supported and the digest of the
-   * {@code entity-body} has been set (see {@link #entityBodyDigest(byte[])} and
-   * {@link #entityBody(byte[])}), {@link QualityOfProtection#AUTH_INT} is used.</li>
-   * <li>Otherwise, if {@link QualityOfProtection#AUTH} is supported it is used.</li>
-   * <li>Otherwise, if {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE} is supported it
-   * is used.</li>
-   * </ol>
+   * used to force a particular qop type. To see which quality of protection that will be used in
+   * the response, see {@link #getQop()}.
    *
    * @param supportedQopTypes the types of quality of protection that the server supports, must not
    *                          be empty
    * @return this object so that setters can be chained
    * @throws IllegalArgumentException if supportedQopTypes is empty
    * @see #getSupportedQopTypes()
+   * @see #getQop()
    */
   public DigestChallengeResponse supportedQopTypes(Set<QualityOfProtection> supportedQopTypes) {
     if (supportedQopTypes.isEmpty()) {
@@ -593,11 +587,53 @@ public class DigestChallengeResponse {
    *
    * @return the types of quality of protection that the server supports
    * @see #supportedQopTypes(Set)
+   * @see #getQop()
    */
   public Set<QualityOfProtection> getSupportedQopTypes() {
     return Collections.unmodifiableSet(supportedQopTypes);
   }
 
+  /**
+   * Returns the "quality of protection" that will be used for the response.
+   * <p>
+   * This is a derived value, computed from the set of supported "quality of protection" types
+   * and whether the digest of the {@code entity-body} for the request has been set or not:
+   * <ol>
+   * <li>If {@link QualityOfProtection#AUTH_INT} is supported and the digest of the
+   * {@code entity-body} has been set (see {@link #entityBodyDigest(byte[])} and
+   * {@link #entityBody(byte[])}), {@link QualityOfProtection#AUTH_INT} is used.</li>
+   * <li>Otherwise, if {@link QualityOfProtection#AUTH} is supported it is used.</li>
+   * <li>Otherwise, if {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE} is supported it
+   * is used.</li>
+   * <li>Otherwise, there is no way of responding to the challenge without violating the
+   * specification. This can happen if this method is called before
+   * {@link #supportedQopTypes(Set)} is called, or if the only supported qop type is
+   * {@link QualityOfProtection#AUTH_INT} but the digest of the {@code entity-body} has not been
+   * set. This method will return {@code null}.</li>
+   * </ol>
+   *
+   * @return the "quality of protection" that will be used for the response
+   * @see #supportedQopTypes(Set)
+   * @see #getSupportedQopTypes()
+   * @see #entityBodyDigest(byte[])
+   * @see #getEntityBodyDigest()
+   * @see #entityBody(byte[])
+   */
+  public QualityOfProtection getQop() {
+    if (supportedQopTypes.contains(QualityOfProtection.AUTH_INT) && this.entityBodyDigest != null) {
+      return QualityOfProtection.AUTH_INT;
+    }
+
+    if (supportedQopTypes.contains(QualityOfProtection.AUTH)) {
+      return QualityOfProtection.AUTH;
+    }
+
+    if (supportedQopTypes.contains(QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE)) {
+      return QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE;
+    }
+
+    return null;
+  }
 
   /**
    * Sets the {@code digest-uri} directive, which must be exactly the same as the
@@ -815,6 +851,22 @@ public class DigestChallengeResponse {
   }
 
   /**
+   * Returns {@code true} if the digest of the {@code entity-body} is required to generate an
+   * authorization header for this response.
+   * <p>
+   * For most challenges, setting the digest of the {@code entity-body} is optional. It is only
+   * required if the only quality of protection the server accepts is {@code auth-int}.
+   *
+   * @return {@code true} if the digest of the {@code entity-body} must be set
+   * @see #entityBody(byte[])
+   * @see #entityBodyDigest(byte[])
+   * @see #getSupportedQopTypes()
+   */
+  public boolean isEntityBodyDigestRequired() {
+    return getSupportedQopTypes().equals(EnumSet.of(QualityOfProtection.AUTH_INT));
+  }
+
+  /**
    * Sets the values of the {@code realm}, {@code nonce}, {@code opaque}, and {@code algorithm}
    * directives and the supported quality of protection types based on a challenge.
    * <p>
@@ -855,8 +907,6 @@ public class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public String getHeaderValue() {
-    QualityOfProtection qop = selectQop();
-
     if (username == null) {
       throw new IllegalStateException("Mandatory username not set");
     }
@@ -875,14 +925,14 @@ public class DigestChallengeResponse {
     if (requestMethod == null) {
       throw new IllegalStateException("Mandatory Method not set");
     }
-    if (qop == QualityOfProtection.AUTH_INT && entityBodyDigest == null) {
+    if (isEntityBodyDigestRequired() && entityBodyDigest == null) {
       throw new IllegalStateException(
           "entity-body or entity-body digest must be set for qop auth-int");
     }
-    if (qop == null) {
+    if (getSupportedQopTypes().isEmpty() || getQop() == null) {
       throw new IllegalStateException("Mandatory supported qop types not set");
     }
-    if (clientNonce == null && qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
+    if (clientNonce == null && getQop() != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
       throw new IllegalStateException("Client nonce must be set when qop is set");
     }
     if ("MD5-sess".equals(getAlgorithm()) && getFirstRequestClientNonce() == null) {
@@ -890,7 +940,7 @@ public class DigestChallengeResponse {
           "First request client nonce must be set when algorithm is MD5-sess");
     }
 
-    String response = calculateResponse(qop);
+    String response = calculateResponse();
 
     StringBuilder result = new StringBuilder();
     result.append("Digest ");
@@ -926,7 +976,7 @@ public class DigestChallengeResponse {
     // cnonce           = "cnonce" "=" cnonce-value
     // cnonce-value     = nonce-value
     // Must be present if qop is specified, must not if qop is unspecified
-    if (qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
+    if (getQop() != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
       result.append(",cnonce=");
       result.append(Rfc2616AbnfParser.quote(getClientNonce()));
     }
@@ -946,16 +996,16 @@ public class DigestChallengeResponse {
       result.append(algorithm);
     }
 
-    if (qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
+    if (getQop() != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
       result.append(",qop=");
-      result.append(qop.getQopValue());
+      result.append(getQop().getQopValue());
     }
 
     // Nonce count is defined in RFC 2617, Section 3.2.2
     // nonce-count      = "nc" "=" nc-value
     // nc-value         = 8LHEX (lower case hex)
     // Must be present if qop is specified, must not if qop is unspecified
-    if (qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
+    if (getQop() != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
       result.append(",nc=");
       result.append(String.format("%08x", nonceCount));
     }
@@ -963,27 +1013,8 @@ public class DigestChallengeResponse {
     return result.toString();
   }
 
-  private QualityOfProtection selectQop() {
-    if (supportedQopTypes.contains(QualityOfProtection.AUTH_INT) && this.entityBodyDigest != null) {
-      return QualityOfProtection.AUTH_INT;
-    }
-
-    if (supportedQopTypes.contains(QualityOfProtection.AUTH)) {
-      return QualityOfProtection.AUTH;
-    }
-
-    if (supportedQopTypes.contains(QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE)) {
-      return QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE;
-    }
-
-    if (supportedQopTypes.contains(QualityOfProtection.AUTH_INT)) {
-      return QualityOfProtection.AUTH_INT;
-    }
-
-    return null;
-  }
-
-  private String calculateResponse(QualityOfProtection qop) {
+  private String calculateResponse() {
+    QualityOfProtection qop = getQop();
     String a1 = getA1();
     String a2 = calculateA2(qop);
     String secret = H(a1);

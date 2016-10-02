@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH_INT;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
@@ -396,6 +397,46 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
+  public void testGetQopAllQopTypesSupportedEntityBodySet() {
+    assertEquals(AUTH_INT,
+        new DigestChallengeResponse().supportedQopTypes(EnumSet.allOf(QualityOfProtection.class))
+            .entityBody(new byte[0])
+            .getQop());
+  }
+
+  @Test
+  public void testGetQopAllQopTypesSupportedEntityBodyNotSet() {
+    assertEquals(AUTH,
+        new DigestChallengeResponse().supportedQopTypes(EnumSet.allOf(QualityOfProtection.class))
+            .getQop());
+  }
+
+  @Test
+  public void testGetQopOnlyAuthIntSupportedEntityBodyNotSet() {
+    assertNull(new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH_INT)).getQop());
+  }
+
+  @Test
+  public void testGetQopAuthSupportedEntityBodySet() {
+    assertEquals(AUTH,
+        new DigestChallengeResponse().supportedQopTypes(EnumSet.complementOf(EnumSet.of(AUTH_INT)))
+            .entityBody(new byte[0])
+            .getQop());
+  }
+
+  @Test
+  public void testGetQopOnlyRfc2069Supported() {
+    assertEquals(UNSPECIFIED_RFC2069_COMPATIBLE,
+        new DigestChallengeResponse().supportedQopTypes(EnumSet.of(UNSPECIFIED_RFC2069_COMPATIBLE))
+            .getQop());
+  }
+
+  @Test
+  public void testGetQopDefaultValue() {
+    assertNull(new DigestChallengeResponse().getQop());
+  }
+
+  @Test
   public void testGetAndSetRequestMethod() {
     assertEquals("GET", new DigestChallengeResponse().requestMethod("GET").getRequestMethod());
   }
@@ -459,6 +500,35 @@ public class DigestChallengeResponseTest {
     assertNull(new DigestChallengeResponse().entityBodyDigest(new byte[3])
         .entityBody(null)
         .getEntityBodyDigest());
+  }
+
+  @Test
+  public void testIsEntityBodyDigestRequiredOnlyAuthIntSupported() {
+    assertTrue(new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH_INT))
+        .isEntityBodyDigestRequired());
+  }
+
+  @Test
+  public void testIsEntityBodyDigestRequiredAuthIntNotSupported() {
+    assertFalse(new DigestChallengeResponse().supportedQopTypes(EnumSet.complementOf(EnumSet.of(
+        AUTH_INT))).isEntityBodyDigestRequired());
+  }
+
+  @Test
+  public void testIsEntityBodyDigestRequiredAuthIntAndAuthSupported() {
+    assertFalse(new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH, AUTH_INT))
+        .isEntityBodyDigestRequired());
+  }
+
+  @Test
+  public void testIsEntityBodyDigestRequiredAuthIntAndRfc2069Supported() {
+    assertFalse(new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH,
+        UNSPECIFIED_RFC2069_COMPATIBLE)).isEntityBodyDigestRequired());
+  }
+
+  @Test
+  public void testIsEntityBodyDigestRequiredDefaultValue() {
+    assertFalse(new DigestChallengeResponse().isEntityBodyDigestRequired());
   }
 
   @Test
