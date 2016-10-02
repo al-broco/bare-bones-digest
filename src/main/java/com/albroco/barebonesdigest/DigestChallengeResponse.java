@@ -855,6 +855,8 @@ public class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public String getHeaderValue() {
+    QualityOfProtection qop = selectQop();
+
     if (username == null) {
       throw new IllegalStateException("Mandatory username not set");
     }
@@ -873,9 +875,10 @@ public class DigestChallengeResponse {
     if (requestMethod == null) {
       throw new IllegalStateException("Mandatory Method not set");
     }
-
-    QualityOfProtection qop = selectQop();
-
+    if (qop == QualityOfProtection.AUTH_INT && entityBodyDigest == null) {
+      throw new IllegalStateException(
+          "entity-body or entity-body digest must be set for qop auth-int");
+    }
     if (qop == null) {
       throw new IllegalStateException("Mandatory supported qop types not set");
     }
@@ -971,6 +974,10 @@ public class DigestChallengeResponse {
 
     if (supportedQopTypes.contains(QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE)) {
       return QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE;
+    }
+
+    if (supportedQopTypes.contains(QualityOfProtection.AUTH_INT)) {
+      return QualityOfProtection.AUTH_INT;
     }
 
     return null;

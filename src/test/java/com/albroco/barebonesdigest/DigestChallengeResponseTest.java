@@ -586,6 +586,14 @@ public class DigestChallengeResponseTest {
   }
 
   @Test(expected = IllegalStateException.class)
+  public void testMissingEntityBodyWhenQopIsAuthInt() {
+    createChallengeFromRfc2617Example().supportedQopTypes(EnumSet.of(AUTH_INT))
+        .entityBody(null)
+        .clientNonce(null)
+        .getHeaderValue();
+  }
+
+  @Test(expected = IllegalStateException.class)
   public void testSupportedQopTypesNotSet() {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
