@@ -4,14 +4,16 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Set;
 
-import static com.albroco.barebonesdigest.DigestTestUtils.assertHeadersEqual;
-import static com.albroco.barebonesdigest.DigestTestUtils.directiveFromHeader;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH_INT;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
     .UNSPECIFIED_RFC2069_COMPATIBLE;
+import static com.albroco.barebonesdigest.DigestTestUtils.assertHeadersEqual;
+import static com.albroco.barebonesdigest.DigestTestUtils.directiveFromHeader;
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
@@ -19,6 +21,26 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotEquals;
 
 public class DigestChallengeResponseTest {
+  @Test
+  public void testIsAlgorithmSupportedMd5() {
+    assertTrue(DigestChallengeResponse.isAlgorithmSupported("MD5"));
+  }
+
+  @Test
+  public void testIsAlgorithmSupportedMd5Sess() {
+    assertTrue(DigestChallengeResponse.isAlgorithmSupported("MD5-sess"));
+  }
+
+  @Test
+  public void testIsAlgorithmSupportedNoAlgorithm() {
+    assertTrue(DigestChallengeResponse.isAlgorithmSupported(null));
+  }
+
+  @Test
+  public void testIsAlgorithmSupportedUnsupportedAlgorithm() {
+    assertFalse(DigestChallengeResponse.isAlgorithmSupported("unsupported"));
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void testSetUnsupportedAlgorithm() throws Exception {
     new DigestChallengeResponse().algorithm("illegal");
@@ -321,6 +343,53 @@ public class DigestChallengeResponseTest {
             .getSupportedQopTypes());
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void testSetSupportedQopTypesEmptySet() {
+    new DigestChallengeResponse().supportedQopTypes(EnumSet.noneOf(DigestChallenge
+        .QualityOfProtection.class));
+  }
+
+  @Test
+  public void testGetAndSetSupportedQopTypesAuth() {
+    assertEquals(EnumSet.of(AUTH),
+        new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH)).getSupportedQopTypes());
+  }
+
+  @Test
+  public void testGetAndSetSupportedQopTypesAuthInt() {
+    assertEquals(EnumSet.of(AUTH_INT),
+        new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH_INT))
+            .getSupportedQopTypes());
+  }
+
+  @Test
+  public void testGetAndSetSupportedQopTypesRfc2069() {
+    assertEquals(EnumSet.of(UNSPECIFIED_RFC2069_COMPATIBLE),
+        new DigestChallengeResponse().supportedQopTypes(EnumSet.of(UNSPECIFIED_RFC2069_COMPATIBLE))
+            .getSupportedQopTypes());
+  }
+
+  @Test
+  public void testSupportedQopTypesReturnedCannotModifyInternalRepresentation() {
+    DigestChallengeResponse response = new DigestChallengeResponse();
+    Set<DigestChallenge.QualityOfProtection> qops =
+        response.supportedQopTypes(EnumSet.of(AUTH)).getSupportedQopTypes();
+    try {
+      qops.add(AUTH_INT);
+      assertEquals(EnumSet.of(AUTH), response.getSupportedQopTypes());
+    } catch (UnsupportedOperationException e) {
+      // Can't add to returned set, this is OK
+    }
+  }
+
+  @Test
+  public void testSupportedQopTypesSetMakesACopy() {
+    Set<DigestChallenge.QualityOfProtection> qops = EnumSet.of(AUTH);
+    DigestChallengeResponse response = new DigestChallengeResponse().supportedQopTypes(qops);
+    qops.add(AUTH_INT);
+    assertEquals(EnumSet.of(AUTH), response.getSupportedQopTypes());
+  }
+
   @Test
   public void testSupportedQopTypesDefaultValue() {
     assertEquals(Collections.emptySet(), new DigestChallengeResponse().getSupportedQopTypes());
@@ -409,6 +478,53 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
+  public void testIsChallengeSupportedSupportedChallengeNoAlgorithm() throws Exception {
+    DigestChallenge challenge = DigestChallenge.parse("Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "qop=\"auth,auth-int\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
+        "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"");
+
+    assertTrue(DigestChallengeResponse.isChallengeSupported(challenge));
+  }
+
+  @Test
+  public void testIsChallengeSupportedSupportedChallengeSupportedAlgorithm() throws Exception {
+    DigestChallenge challenge = DigestChallenge.parse("Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "qop=\"auth,auth-int\", " +
+        "algorithm=MD5, " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
+        "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"");
+
+    assertTrue(DigestChallengeResponse.isChallengeSupported(challenge));
+  }
+
+  @Test
+  public void testIsChallengeSupportedUnsupportedAlgorithm() throws Exception {
+    DigestChallenge challenge = DigestChallenge.parse("Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "qop=\"auth,auth-int\", " +
+        "algorithm=XYZ, " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
+        "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"");
+
+    assertFalse(DigestChallengeResponse.isChallengeSupported(challenge));
+  }
+
+  @Test
+  public void testIsChallengeNoSupportedQopTypes() throws Exception {
+    DigestChallenge challenge = DigestChallenge.parse("Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "qop=\"custom\", " +
+        "algorithm=MD5, " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
+        "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"");
+
+    assertFalse(DigestChallengeResponse.isChallengeSupported(challenge));
+  }
+
+  @Test
   public void testCreateFromChallenge() throws Exception {
     DigestChallenge challenge = DigestChallenge.parse("Digest " +
         "realm=\"testrealm@host.com\", " +
@@ -467,6 +583,23 @@ public class DigestChallengeResponseTest {
         .entityBody(new byte[0])
         .clientNonce(null)
         .getHeaderValue();
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testSupportedQopTypesNotSet() {
+    // The example below is from Section 3.5 of RC 2617,
+    // https://tools.ietf.org/html/rfc2617#section-3.5
+    DigestChallengeResponse response = new DigestChallengeResponse().username("Mufasa")
+        .password("Circle Of Life")
+        .quotedRealm("\"testrealm@host.com\"")
+        .quotedNonce("\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"")
+        .digestUri("/dir/index.html")
+        .requestMethod("GET")
+        .nonceCount(1)
+        .clientNonce("0a4f113b")
+        .quotedOpaque("\"5ccc069c403ebaf9f0171e9517f40e41\"");
+
+    response.getHeaderValue();
   }
 
   @Test
@@ -581,30 +714,6 @@ public class DigestChallengeResponseTest {
         .firstRequestClientNonce("cnonce");
 
     assertEquals("auth", directiveFromHeader(response.getHeaderValue(), "qop"));
-  }
-
-  @Test
-  public void testMinimalUnknownQopHeader() throws Exception {
-    DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
-        .password("pwd")
-        .realm("realm")
-        .nonce("nonce")
-        .digestUri("/uri")
-        .requestMethod("GET")
-        .clientNonce("cnonce")
-        .supportedQopTypes(Collections.<DigestChallenge.QualityOfProtection>emptySet())
-        .firstRequestClientNonce("cnonce");
-
-    // Note: If qop is specified but none of the supported qops listed is auth or auth-int,
-    // fallback to RFC 2069 authentication
-
-    String expectedHeader = "Digest username=\"usr\"," +
-        "realm=\"realm\"," +
-        "nonce=\"nonce\"," +
-        "uri=\"/uri\"," +
-        "response=\"adba5ae6d43ec9d90bae975312318549\"";
-
-    assertHeadersEqual(expectedHeader, response.getHeaderValue());
   }
 
   @Test

@@ -189,7 +189,7 @@ public class DigestAuthentication {
     // TODO: allow ordering of challenges
 
     for (DigestChallenge challenge : challenges) {
-      if (DigestChallengeResponse.isCompatibleWith(challenge)) {
+      if (DigestChallengeResponse.isChallengeSupported(challenge)) {
         return DigestChallengeResponse.responseTo(challenge);
       }
     }

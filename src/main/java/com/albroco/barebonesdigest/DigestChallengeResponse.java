@@ -8,6 +8,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -124,33 +125,51 @@ public class DigestChallengeResponse {
   }
 
   /**
-   * TODO doc
+   * Returns {@code true} if a given challenge is supported and a response to it can be generated
+   * (given that all other required values are supplied).
+   * <p>
+   * For a challenge to be supported, the following requirements must be met:
+   * <ul>
+   * <li>The digest algorithm must be supported (see {@link #algorithm(String)}.</li>
+   * <li>The challenge must specify at least one supported qop (quality of protection), see
+   * {@link #supportedQopTypes(Set)}.</li>
+   * </ul>
    *
-   * @param challenge
-   * @return
+   * @param challenge the challenge
+   * @return {@code true} if the challenge is supported
    */
-  public static boolean isCompatibleWith(DigestChallenge challenge) {
-    return isAlgorithmSupported(challenge.getAlgorithm());
+  public static boolean isChallengeSupported(DigestChallenge challenge) {
+    return isAlgorithmSupported(challenge.getAlgorithm()) &&
+        !challenge.getSupportedQopTypes().isEmpty();
   }
 
   /**
    * Creates a digest challenge response, setting the values of the {@code realm}, {@code nonce},
    * {@code opaque}, and {@code algorithm} directives and the supported quality of protection
    * types based on a challenge.
+   * <p>
+   * If the challenge is not supported an exception is thrown. Use
+   * {@link #isChallengeSupported(DigestChallenge)} to check if a challenge is supported before
+   * calling this method.
    *
    * @param challenge the challenge
    * @return a response to the challenge.
    * @throws IllegalArgumentException if the challenge is not supported
+   * @see #isChallengeSupported(DigestChallenge)
    */
   public static DigestChallengeResponse responseTo(DigestChallenge challenge) {
     return new DigestChallengeResponse().challenge(challenge);
   }
 
   /**
-   * TODO doc
+   * Returns {@code true} if a given digest algorithm is supported.
+   * <p>
+   * The only values currently supported are "MD5", "MD5-sess", and {@code null}. {@code null}
+   * indicates that the digest is generated using MD5, but no {@code algorithm} directive is
+   * included in the response.
    *
-   * @param algorithm
-   * @return
+   * @param algorithm the algorithm
+   * @return {@code true} if the algorithm is supported
    */
   public static boolean isAlgorithmSupported(String algorithm) {
     return algorithm == null || "MD5".equals(algorithm) || "MD5-sess".equals(algorithm);
@@ -158,7 +177,10 @@ public class DigestChallengeResponse {
 
   /**
    * Sets the {@code algorithm} directive, which must be the same as the {@code algorithm} directive
-   * of the challenge. The only values currently supported are "MD5" and "MD5-sess".
+   * of the challenge.
+   * <p>
+   * Use {@link #isAlgorithmSupported(String)} to check if a particular algorithm is supported on
+   * the device.
    *
    * @param algorithm the value of the {@code algorithm} directive or {@code null} to not include an
    *                  algorithm in the response
@@ -548,15 +570,19 @@ public class DigestChallengeResponse {
    * <li>Otherwise, if {@link QualityOfProtection#AUTH} is supported it is used.</li>
    * <li>Otherwise, if {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE} is supported it
    * is used.</li>
-   * <li>Otherwise, there is no way to generate a response to the challenge without violating the
-   * standard. As a fallback, use {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE}.</li>
    * </ol>
    *
-   * @param supportedQopTypes the types of quality of protection that the server supports
+   * @param supportedQopTypes the types of quality of protection that the server supports, must not
+   *                          be empty
    * @return this object so that setters can be chained
+   * @throws IllegalArgumentException if supportedQopTypes is empty
    * @see #getSupportedQopTypes()
    */
   public DigestChallengeResponse supportedQopTypes(Set<QualityOfProtection> supportedQopTypes) {
+    if (supportedQopTypes.isEmpty()) {
+      throw new IllegalArgumentException("The set of supported qop types cannot be empty");
+    }
+
     this.supportedQopTypes.clear();
     this.supportedQopTypes.addAll(supportedQopTypes);
     return this;
@@ -569,7 +595,7 @@ public class DigestChallengeResponse {
    * @see #supportedQopTypes(Set)
    */
   public Set<QualityOfProtection> getSupportedQopTypes() {
-    return supportedQopTypes;
+    return Collections.unmodifiableSet(supportedQopTypes);
   }
 
 
@@ -791,10 +817,15 @@ public class DigestChallengeResponse {
   /**
    * Sets the values of the {@code realm}, {@code nonce}, {@code opaque}, and {@code algorithm}
    * directives and the supported quality of protection types based on a challenge.
+   * <p>
+   * If the challenge is not supported an exception is thrown. Use
+   * {@link #isChallengeSupported(DigestChallenge)} to check if a challenge is supported before
+   * calling this method.
    *
    * @param challenge the challenge
    * @return this object so that setters can be chained
-   * @throws IllegalArgumentException if the challenge uses an algorithm that is not supported
+   * @throws IllegalArgumentException if the challenge is not supported
+   * @see #isChallengeSupported(DigestChallenge)
    */
   public DigestChallengeResponse challenge(DigestChallenge challenge) {
     return quotedNonce(challenge.getQuotedNonce()).quotedOpaque(challenge.getQuotedOpaque())
@@ -813,6 +844,7 @@ public class DigestChallengeResponse {
    * <li>{@link #password(String) password}.</li>
    * <li>{@link #quotedRealm(String) realm}.</li>
    * <li>{@link #quotedNonce(String) nonce}.</li>
+   * <li>{@link #supportedQopTypes(Set)} supported qop types.</li>
    * <li>{@link #digestUri(String) digest-uri}.</li>
    * <li>{@link #requestMethod(String) Method}.</li>
    * </ul>
@@ -823,8 +855,6 @@ public class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public String getHeaderValue() {
-    QualityOfProtection qop = selectQop();
-
     if (username == null) {
       throw new IllegalStateException("Mandatory username not set");
     }
@@ -842,6 +872,12 @@ public class DigestChallengeResponse {
     }
     if (requestMethod == null) {
       throw new IllegalStateException("Mandatory Method not set");
+    }
+
+    QualityOfProtection qop = selectQop();
+
+    if (qop == null) {
+      throw new IllegalStateException("Mandatory supported qop types not set");
     }
     if (clientNonce == null && qop != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
       throw new IllegalStateException("Client nonce must be set when qop is set");
@@ -937,12 +973,7 @@ public class DigestChallengeResponse {
       return QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE;
     }
 
-    // Note: As a fallback, use the unspecified, RFC2069 qop. The server has specified which qops it
-    // supports, but the list does not include any qop we recognize. If the server specified a qop,
-    // we SHOULD include a qop directive but it MUST be from the list of specified qops. Given the
-    // choice we violate the SHOULD directive insted of the MUST, see the description of qop in
-    // Section 3.2.2 of RFC 2617: https://tools.ietf.org/html/rfc2617#section-3.2.2
-    return QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE;
+    return null;
   }
 
   private String calculateResponse(QualityOfProtection qop) {
