@@ -72,14 +72,14 @@ public class DigestAuthentication {
         }
       };
 
-  private DigestAuthentication(List<DigestChallenge> challenges) {
-    this.challenges = challenges;
-    Collections.sort(this.challenges, DEFAULT_CHALLENGE_COMPARATOR);
-  }
-
   public static DigestAuthentication fromResponse(HttpURLConnection connection) throws
       HttpDigestChallengeParseException {
     return fromResponseHeaders(connection.getHeaderFields());
+  }
+
+  private DigestAuthentication(List<DigestChallenge> challenges) {
+    this.challenges = challenges;
+    Collections.sort(this.challenges, DEFAULT_CHALLENGE_COMPARATOR);
   }
 
   public static <T extends Iterable<String>> DigestAuthentication fromResponseHeaders(Map<String,
