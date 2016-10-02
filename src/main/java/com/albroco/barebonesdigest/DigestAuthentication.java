@@ -16,6 +16,26 @@ public class DigestAuthentication {
   private String password;
   private boolean firstResponse = true;
 
+  /**
+   * Default comparator used when comparing which challenge to use when there is more than one to
+   * choose from.
+   * <p>
+   * Orders challenges from most preferred to least preferred. Unsupported challenges (that is,
+   * challenges that do not meet the requirements of
+   * {@link DigestChallengeResponse#isChallengeSupported(DigestChallenge)}) are sorted last.
+   * Supported challenges are sorted in the following order:
+   * <ol>
+   * <li>Challenges where the server supports qop types <code>auth</code> and
+   * <code>auth-int</code>.</li>
+   * <li>Challenges where the server supports qop type <code>auth</code> but not
+   * <code>auth-int</code>.</li>
+   * <li>Challenges where the server supports the unnamed legacy qop type for RFC 2069
+   * compatibility but not <code>auth</code>. This should rarely happen in practice.</li>
+   * <li>Challenges where the server supports qop type <code>auth-int</code> and nothing else.
+   * This is ranked last because <code>auth-int</code> is limited and cannot authenticate requests
+   * without a body, such as HTTP GET.</li>
+   * </ol>
+   */
   public static final Comparator<DigestChallenge> DEFAULT_CHALLENGE_COMPARATOR =
       new Comparator<DigestChallenge>() {
         @Override
@@ -24,6 +44,10 @@ public class DigestAuthentication {
         }
 
         private int score(DigestChallenge challenge) {
+          if (!DigestChallengeResponse.isChallengeSupported(challenge)) {
+            return Integer.MIN_VALUE;
+          }
+
           Set<DigestChallenge.QualityOfProtection> supportedQopTypes =
               challenge.getSupportedQopTypes();
           if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH_INT) &&
@@ -35,16 +59,16 @@ public class DigestAuthentication {
             return -1;
           }
 
-          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH_INT)) {
+          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection
+              .UNSPECIFIED_RFC2069_COMPATIBLE)) {
             return -2;
           }
 
-          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection
-              .UNSPECIFIED_RFC2069_COMPATIBLE)) {
+          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH_INT)) {
             return -3;
           }
 
-          return -4;
+          return Integer.MIN_VALUE;
         }
       };
 
@@ -186,8 +210,6 @@ public class DigestAuthentication {
   }
 
   private DigestChallengeResponse pickChallengeResponse() {
-    // TODO: allow ordering of challenges
-
     for (DigestChallenge challenge : challenges) {
       if (DigestChallengeResponse.isChallengeSupported(challenge)) {
         return DigestChallengeResponse.responseTo(challenge);
