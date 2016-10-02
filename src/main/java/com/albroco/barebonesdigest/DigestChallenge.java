@@ -139,7 +139,7 @@ public class DigestChallenge {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser(challengeString);
     try {
       parser.consumeLiteral(HTTP_DIGEST_CHALLENGE_PREFIX);
-      parser.consumeWhitespace();
+      parser.consumeRws();
 
       String quotedRealm = null;
       String quotedNonce = null;
@@ -150,7 +150,7 @@ public class DigestChallenge {
 
       while (parser.hasMoreData()) {
         String token = parser.consumeToken().get();
-        parser.consumeWhitespace().consumeLiteral("=").consumeWhitespace();
+        parser.consumeOws().consumeLiteral("=").consumeOws();
 
         switch (token) {
           case "realm":
@@ -218,9 +218,9 @@ public class DigestChallenge {
             break;
         }
 
-        parser.consumeWhitespace();
+        parser.consumeOws();
         if (parser.hasMoreData()) {
-          parser.consumeLiteral(",").consumeWhitespace();
+          parser.consumeLiteral(",").consumeOws();
         }
       }
 

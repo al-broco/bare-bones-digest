@@ -47,44 +47,85 @@ public class Rfc2116AbnfParserTest {
   }
 
   @Test
-  public void testConsumeWhitespaceNoWhitespace() throws Exception {
+  public void testConsumeOwsNoWhitespace() throws Exception {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser("string");
-    parser.consumeWhitespace();
+    parser.consumeOws();
     assertEquals("", parser.get());
   }
 
   @Test
-  public void testConsumeWhitespaceMatchesSpace() throws Exception {
+  public void testConsumeOwsMatchesSpace() throws Exception {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser(" string");
-    parser.consumeWhitespace();
+    parser.consumeOws();
     assertEquals(" ", parser.get());
   }
 
   @Test
-  public void testConsumeWhitespaceMatchesHorizontalTab() throws Exception {
+  public void testConsumeOwsMatchesHorizontalTab() throws Exception {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser("\tstring");
-    parser.consumeWhitespace();
+    parser.consumeOws();
     assertEquals("\t", parser.get());
   }
 
   @Test
-  public void testConsumeWhitespaceMatchesNewline() throws Exception {
+  public void testConsumeOwsMatchesNewline() throws Exception {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser("\nstring");
-    parser.consumeWhitespace();
+    parser.consumeOws();
     assertEquals("\n", parser.get());
   }
 
   @Test
-  public void testConsumeWhitespaceMatchesCarriageReturn() throws Exception {
+  public void testConsumeOwsMatchesCarriageReturn() throws Exception {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser("\rstring");
-    parser.consumeWhitespace();
+    parser.consumeOws();
     assertEquals("\r", parser.get());
   }
 
   @Test
-  public void testConsumeWhitespaceConsumesMultipleWhitespaceCharacters() throws Exception {
+  public void testConsumeOwsConsumesMultipleWhitespaceCharacters() throws Exception {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser(" \t\r\nstring");
-    parser.consumeWhitespace();
+    parser.consumeOws();
+    assertEquals(" \t\r\n", parser.get());
+  }
+
+  @Test(expected = Rfc2616AbnfParser.ParseException.class)
+  public void testConsumeRwsNoWhitespace() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("string");
+    parser.consumeRws();
+  }
+
+  @Test
+  public void testConsumeRwsMatchesSpace() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser(" string");
+    parser.consumeRws();
+    assertEquals(" ", parser.get());
+  }
+
+  @Test
+  public void testConsumeRwsMatchesHorizontalTab() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("\tstring");
+    parser.consumeRws();
+    assertEquals("\t", parser.get());
+  }
+
+  @Test
+  public void testConsumeRwsMatchesNewline() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("\nstring");
+    parser.consumeRws();
+    assertEquals("\n", parser.get());
+  }
+
+  @Test
+  public void testConsumeRwsMatchesCarriageReturn() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("\rstring");
+    parser.consumeRws();
+    assertEquals("\r", parser.get());
+  }
+
+  @Test
+  public void testConsumeRwsConsumesMultipleWhitespaceCharacters() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser(" \t\r\nstring");
+    parser.consumeRws();
     assertEquals(" \t\r\n", parser.get());
   }
 
@@ -301,27 +342,27 @@ public class Rfc2116AbnfParserTest {
 
     assertEquals("Digest", parser.consumeLiteral("digest").get());
 
-    assertEquals("realm", parser.consumeWhitespace().consumeToken().get());
-    assertEquals("=", parser.consumeWhitespace().consumeLiteral("=").get());
-    assertEquals("\"testrealm@host.com\"", parser.consumeWhitespace().consumeQuotedString().get());
-    assertEquals(",", parser.consumeWhitespace().consumeLiteral(",").get());
+    assertEquals("realm", parser.consumeOws().consumeToken().get());
+    assertEquals("=", parser.consumeOws().consumeLiteral("=").get());
+    assertEquals("\"testrealm@host.com\"", parser.consumeOws().consumeQuotedString().get());
+    assertEquals(",", parser.consumeOws().consumeLiteral(",").get());
 
-    assertEquals("qop", parser.consumeWhitespace().consumeToken().get());
-    assertEquals("=", parser.consumeWhitespace().consumeLiteral("=").get());
-    assertEquals("\"auth,auth-int\"", parser.consumeWhitespace().consumeQuotedString().get());
-    assertEquals(",", parser.consumeWhitespace().consumeLiteral(",").get());
+    assertEquals("qop", parser.consumeOws().consumeToken().get());
+    assertEquals("=", parser.consumeOws().consumeLiteral("=").get());
+    assertEquals("\"auth,auth-int\"", parser.consumeOws().consumeQuotedString().get());
+    assertEquals(",", parser.consumeOws().consumeLiteral(",").get());
 
-    assertEquals("nonce", parser.consumeWhitespace().consumeToken().get());
-    assertEquals("=", parser.consumeWhitespace().consumeLiteral("=").get());
+    assertEquals("nonce", parser.consumeOws().consumeToken().get());
+    assertEquals("=", parser.consumeOws().consumeLiteral("=").get());
     assertEquals("\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"",
-        parser.consumeWhitespace().consumeQuotedString().get());
-    assertEquals(",", parser.consumeWhitespace().consumeLiteral(",").get());
+        parser.consumeOws().consumeQuotedString().get());
+    assertEquals(",", parser.consumeOws().consumeLiteral(",").get());
 
-    assertEquals("opaque", parser.consumeWhitespace().consumeToken().get());
-    assertEquals("=", parser.consumeWhitespace().consumeLiteral("=").get());
+    assertEquals("opaque", parser.consumeOws().consumeToken().get());
+    assertEquals("=", parser.consumeOws().consumeLiteral("=").get());
     assertEquals("\"5ccc069c403ebaf9f0171e9517f40e41\"",
-        parser.consumeWhitespace().consumeQuotedString().get());
+        parser.consumeOws().consumeQuotedString().get());
 
-    assertFalse(parser.consumeWhitespace().hasMoreData());
+    assertFalse(parser.consumeOws().hasMoreData());
   }
 }

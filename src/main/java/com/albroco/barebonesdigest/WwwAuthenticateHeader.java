@@ -41,7 +41,7 @@ public class WwwAuthenticateHeader {
    * @param connection the connection the response will be read from
    * @return a list of challenges
    * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
-   * parsed
+   *                                           parsed
    */
   public static List<String> extractChallenges(HttpURLConnection connection) throws
       HttpDigestChallengeParseException {
@@ -63,7 +63,7 @@ public class WwwAuthenticateHeader {
    *                iterables where each element is a header value string
    * @return a list of challenges
    * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
-   * parsed
+   *                                           parsed
    */
   public static <T extends Iterable<String>> List<String> extractChallenges(Map<String, T>
       headers) throws HttpDigestChallengeParseException {
@@ -86,7 +86,7 @@ public class WwwAuthenticateHeader {
    * @param wwwAuthenticateHeaders the header values
    * @return a list of challenges
    * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
-   * parsed
+   *                                           parsed
    */
   public static List<String> extractChallenges(Iterable<String> wwwAuthenticateHeaders) throws
       HttpDigestChallengeParseException {
@@ -103,7 +103,7 @@ public class WwwAuthenticateHeader {
    * @param wwwAuthenticateHeader the header value
    * @return a list of challenges
    * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
-   * parsed
+   *                                           parsed
    */
   public static List<String> extractChallenges(String wwwAuthenticateHeader) throws
       HttpDigestChallengeParseException {
@@ -120,9 +120,9 @@ public class WwwAuthenticateHeader {
         int startOfChallenge = parser.getPos();
         consumeChallenge(parser);
         result.add(parser.getInput().substring(startOfChallenge, parser.getPos()));
-        parser.consumeWhitespace();
+        parser.consumeOws();
         if (parser.hasMoreData()) {
-          parser.consumeLiteral(",").consumeWhitespace();
+          parser.consumeLiteral(",").consumeOws();
         }
       } catch (Rfc2616AbnfParser.ParseException e) {
         throw new HttpDigestChallengeParseException(e);
@@ -145,10 +145,10 @@ public class WwwAuthenticateHeader {
 
   private static void consumeToEndOfToken68BasedChallenge(Rfc2616AbnfParser parser) throws
       Rfc2616AbnfParser.ParseException {
-    parser.consumeWhitespace().consumeToken68(); // token68
+    parser.consumeRws().consumeToken68(); // token68
     if (parser.hasMoreData()) {
       int pos = parser.getPos();
-      parser.consumeWhitespace().consumeLiteral(",").setPos(pos);
+      parser.consumeOws().consumeLiteral(",").setPos(pos);
     }
   }
 
@@ -157,20 +157,18 @@ public class WwwAuthenticateHeader {
     boolean firstAuthParam = true;
     while (parser.hasMoreData()) {
       int possibleEndOfChallenge = parser.getPos();
-      parser.consumeWhitespace();
+      parser.consumeOws();
       if (firstAuthParam) {
         if (parser.isLookingAtLiteral(",")) {
           parser.setPos(possibleEndOfChallenge);
           return;
         }
       } else {
-        parser.consumeLiteral(",").consumeWhitespace();
+        parser.consumeLiteral(",").consumeOws();
       }
-      parser.consumeToken().consumeWhitespace();
+      parser.consumeToken().consumeOws();
       if (firstAuthParam || parser.isLookingAtLiteral("=")) {
-        parser.consumeLiteral("=")
-            .consumeWhitespace()
-            .consumeQuotedStringOrToken();
+        parser.consumeLiteral("=").consumeOws().consumeQuotedStringOrToken();
       } else {
         parser.setPos(possibleEndOfChallenge);
         return;

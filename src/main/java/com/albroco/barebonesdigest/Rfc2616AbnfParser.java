@@ -124,14 +124,13 @@ final class Rfc2616AbnfParser {
     return this;
   }
 
-  public Rfc2616AbnfParser consumeWhitespace() {
-    // Definition from RFC 2616, Section 2.2:
+  public Rfc2616AbnfParser consumeOws() {
+    // Optional white space, definition from RFC 7230, Section 3.2.3:
+    // OWS            = *( SP / HTAB )
+    //                ; optional whitespace
+    // Note: Also include newline/carriage return also be able to parse the rule for LWS from
+    // RFC 2616, Section 2.2:
     // LWS            = [CRLF] 1*( SP | HT )
-    // CRLF           = CR LF
-    // CR             = <US-ASCII CR, carriage return (13)>
-    // LF             = <US-ASCII LF, linefeed (10)>
-    // SP             = <US-ASCII SP, space (32)>
-    // HT             = <US-ASCII HT, horizontal-tab (9)>
     // TODO make more efficient
     eltStart = eltEnd;
     while (hasMoreData() && (input.charAt(eltEnd) == ' ' ||
@@ -141,6 +140,16 @@ final class Rfc2616AbnfParser {
       ++eltEnd;
     }
 
+    return this;
+  }
+
+  public Rfc2616AbnfParser consumeRws() throws ParseException {
+    // Required white space, definition from RFC 7230, Section 3.2.3:
+    // RWS            = 1*( SP / HTAB )
+    //                ; required whitespace
+    if (consumeOws().get().length() == 0) {
+      throw new ParseException("Expected whitespace", this);
+    }
     return this;
   }
 
