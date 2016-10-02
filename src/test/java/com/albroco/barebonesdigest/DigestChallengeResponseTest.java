@@ -19,7 +19,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotEquals;
 
 public class DigestChallengeResponseTest {
-  @Test(expected = UnsupportedHttpDigestAlgorithmException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testSetUnsupportedAlgorithm() throws Exception {
     new DigestChallengeResponse().algorithm("illegal");
   }

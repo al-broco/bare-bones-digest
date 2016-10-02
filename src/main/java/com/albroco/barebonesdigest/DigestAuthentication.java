@@ -164,9 +164,7 @@ public class DigestAuthentication {
     return password;
   }
 
-  public DigestChallengeResponse getChallengeResponse() throws
-      UnsupportedHttpDigestAlgorithmException {
-    // TODO: not a good exception
+  public DigestChallengeResponse getChallengeResponse() {
     if (response == null) {
       response = pickChallengeResponse().username(username).password(password);
       challenges = null;
@@ -176,35 +174,24 @@ public class DigestAuthentication {
     return response;
   }
 
-  public String getAuthorizationForRequest(String requestMethod,
-      String digestUri) throws UnsupportedHttpDigestAlgorithmException {
+  public String getAuthorizationForRequest(String requestMethod, String digestUri) {
     if (!firstResponse) {
       getChallengeResponse().incrementNonceCount().randomizeClientNonce();
     }
     firstResponse = false;
 
-    // TODO: not a good exception
     return getChallengeResponse().requestMethod(requestMethod)
         .digestUri(digestUri)
         .getHeaderValue();
   }
 
-  private DigestChallengeResponse pickChallengeResponse() throws
-      UnsupportedHttpDigestAlgorithmException {
+  private DigestChallengeResponse pickChallengeResponse() {
     // TODO: allow ordering of challenges
-    // TODO: Filter unsupported challenges
-    UnsupportedHttpDigestAlgorithmException exception = null;
 
     for (DigestChallenge challenge : challenges) {
-      try {
+      if (DigestChallengeResponse.isCompatibleWith(challenge)) {
         return DigestChallengeResponse.responseTo(challenge);
-      } catch (UnsupportedHttpDigestAlgorithmException e) {
-        exception = e;
       }
-    }
-
-    if (exception != null) {
-      throw exception;
     }
 
     // TODO: throw exception that no compatible challenge was found
