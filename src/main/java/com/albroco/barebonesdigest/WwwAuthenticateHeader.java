@@ -1,5 +1,6 @@
 package com.albroco.barebonesdigest;
 
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +33,19 @@ public class WwwAuthenticateHeader {
   public static final String HTTP_HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
 
   private WwwAuthenticateHeader() {
+  }
+
+  /**
+   * Extracts challenges from an HTTP response.
+   *
+   * @param connection the connection the response will be read from
+   * @return a list of challenges
+   * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
+   * parsed
+   */
+  public static List<String> extractChallenges(HttpURLConnection connection) throws
+      HttpDigestChallengeParseException {
+    return extractChallenges(connection.getHeaderFields());
   }
 
   /**
