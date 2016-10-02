@@ -132,7 +132,7 @@ public class WwwAuthenticateHeader {
 
   private static void consumeChallenge(Rfc2616AbnfParser parser) throws Rfc2616AbnfParser
       .ParseException {
-    parser.consumeToken().consumeWhitespace(); // auth-scheme
+    parser.consumeToken(); // auth-scheme
 
     int savedPos = parser.getPos();
     try {
@@ -145,10 +145,10 @@ public class WwwAuthenticateHeader {
 
   private static void consumeToEndOfToken68BasedChallenge(Rfc2616AbnfParser parser) throws
       Rfc2616AbnfParser.ParseException {
-    parser.consumeToken68().consumeWhitespace(); // token68
+    parser.consumeWhitespace().consumeToken68(); // token68
     if (parser.hasMoreData()) {
       int pos = parser.getPos();
-      parser.consumeLiteral(",").setPos(pos);
+      parser.consumeWhitespace().consumeLiteral(",").setPos(pos);
     }
   }
 
@@ -157,15 +157,20 @@ public class WwwAuthenticateHeader {
     boolean firstAuthParam = true;
     while (parser.hasMoreData()) {
       int possibleEndOfChallenge = parser.getPos();
-      if (!firstAuthParam) {
+      parser.consumeWhitespace();
+      if (firstAuthParam) {
+        if (parser.isLookingAtLiteral(",")) {
+          parser.setPos(possibleEndOfChallenge);
+          return;
+        }
+      } else {
         parser.consumeLiteral(",").consumeWhitespace();
       }
       parser.consumeToken().consumeWhitespace();
       if (firstAuthParam || parser.isLookingAtLiteral("=")) {
         parser.consumeLiteral("=")
             .consumeWhitespace()
-            .consumeQuotedStringOrToken()
-            .consumeWhitespace();
+            .consumeQuotedStringOrToken();
       } else {
         parser.setPos(possibleEndOfChallenge);
         return;
