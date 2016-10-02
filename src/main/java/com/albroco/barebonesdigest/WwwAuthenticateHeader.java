@@ -6,7 +6,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * TODO document
+ * Class for extracting challenges from <code>WWW-Authenticate</code> headers.
+ * <p>
+ * The <code>WWW-Authenticate</code> header is described in
+ * <a href="https://tools.ietf.org/html/rfc7235#section-4.1">Section 4.1 of RFC 7235</a>. It can
+ * contain one or more challenges and it can appear multiple times in each response.
+ * <p>
+ * Example: The following header:
+ * <pre>
+ * WWW-Authenticate: Newauth realm="apps", type=1, title="Login to \"apps\"", Basic realm="simple"
+ * </pre>
+ * contains two challenges, <code>Newauth realm="apps", type=1, title="Login to \"apps\""</code> and
+ * <code>Basic realm="simple"</code>.
+ * <p>
+ * This class is not specific for digest authentication. It returns the challenges as strings and
+ * can extract challenges of any type.
  */
 public class WwwAuthenticateHeader {
   /**
@@ -17,8 +31,25 @@ public class WwwAuthenticateHeader {
    */
   public static final String HTTP_HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
 
+  private WwwAuthenticateHeader() {
+  }
+
   /**
-   * TODO document
+   * Extracts challenges from a set of HTTP headers.
+   * <p>
+   * A note about the map representing the headers: header names are case insensitive in HTTP. This
+   * means that the <code>WWW-Authenticate</code> header can be represented in multiple
+   * ways (<code>WWW-Authenticate</code>, <code>www-authenticate</code>, etc), even in the same
+   * HTTP response. This method makes no assumption about the case of the headers, but two keys
+   * in the map must not be equal if case is disregarded, that is, all case variations of
+   * <code>WWW-Authenticate</code> must be collected with the same key. Incidentally, this is
+   * what is returned by {@code HttpURLConnection.getHeaderFields()}.
+   *
+   * @param headers the headers, as a map where the keys are header names and values are
+   *                iterables where each element is a header value string
+   * @return a list of challenges
+   * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
+   * parsed
    */
   public static <T extends Iterable<String>> List<String> extractChallenges(Map<String, T>
       headers) throws HttpDigestChallengeParseException {
@@ -36,7 +67,12 @@ public class WwwAuthenticateHeader {
   }
 
   /**
-   * TODO document
+   * Extracts challenges from a set of <code>WWW-Authenticate</code> HTTP headers.
+   *
+   * @param wwwAuthenticateHeaders the header values
+   * @return a list of challenges
+   * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
+   * parsed
    */
   public static List<String> extractChallenges(Iterable<String> wwwAuthenticateHeaders) throws
       HttpDigestChallengeParseException {
@@ -48,7 +84,12 @@ public class WwwAuthenticateHeader {
   }
 
   /**
-   * TODO document
+   * Extracts challenges from a <code>WWW-Authenticate</code> header.
+   *
+   * @param wwwAuthenticateHeader the header value
+   * @return a list of challenges
+   * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
+   * parsed
    */
   public static List<String> extractChallenges(String wwwAuthenticateHeader) throws
       HttpDigestChallengeParseException {
