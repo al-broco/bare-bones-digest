@@ -159,6 +159,16 @@ public class WwwAuthenticateHeaderTest {
   }
 
   @Test(expected = HttpDigestChallengeParseException.class)
+  public void testMalformedChallengeEmptyChallenge() throws Exception {
+    WwwAuthenticateHeader.extractChallenges("Custom1,,custom2");
+  }
+
+  @Test(expected = HttpDigestChallengeParseException.class)
+  public void testMalformedChallengeWhitespaceOnlyChallenge() throws Exception {
+    WwwAuthenticateHeader.extractChallenges("Custom1, ,custom2");
+  }
+
+  @Test(expected = HttpDigestChallengeParseException.class)
   public void testMalformedChallengeWhitespaceOnly() throws Exception {
     assertEquals(Collections.emptyList(),
         WwwAuthenticateHeader.extractChallenges("  "));

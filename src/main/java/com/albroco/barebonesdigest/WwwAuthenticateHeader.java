@@ -118,8 +118,12 @@ public class WwwAuthenticateHeader {
     while (parser.hasMoreData()) {
       try {
         int startOfChallenge = parser.getPos();
+
+        // Consume and store the challenge
         consumeChallenge(parser);
         result.add(parser.getInput().substring(startOfChallenge, parser.getPos()));
+
+        // Consume (and discard) comma separating challenge from the next, or move on to string end
         parser.consumeOws();
         if (parser.hasMoreData()) {
           parser.consumeLiteral(",").consumeOws();
@@ -137,51 +141,101 @@ public class WwwAuthenticateHeader {
     int savedPos = parser.getPos();
     try {
       consumeToEndOfEmptyOrAuthParamBasedChallenge(parser);
+      return;
     } catch (Rfc2616AbnfParser.ParseException e) {
-      parser.setPos(savedPos);
-      consumeToEndOfToken68BasedChallenge(parser);
+      // Failed to parse string as an auth-param based challenge
+    }
+
+    parser.setPos(savedPos);
+    try {
+      consumeToEndOfSchemeOnlyChallenge(parser);
+      return;
+    } catch (Rfc2616AbnfParser.ParseException e) {
+      // Failed to parse string as scheme-only challenge
+    }
+
+    parser.setPos(savedPos);
+    consumeToEndOfToken68BasedChallenge(parser);
+  }
+
+  private static void consumeToEndOfSchemeOnlyChallenge(Rfc2616AbnfParser parser) throws
+      Rfc2616AbnfParser.ParseException {
+    int pos = parser.getPos();
+    try {
+      parser.consumeOws();
+      if (!isLookingAtCommaOrStringEnd(parser)) {
+        // Unexpected content, the following will fail the parsing:
+        parser.consumeLiteral(",");
+      }
+    } finally {
+      parser.setPos(pos);
     }
   }
 
   private static void consumeToEndOfToken68BasedChallenge(Rfc2616AbnfParser parser) throws
       Rfc2616AbnfParser.ParseException {
     parser.consumeRws().consumeToken68(); // token68
-    if (parser.hasMoreData()) {
-      int pos = parser.getPos();
+    if (!isLookingAtCommaOrStringEnd(parser)) {
+      // Unexpected content, the following will fail the parsing:
+      parser.consumeLiteral(",");
+    }
+  }
+
+  private static boolean isLookingAtCommaOrStringEnd(Rfc2616AbnfParser parser) {
+    int pos = parser.getPos();
+    try {
       parser.consumeOws();
-      if (parser.hasMoreData()) {
-        parser.consumeLiteral(",");
-      }
+      return !parser.hasMoreData() || parser.isLookingAtLiteral(",");
+    } finally {
       parser.setPos(pos);
     }
   }
 
   private static void consumeToEndOfEmptyOrAuthParamBasedChallenge(Rfc2616AbnfParser parser)
       throws Rfc2616AbnfParser.ParseException {
-    boolean firstAuthParam = true;
+
+    consumeAuthParam(parser);
+
     while (parser.hasMoreData()) {
+      // This could be the end of the challenge, it depends on what follows
       int possibleEndOfChallenge = parser.getPos();
+
       parser.consumeOws();
       if (!parser.hasMoreData()) {
+        // String end, challenge has ended
         parser.setPos(possibleEndOfChallenge);
         return;
       }
-      if (firstAuthParam) {
-        if (parser.isLookingAtLiteral(",")) {
-          parser.setPos(possibleEndOfChallenge);
-          return;
-        }
-      } else {
-        parser.consumeLiteral(",").consumeOws();
-      }
-      parser.consumeToken().consumeOws();
-      if (firstAuthParam || parser.isLookingAtLiteral("=")) {
-        parser.consumeLiteral("=").consumeOws().consumeQuotedStringOrToken();
-      } else {
+
+      // auth-param must be followed by comma, either separating it from the next auth-param or
+      // the next challenge
+      parser.consumeLiteral(",").consumeOws();
+      if (!tryToConsumeAuthParam(parser)) {
+        // Comma not followed by auth-param, this means a new challenge starts after the comma
         parser.setPos(possibleEndOfChallenge);
         return;
       }
-      firstAuthParam = false;
     }
+  }
+
+  private static void consumeAuthParam(Rfc2616AbnfParser parser) throws Rfc2616AbnfParser
+      .ParseException {
+    parser.consumeOws()
+        .consumeToken()
+        .consumeOws()
+        .consumeLiteral("=")
+        .consumeOws()
+        .consumeQuotedStringOrToken();
+  }
+
+  private static boolean tryToConsumeAuthParam(Rfc2616AbnfParser parser) {
+    int originalPos = parser.getPos();
+    try {
+      consumeAuthParam(parser);
+    } catch (Rfc2616AbnfParser.ParseException e) {
+      parser.setPos(originalPos);
+      return false;
+    }
+    return true;
   }
 }
