@@ -49,7 +49,7 @@ public class WwwAuthenticateHeader {
   }
 
   /**
-   * Extracts challenges from a set of HTTP headers.
+   * Extracts challenges from a map of HTTP headers.
    * <p>
    * A note about the map representing the headers: header names are case insensitive in HTTP. This
    * means that the <code>WWW-Authenticate</code> header can be represented in multiple
