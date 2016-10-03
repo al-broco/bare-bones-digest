@@ -136,6 +136,12 @@ public class Rfc2116AbnfParserTest {
     assertEquals("token", parser.get());
   }
 
+  @Test(expected= Rfc2616AbnfParser.ParseException.class)
+  public void testConsumeTokenNoToken() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("");
+    parser.consumeToken();
+  }
+
   @Test
   public void testConsumeTokenTokenFollowedBySeparator() throws Exception {
     String separators = "()<>@,;:\\\"/[]?={} \t";
@@ -164,7 +170,7 @@ public class Rfc2116AbnfParserTest {
   }
 
   @Test
-  public void testConsumeTokenTokenAllValidTokenCharacters() throws Exception {
+  public void testConsumeTokenAllValidTokenCharacters() throws Exception {
     String validTokenChars =
         "!#$%&'*+-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ^_`abcdefghijklmnopqrstuvwxyz|~";
 
@@ -173,6 +179,76 @@ public class Rfc2116AbnfParserTest {
       Rfc2616AbnfParser parser = new Rfc2616AbnfParser(token);
       parser.consumeToken();
       assertEquals(token, parser.get());
+    }
+  }
+
+  @Test
+  public void testConsumeValidToken68() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("token68");
+    parser.consumeToken68();
+    assertEquals("token68", parser.get());
+  }
+
+  @Test
+  public void testConsumeValidToken68EndingInEquals() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("token68=");
+    parser.consumeToken68();
+    assertEquals("token68=", parser.get());
+  }
+
+  @Test
+  public void testConsumeValidToken68EndingInMultipleEquals() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("token68======");
+    parser.consumeToken68();
+    assertEquals("token68======", parser.get());
+  }
+
+  @Test
+  public void testConsumeValidToken68EqualsEndsToken() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("token68=not_part_of_the_token");
+    parser.consumeToken68();
+    assertEquals("token68=", parser.get());
+  }
+
+  @Test(expected= Rfc2616AbnfParser.ParseException.class)
+  public void testConsumeToken68NoToken() throws Exception {
+    Rfc2616AbnfParser parser = new Rfc2616AbnfParser("");
+    parser.consumeToken68();
+  }
+
+  @Test
+  public void testConsumeToken68FollowedByNonToken68Character() throws Exception {
+    String validToken68Chars =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~+/";
+
+    String invalidToken68Chars = "";
+    for (char c = 0; c <= 128; ++c) {
+      if (c == '=') {
+        continue;
+      }
+      if (validToken68Chars.indexOf(c) != -1) {
+        continue;
+      }
+      invalidToken68Chars += c;
+    }
+
+    for (char c : invalidToken68Chars.toCharArray()) {
+      Rfc2616AbnfParser parser = new Rfc2616AbnfParser("token68" + c);
+      parser.consumeToken68();
+      assertEquals("token68", parser.get());
+    }
+  }
+
+  @Test
+  public void testConsumeToken68AllValidToken68CharactersExceptEquals() throws Exception {
+    String validToken68Chars =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~+/";
+
+    for (char c : validToken68Chars.toCharArray()) {
+      String token68 = Character.toString(c);
+      Rfc2616AbnfParser parser = new Rfc2616AbnfParser(token68);
+      parser.consumeToken68();
+      assertEquals(token68, parser.get());
     }
   }
 
