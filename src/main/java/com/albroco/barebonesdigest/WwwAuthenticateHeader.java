@@ -148,7 +148,11 @@ public class WwwAuthenticateHeader {
     parser.consumeRws().consumeToken68(); // token68
     if (parser.hasMoreData()) {
       int pos = parser.getPos();
-      parser.consumeOws().consumeLiteral(",").setPos(pos);
+      parser.consumeOws();
+      if (parser.hasMoreData()) {
+        parser.consumeLiteral(",");
+      }
+      parser.setPos(pos);
     }
   }
 
@@ -158,6 +162,10 @@ public class WwwAuthenticateHeader {
     while (parser.hasMoreData()) {
       int possibleEndOfChallenge = parser.getPos();
       parser.consumeOws();
+      if (!parser.hasMoreData()) {
+        parser.setPos(possibleEndOfChallenge);
+        return;
+      }
       if (firstAuthParam) {
         if (parser.isLookingAtLiteral(",")) {
           parser.setPos(possibleEndOfChallenge);
