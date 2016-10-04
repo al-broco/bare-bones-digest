@@ -5,9 +5,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection;
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH;
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH_INT;
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
+    .UNSPECIFIED_RFC2069_COMPATIBLE;
 
 /**
  * TODO doc
@@ -30,11 +37,8 @@ public class DigestAuthentication {
    * <code>auth-int</code>.</li>
    * <li>Challenges where the server supports qop type <code>auth</code> but not
    * <code>auth-int</code>.</li>
-   * <li>Challenges where the server supports qop type <code>auth-int</code> and the unnamed
-   * legacy qop type for RFC 2069 compatibility but neither <code>auth</code> nor
-   * <code>auth-int</code>. This should rarely happen in practice.</li>
    * <li>Challenges where the server supports the unnamed legacy qop type for RFC 2069
-   * compatibility but not <code>auth</code>. This should rarely happen in practice.</li>
+   * compatibility and nothing else. This should rarely happen in practice.</li>
    * <li>Challenges where the server supports qop type <code>auth-int</code> and nothing else.
    * This is ranked last among the supported challenges because <code>auth-int</code> is limited
    * and cannot authenticate requests without a body, such as HTTP GET.</li>
@@ -43,36 +47,35 @@ public class DigestAuthentication {
    */
   public static final Comparator<DigestChallenge> DEFAULT_CHALLENGE_COMPARATOR =
       new Comparator<DigestChallenge>() {
+        private final Collection<QualityOfProtection> AUTH_AUTH_INT_QOPS =
+            EnumSet.of(AUTH, AUTH_INT);
+
         @Override
         public int compare(DigestChallenge lhs, DigestChallenge rhs) {
           return score(rhs) - score(lhs);
         }
 
         private int score(DigestChallenge challenge) {
+          if (!DigestChallengeResponse.isChallengeSupported(challenge)) {
+            return Integer.MIN_VALUE;
+          }
+
           Set<DigestChallenge.QualityOfProtection> supportedQopTypes =
               challenge.getSupportedQopTypes();
-          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH_INT) &&
-              supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH)) {
+          if (supportedQopTypes.containsAll(AUTH_AUTH_INT_QOPS)) {
             return 0;
           }
 
-          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH)) {
+          if (supportedQopTypes.contains(AUTH)) {
             return -1;
           }
 
-          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH_INT) &&
-              supportedQopTypes.contains(DigestChallenge.QualityOfProtection
-                  .UNSPECIFIED_RFC2069_COMPATIBLE)) {
+          if (supportedQopTypes.contains(UNSPECIFIED_RFC2069_COMPATIBLE)) {
             return -2;
           }
 
-          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection
-              .UNSPECIFIED_RFC2069_COMPATIBLE)) {
+          if (supportedQopTypes.contains(AUTH_INT)) {
             return -3;
-          }
-
-          if (supportedQopTypes.contains(DigestChallenge.QualityOfProtection.AUTH_INT)) {
-            return -4;
           }
 
           return Integer.MIN_VALUE;
@@ -221,7 +224,7 @@ public class DigestAuthentication {
    * @return {@code true} if a response can be generated to any of the challenges
    */
   public boolean canRespond() {
-    return !this.challenges.isEmpty();
+    return response != null || !this.challenges.isEmpty();
   }
 
   /**
