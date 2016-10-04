@@ -344,4 +344,14 @@ final class Rfc2616AbnfParser {
           parser.getRemainingInput());
     }
   }
+
+  @Override
+  public String toString() {
+    return "Rfc2616AbnfParser{" +
+        "input='" + input + '\'' +
+        ", pos=" + eltEnd +
+        ", lastConsumed=" + get() +
+        ", remainingInput='" + getRemainingInput() + "'" +
+        '}';
+  }
 }

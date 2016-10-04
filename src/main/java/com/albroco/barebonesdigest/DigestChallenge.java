@@ -134,7 +134,8 @@ public class DigestChallenge {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">RFC 2617, Section 3.2.1, The
    * WWW-Authenticate Response Header</a>
    */
-  public static DigestChallenge parse(String challengeString) throws HttpDigestChallengeParseException {
+  public static DigestChallenge parse(String challengeString) throws
+      HttpDigestChallengeParseException {
     // see https://tools.ietf.org/html/rfc7235#section-4.1
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser(challengeString);
     try {
@@ -460,5 +461,17 @@ public class DigestChallenge {
    */
   public boolean isStale() {
     return stale;
+  }
+
+  @Override
+  public String toString() {
+    return "DigestChallenge{" +
+        "realm=" + quotedRealm +
+        ", nonce=" + quotedNonce +
+        ", opaque=" + quotedOpaque +
+        ", algorithm=" + algorithm +
+        ", qop=" + supportedQops +
+        ", stale=" + stale +
+        '}';
   }
 }

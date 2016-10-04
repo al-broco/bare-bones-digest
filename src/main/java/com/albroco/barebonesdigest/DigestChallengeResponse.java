@@ -1136,4 +1136,23 @@ public class DigestChallengeResponse {
     RANDOM.nextBytes(clientNonceByteBuffer);
     return encodeHexString(clientNonceByteBuffer);
   }
+
+  @Override
+  public String toString() {
+    return "DigestChallengeResponse{" +
+        "algorithm=" + algorithm +
+        ", realm=" + quotedRealm +
+        ", supportedQopTypes=" + supportedQopTypes +
+        ", nonce=" + quotedNonce +
+        ", nonceCount=" + nonceCount +
+        ", clientNonce=" + clientNonce +
+        ", firstRequestClientNonce=" + firstRequestClientNonce +
+        ", opaque=" + quotedOpaque +
+        ", username=" + username +
+        ", password=*" +
+        ", requestMethod=" + requestMethod +
+        ", digestUri=" + digestUri +
+        ", entityBodyDigest=" + Arrays.toString(entityBodyDigest) +
+        '}';
+  }
 }

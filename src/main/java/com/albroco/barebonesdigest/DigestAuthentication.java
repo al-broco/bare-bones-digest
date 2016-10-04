@@ -407,4 +407,15 @@ public class DigestAuthentication {
     }
     return digestChallenges;
   }
+
+  @Override
+  public String toString() {
+    return "DigestAuthentication{" +
+        "challenges=" + challenges +
+        ", response=" + response +
+        ", username='" + getUsername() + '\'' +
+        ", password=*" +
+        ", firstResponse=" + firstResponse +
+        '}';
+  }
 }
