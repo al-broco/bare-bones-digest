@@ -20,7 +20,7 @@ import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
  * TODO doc
  * note: not thread safe
  */
-public class DigestAuthentication {
+public final class DigestAuthentication {
   private List<DigestChallenge> challenges;
   private DigestChallengeResponse response;
   private String username;

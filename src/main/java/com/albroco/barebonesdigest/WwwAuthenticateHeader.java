@@ -23,7 +23,7 @@ import java.util.Map;
  * This class is not specific for digest authentication. It returns the challenges as strings and
  * can extract challenges of any type.
  */
-public class WwwAuthenticateHeader {
+public final class WwwAuthenticateHeader {
   /**
    * Name of the HTTP response header WWW-Authenticate.
    *

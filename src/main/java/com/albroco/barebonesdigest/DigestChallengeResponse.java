@@ -78,7 +78,7 @@ import java.util.Set;
  * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">RFC 2617, "HTTP Digest Access
  * Authentication", Section 3.2.2, "The Authorization Request Header"</a>
  */
-public class DigestChallengeResponse {
+public final class DigestChallengeResponse {
   /**
    * The name of the HTTP request header ({@value #HTTP_HEADER_AUTHORIZATION}).
    */
