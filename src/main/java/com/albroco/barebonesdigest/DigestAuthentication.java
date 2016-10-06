@@ -1,11 +1,14 @@
 package com.albroco.barebonesdigest;
 
+import com.android.internal.util.Predicate;
+
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +29,56 @@ public final class DigestAuthentication {
   private String username;
   private String password;
   private boolean firstResponse = true;
+
+  /**
+   * Predicate for filtering challenges baesd on what "quality of protection" types they support.
+   * TODO test
+   */
+  public static final class QopFilter implements Predicate<DigestChallenge> {
+    private final Set<QualityOfProtection> supportedQops;
+
+    public static QopFilter allowingQops(QualityOfProtection supportedQop,
+        QualityOfProtection... supportedQops) {
+      return new QopFilter(EnumSet.of(supportedQop, supportedQops));
+    }
+
+    public static QopFilter disallowingQops(QualityOfProtection supportedQop,
+        QualityOfProtection... supportedQops) {
+      return new QopFilter(EnumSet.complementOf(EnumSet.of(supportedQop, supportedQops)));
+    }
+
+    private QopFilter(Set<QualityOfProtection> supportedQops) {
+      this.supportedQops = supportedQops;
+    }
+
+    @Override
+    public boolean apply(DigestChallenge digestChallenge) {
+      for (QualityOfProtection qop : supportedQops) {
+        if (digestChallenge.getSupportedQopTypes().contains(qop)) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Predicate that can be used with {@link #filterChallenges(Predicate)} to prevent challenges that
+   * only support the {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE} from being used
+   * when generating a response.
+   * TODO test
+   */
+  public static final Predicate<DigestChallenge> EXCLUDE_LEGACY_QOP_FILTER =
+      QopFilter.disallowingQops(UNSPECIFIED_RFC2069_COMPATIBLE);
+
+  /**
+   * Predicate that can be used with {@link #filterChallenges(Predicate)} to prevent challenges that
+   * only support the {@link QualityOfProtection#AUTH_INT} from being used when generating a
+   * response.
+   * TODO test
+   */
+  public static final Predicate<DigestChallenge> EXCLUDE_AUTH_INT_FILTER =
+      QopFilter.disallowingQops(AUTH_INT);
 
   /**
    * Default comparator used when comparing which challenge to use when there is more than one to
@@ -193,11 +246,7 @@ public final class DigestAuthentication {
    * @return a new {@code DigestAuthentication} object
    */
   public static DigestAuthentication fromDigestChallenge(DigestChallenge challenge) {
-    if (DigestChallengeResponse.isChallengeSupported(challenge)) {
-      return new DigestAuthentication(Collections.singletonList(challenge));
-    } else {
-      return new DigestAuthentication(Collections.<DigestChallenge>emptyList());
-    }
+    return fromDigestChallenges(Collections.singleton(challenge));
   }
 
   /**
@@ -208,9 +257,7 @@ public final class DigestAuthentication {
    */
   private DigestAuthentication(List<DigestChallenge> challengesRepresentation) {
     this.challenges = challengesRepresentation;
-    if (challenges.size() > 1) {
-      Collections.sort(this.challenges, DEFAULT_CHALLENGE_COMPARATOR);
-    }
+    Collections.sort(this.challenges, DEFAULT_CHALLENGE_COMPARATOR);
   }
 
   /**
@@ -227,6 +274,27 @@ public final class DigestAuthentication {
    */
   public boolean canRespond() {
     return response != null || !this.challenges.isEmpty();
+  }
+
+  /**
+   * Filters challenges so that challenges for which the predicate returns {@code false} will
+   * not be used when generating a response.
+   * <p>
+   * Note that if no challenges remain it will not be possible to generate a response, see
+   * {@link #canRespond()}.
+   *
+   * TODO test
+   *
+   * @param filter a predicate to use for filtering
+   * @return this object so that setters can be chained
+   */
+  public DigestAuthentication filterChallenges(Predicate<? super DigestChallenge> filter) {
+    for (Iterator<DigestChallenge> i = challenges.iterator(); i.hasNext(); ) {
+      if (!filter.apply(i.next())) {
+        i.remove();
+      }
+    }
+    return this;
   }
 
   /**
