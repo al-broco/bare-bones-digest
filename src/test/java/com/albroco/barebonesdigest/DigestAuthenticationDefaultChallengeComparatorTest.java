@@ -16,8 +16,7 @@ public class DigestAuthenticationDefaultChallengeComparatorTest {
   private static final DigestChallenge AUTH_AUTH_INT_CHALLENGE =
       createChallenge("MD5", "auth,auth-int");
   private static final DigestChallenge LEGACY_CHALLENGE = createChallenge("MD5", null);
-  private static final DigestChallenge UNSUPPORTED_QOP_CHALLENGE =
-      createChallenge("MD5", "custom");
+  private static final DigestChallenge UNSUPPORTED_QOP_CHALLENGE = createChallenge("MD5", "custom");
   private static final DigestChallenge UNSUPPORTED_ALGORITHM_CHALLENGE =
       createChallenge("UNSUPPORTED", "auth,auth-int");
 

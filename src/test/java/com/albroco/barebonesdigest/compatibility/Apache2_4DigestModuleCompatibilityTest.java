@@ -10,8 +10,9 @@ import static com.albroco.barebonesdigest.DigestTestUtils.assertHeadersEqual;
 /**
  * Tests that the digest algorithm is compatible with the module <code>mod_auth_digest</code> of
  * Apache HTTP server 2.4.
+ *
  * @see <a href="http://httpd.apache.org/docs/2.4/mod/mod_auth_digest.html">
- *   Apache Module mod_auth_digest</a>
+ * Apache Module mod_auth_digest</a>
  */
 public class Apache2_4DigestModuleCompatibilityTest {
 

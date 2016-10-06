@@ -136,7 +136,7 @@ public class Rfc2116AbnfParserTest {
     assertEquals("token", parser.get());
   }
 
-  @Test(expected= Rfc2616AbnfParser.ParseException.class)
+  @Test(expected = Rfc2616AbnfParser.ParseException.class)
   public void testConsumeTokenNoToken() throws Exception {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser("");
     parser.consumeToken();
@@ -210,7 +210,7 @@ public class Rfc2116AbnfParserTest {
     assertEquals("token68=", parser.get());
   }
 
-  @Test(expected= Rfc2616AbnfParser.ParseException.class)
+  @Test(expected = Rfc2616AbnfParser.ParseException.class)
   public void testConsumeToken68NoToken() throws Exception {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser("");
     parser.consumeToken68();

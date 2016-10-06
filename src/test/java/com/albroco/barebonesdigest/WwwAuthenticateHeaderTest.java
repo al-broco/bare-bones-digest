@@ -83,8 +83,7 @@ public class WwwAuthenticateHeaderTest {
 
   @Test
   public void testParseEmptyHeader() throws Exception {
-    assertEquals(Collections.emptyList(),
-        WwwAuthenticateHeader.extractChallenges(""));
+    assertEquals(Collections.emptyList(), WwwAuthenticateHeader.extractChallenges(""));
   }
 
   @Test
@@ -170,8 +169,7 @@ public class WwwAuthenticateHeaderTest {
 
   @Test(expected = HttpDigestChallengeParseException.class)
   public void testMalformedChallengeWhitespaceOnly() throws Exception {
-    assertEquals(Collections.emptyList(),
-        WwwAuthenticateHeader.extractChallenges("  "));
+    assertEquals(Collections.emptyList(), WwwAuthenticateHeader.extractChallenges("  "));
   }
 
   @Test

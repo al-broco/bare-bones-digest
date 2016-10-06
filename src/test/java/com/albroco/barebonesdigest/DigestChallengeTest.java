@@ -305,8 +305,7 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
-    assertEquals(EnumSet.of(UNSPECIFIED_RFC2069_COMPATIBLE),
-        header.getSupportedQopTypes());
+    assertEquals(EnumSet.of(UNSPECIFIED_RFC2069_COMPATIBLE), header.getSupportedQopTypes());
   }
 
   @Test
