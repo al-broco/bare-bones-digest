@@ -610,44 +610,44 @@ public class DigestChallengeResponseTest {
     assertEquals("testrealm@host.com", response.getRealm());
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = InsufficientInformationException.class)
   public void testMissingUsername() {
     createChallengeFromRfc2617Example().username(null).getHeaderValue();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = InsufficientInformationException.class)
   public void testMissingPassword() {
     createChallengeFromRfc2617Example().password(null).getHeaderValue();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = InsufficientInformationException.class)
   public void testMissingRealm() {
     createChallengeFromRfc2617Example().realm(null).getHeaderValue();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = InsufficientInformationException.class)
   public void testMissingNonce() {
     createChallengeFromRfc2617Example().nonce(null).getHeaderValue();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = InsufficientInformationException.class)
   public void testMissingDigestUri() {
     createChallengeFromRfc2617Example().digestUri(null).getHeaderValue();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = InsufficientInformationException.class)
   public void testMissingRequestMethod() {
     createChallengeFromRfc2617Example().requestMethod(null).getHeaderValue();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = InsufficientInformationException.class)
   public void testMissingClientNonceWhenQopIsAuth() {
     createChallengeFromRfc2617Example().supportedQopTypes(EnumSet.of(AUTH))
         .clientNonce(null)
         .getHeaderValue();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = InsufficientInformationException.class)
   public void testMissingClientNonceWhenQopIsAuthInt() {
     createChallengeFromRfc2617Example().supportedQopTypes(EnumSet.of(AUTH_INT))
         .entityBody(new byte[0])
@@ -655,7 +655,7 @@ public class DigestChallengeResponseTest {
         .getHeaderValue();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = InsufficientInformationException.class)
   public void testMissingEntityBodyWhenQopIsAuthInt() {
     createChallengeFromRfc2617Example().supportedQopTypes(EnumSet.of(AUTH_INT))
         .entityBody(null)
@@ -663,7 +663,7 @@ public class DigestChallengeResponseTest {
         .getHeaderValue();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = InsufficientInformationException.class)
   public void testSupportedQopTypesNotSet() {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
@@ -686,7 +686,7 @@ public class DigestChallengeResponseTest {
     createChallengeFromRfc2069Example().clientNonce(null).getHeaderValue();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = InsufficientInformationException.class)
   public void testMissingFirstRequestClientNonceWithMd5SessAlgorithm() throws Exception {
     createChallengeFromRfc2617Example().firstRequestClientNonce(null)
         .algorithm("MD5-sess")

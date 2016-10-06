@@ -890,53 +890,67 @@ public class DigestChallengeResponse {
    * Returns the {@code credentials}, that is, the string to set in the {@code Authorization}
    * HTTP request header.
    * <p>
-   * Before calling this method, the following values and directives must be set:
+   * Before calling this method a number of values and directives must be set. The following are the
+   * most important:
    * <ul>
-   * <li>{@link #username(String) username}.</li>
-   * <li>{@link #password(String) password}.</li>
-   * <li>{@link #quotedRealm(String) realm}.</li>
-   * <li>{@link #quotedNonce(String) nonce}.</li>
-   * <li>{@link #supportedQopTypes(Set)} supported qop types.</li>
-   * <li>{@link #digestUri(String) digest-uri}.</li>
-   * <li>{@link #requestMethod(String) Method}.</li>
+   * <li>{@link #username(String)}.</li>
+   * <li>{@link #password(String)}.</li>
+   * <li>{@link #digestUri(String)}.</li>
+   * <li>{@link #requestMethod(String)}.</li>
+   * <li>If the qop type is <code>auth-int</code> (which is uncommon), {@link #entityBody(byte[])}
+   * or {@link #entityBodyDigest(byte[])} must also be set (see
+   * {@link #isEntityBodyDigestRequired()}).</li>
+   * </ul>
+   * <p>
+   * The following directives must also be set, but are normally parsed from the challenge or have
+   * default values, listed here mostly for completions sake:
+   * <ul>
+   * <li>{@link #quotedRealm(String)}, parsed from the challenge.</li>
+   * <li>{@link #quotedNonce(String)}, parsed from the challenge.</li>
+   * <li>{@link #supportedQopTypes(Set)}, parsed from the challenge.</li>
+   * <li>{@link #clientNonce(String)}}, except if using the
+   * {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE} qop (not recommended). Set to a
+   * random value by default.</li>
+   * <li>{@link #firstRequestClientNonce(String)} if the algorithm is MD-sess. Set to the client
+   * nonce by default.</li>
    * </ul>
    *
    * @return the string to set in the {@code Authorization} HTTP request header
-   * @throws IllegalStateException if any of the mandatory directives and values listed above has
-   *                               not been set
+   * @throws InsufficientInformationException if any of the mandatory directives and values
+   *                                          listed above has not been set
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
   public String getHeaderValue() {
     if (username == null) {
-      throw new IllegalStateException("Mandatory username not set");
+      throw new InsufficientInformationException("Mandatory username not set");
     }
     if (password == null) {
-      throw new IllegalStateException("Mandatory password not set");
+      throw new InsufficientInformationException("Mandatory password not set");
     }
     if (quotedRealm == null) {
-      throw new IllegalStateException("Mandatory realm not set");
+      throw new InsufficientInformationException("Mandatory realm not set");
     }
     if (quotedNonce == null) {
-      throw new IllegalStateException("Mandatory nonce not set");
+      throw new InsufficientInformationException("Mandatory nonce not set");
     }
     if (digestUri == null) {
-      throw new IllegalStateException("Mandatory digest-uri not set");
+      throw new InsufficientInformationException("Mandatory digest-uri not set");
     }
     if (requestMethod == null) {
-      throw new IllegalStateException("Mandatory Method not set");
+      throw new InsufficientInformationException("Mandatory request method not set");
     }
     if (isEntityBodyDigestRequired() && entityBodyDigest == null) {
-      throw new IllegalStateException(
+      throw new InsufficientInformationException(
           "entity-body or entity-body digest must be set for qop auth-int");
     }
     if (getSupportedQopTypes().isEmpty() || getQop() == null) {
-      throw new IllegalStateException("Mandatory supported qop types not set");
+      throw new InsufficientInformationException("Mandatory supported qop types not set");
     }
     if (clientNonce == null && getQop() != QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE) {
-      throw new IllegalStateException("Client nonce must be set when qop is set");
+      throw new InsufficientInformationException("Client nonce must be set when qop is set");
     }
     if ("MD5-sess".equals(getAlgorithm()) && getFirstRequestClientNonce() == null) {
-      throw new IllegalStateException(
+      throw new InsufficientInformationException(
           "First request client nonce must be set when algorithm is MD5-sess");
     }
 

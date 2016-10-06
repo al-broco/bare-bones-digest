@@ -375,13 +375,15 @@ public class DigestAuthentication {
    *                      see {@link DigestChallengeResponse#digestUri(String)} for a discussion
    *                      of what to set here
    * @return an authorization string, to use in an <code>Authorization</code> header
-   * @throws IllegalStateException If this method is called when
-   *                               {@link #canRespond()} returns {@code false}, that is, none of
-   *                               the available challenges are supported
-   * @throws IllegalStateException If this method is called when
-   *                               {@link #isEntityBodyDigestRequired()} returns {@code true},
-   *                               that is, a response can not be generated without a digest of
-   *                               the request's body. See TODO
+   * @throws IllegalStateException            If this method is called when
+   *                                          {@link #canRespond()} returns {@code false}, that
+   *                                          is, none of the available challenges are supported
+   * @throws InsufficientInformationException If this method is called when
+   *                                          {@link #isEntityBodyDigestRequired()} returns
+   *                                          {@code true}, that is, a response can not be generated
+   *                                          without a digest of
+   *                                          the request's body. See TODO
+   * @throws InsufficientInformationException If username or password has not been set
    * @see DigestChallengeResponse#requestMethod(String)
    * @see DigestChallengeResponse#digestUri(String)
    */

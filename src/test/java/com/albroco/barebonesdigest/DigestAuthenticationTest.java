@@ -285,6 +285,7 @@ public class DigestAuthenticationTest {
   @Test
   public void testCreateFromDigestChallenge() throws Exception {
     DigestAuthentication auth =
+
         DigestAuthentication.fromDigestChallenge(DigestChallenge.parse(AUTH_CHALLENGE));
     assertTrue(auth.canRespond());
   }
@@ -512,7 +513,8 @@ public class DigestAuthenticationTest {
   }
 
   @Test
-  public void testGetAuthorizationForRequestNonceCountIncreasesForEachInvocation() throws Exception {
+  public void testGetAuthorizationForRequestNonceCountIncreasesForEachInvocation() throws
+      Exception {
     DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_CHALLENGE);
     auth.username("user").password("passwd").getAuthorizationForRequest("GET", "/index.html");
     String authorization = auth.getAuthorizationForRequest("GET", "/index.html");
@@ -521,5 +523,18 @@ public class DigestAuthenticationTest {
     String expectedAssignment = "nc=00000002";
     assertTrue("Missing assignment " + expectedAssignment + ", hdr: " + authorization,
         assignments.contains(expectedAssignment));
+  }
+
+  @Test(expected = InsufficientInformationException.class)
+  public void testGetAuthorizationForRequestMissingEnitityBodyDigest() throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_INT_CHALLENGE);
+    auth.username("user").password("passwd").getAuthorizationForRequest("GET", "/index.html");
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testGetAuthorizationForRequestNoValidChallenges() throws Exception {
+    DigestAuthentication auth =
+        DigestAuthentication.fromWwwAuthenticateHeader(UNSUPPORTED_QOP_CHALLENGE);
+    auth.username("user").password("passwd").getAuthorizationForRequest("GET", "/index.html");
   }
 }
