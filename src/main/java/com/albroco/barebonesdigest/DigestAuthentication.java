@@ -208,7 +208,9 @@ public class DigestAuthentication {
    */
   private DigestAuthentication(List<DigestChallenge> challengesRepresentation) {
     this.challenges = challengesRepresentation;
-    Collections.sort(this.challenges, DEFAULT_CHALLENGE_COMPARATOR);
+    if (challenges.size() > 1) {
+      Collections.sort(this.challenges, DEFAULT_CHALLENGE_COMPARATOR);
+    }
   }
 
   /**
