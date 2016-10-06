@@ -29,7 +29,7 @@ public class DigestTestUtils {
   }
 
   public static Set<String> directiveAssignmentsFromHeader(String header) {
-    assertTrue(header.startsWith("Digest "));
+    assertTrue("Header doesn't start with 'Digest '", header.startsWith("Digest "));
     return new HashSet<>(Arrays.asList(header.substring("Digest ".length()).split(",", -1)));
   }
 }
