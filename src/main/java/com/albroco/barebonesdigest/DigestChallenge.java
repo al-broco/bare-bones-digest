@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  * All values are parsed but not all values are stored. In particular, the following is not stored:
  *
  * <ul>
- * <li>The values of the {@code realm} directive.</li>
+ * <li>The values of the {@code domain} directive.</li>
  * <li>Unrecognized directives.</li>
  * <li>Supported "quality of protection" values except for the standard ones, "auth" and
  * "auth-int".</li>
