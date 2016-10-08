@@ -400,10 +400,8 @@ public class DigestAuthenticationTest {
     assertTrue(auth.canRespond());
   }
 
-  @Test(expected=IllegalStateException.class)
-  public void
-  testFilterChallengesAfterChellengeHasBeenChosen()
-      throws Exception {
+  @Test(expected = IllegalStateException.class)
+  public void testFilterChallengesAfterChellengeHasBeenChosen() throws Exception {
     DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_CHALLENGE);
     auth.getChallengeResponse();
     auth.filterChallenges(DigestAuthentication.EXCLUDE_LEGACY_QOP_FILTER);
@@ -616,10 +614,81 @@ public class DigestAuthenticationTest {
     auth.username("user").password("passwd").getAuthorizationForRequest("GET", "/index.html");
   }
 
+  @Test
+  public void testGetAuthorizationForRequestEnitityBodySetOnChallengeResponse()
+      throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_INT_CHALLENGE);
+    auth.username("user")
+        .password("passwd")
+        .getChallengeResponse().entityBody(new byte[0]);
+    String authorization = auth.getAuthorizationForRequest("POST", "/index.html", new byte[0]);
+    assertNotNull(authorization);
+  }
+
   @Test(expected = IllegalStateException.class)
   public void testGetAuthorizationForRequestNoValidChallenges() throws Exception {
     DigestAuthentication auth =
         DigestAuthentication.fromWwwAuthenticateHeader(UNSUPPORTED_QOP_CHALLENGE);
     auth.username("user").password("passwd").getAuthorizationForRequest("GET", "/index.html");
+  }
+
+  @Test
+  public void testGetAuthorizationForRequestWithEntityBody() throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_INT_CHALLENGE);
+    String authorization = auth.username("user")
+        .password("passwd")
+        .getAuthorizationForRequest("POST", "/index.html", new byte[0]);
+    assertNotNull(authorization);
+    assertTrue("Header doesn't start with 'Digest ': " + authorization,
+        authorization.startsWith("Digest "));
+  }
+
+  @Test
+  public void testGetAuthorizationForRequestWithEntityBodyStartsAtNonceCount1() throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_INT_CHALLENGE);
+    String authorization = auth.username("user")
+        .password("passwd")
+        .getAuthorizationForRequest("POST", "/index.html", new byte[0]);
+    assertNotNull(authorization);
+    Set<String> assignments = DigestTestUtils.directiveAssignmentsFromHeader(authorization);
+    String expectedAssignment = "nc=00000001";
+    assertTrue("Missing assignment " + expectedAssignment + ", hdr: " + authorization,
+        assignments.contains(expectedAssignment));
+  }
+
+  @Test
+  public void testGetAuthorizationForRequestWithEntityBodyNonceCountIncreasesForEachInvocation()
+      throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_INT_CHALLENGE);
+    auth.username("user")
+        .password("passwd")
+        .getAuthorizationForRequest("POST", "/index.html", new byte[0]);
+    String authorization = auth.getAuthorizationForRequest("POST", "/index.html", new byte[0]);
+    assertNotNull(authorization);
+    Set<String> assignments = DigestTestUtils.directiveAssignmentsFromHeader(authorization);
+    String expectedAssignment = "nc=00000002";
+    assertTrue("Missing assignment " + expectedAssignment + ", hdr: " + authorization,
+        assignments.contains(expectedAssignment));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testGetAuthorizationForRequestWithEntityBodyNoValidChallenges() throws Exception {
+    DigestAuthentication auth =
+        DigestAuthentication.fromWwwAuthenticateHeader(UNSUPPORTED_QOP_CHALLENGE);
+    auth.username("user")
+        .password("passwd")
+        .getAuthorizationForRequest("POST", "/index.html", new byte[0]);
+  }
+
+  @Test(expected = InsufficientInformationException.class)
+  public void testGetAuthorizationForRequestWithEntityEntityBodyNotReusedInSubsequentRequests()
+      throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_INT_CHALLENGE);
+    // This should work:
+    auth.username("user")
+        .password("passwd")
+        .getAuthorizationForRequest("POST", "/index.html", new byte[0]);
+    // THis should fail:
+    auth.username("user").password("passwd").getAuthorizationForRequest("POST", "/index.html");
   }
 }

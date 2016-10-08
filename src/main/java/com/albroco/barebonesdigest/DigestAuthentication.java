@@ -448,7 +448,10 @@ public final class DigestAuthentication {
    * Returns the value of <code>Authorization</code> header that can be used in a particular
    * request.
    * <p>
-   * TODO document that each invocation will increase nonce count, etc
+   * The first time an <code>Authorization</code> header is generated nonce count will be set to 1.
+   * Each subsequent call will increase the nonce count by one. The server expects the nonce count
+   * to increase by exactly one for each request, so do not call this method unless you intend to
+   * use the result in a request.
    *
    * @param requestMethod the HTTP request method, such as GET or POST.
    * @param digestUri     the {@code Request-URI} of the {@code Request-Line} of the HTTP request,
@@ -458,11 +461,11 @@ public final class DigestAuthentication {
    * @throws IllegalStateException            If this method is called when
    *                                          {@link #canRespond()} returns {@code false}, that
    *                                          is, none of the available challenges are supported
-   * @throws InsufficientInformationException If this method is called when
-   *                                          {@link #isEntityBodyDigestRequired()} returns
-   *                                          {@code true}, that is, a response can not be generated
-   *                                          without a digest of
-   *                                          the request's body. See TODO
+   * @throws InsufficientInformationException If this method is called when and entity body is
+   *                                          required ({@link #isEntityBodyDigestRequired()}
+   *                                          returns {@code true}) and an entity body has not
+   *                                          been set on the challenge response directly. See
+   *                                          {@link #getAuthorizationForRequest(String, String, byte[])}
    * @throws InsufficientInformationException If username or password has not been set
    * @see DigestChallengeResponse#requestMethod(String)
    * @see DigestChallengeResponse#digestUri(String)
@@ -470,19 +473,15 @@ public final class DigestAuthentication {
    */
   public String getAuthorizationForRequest(String requestMethod, String digestUri) {
     prepareForAuthorization();
-
     String result =
         getChallengeResponse().requestMethod(requestMethod).digestUri(digestUri).getHeaderValue();
     getChallengeResponse().requestMethod(null).digestUri(null).entityBody(null);
-    // TODO test that ccalues above are cleared
     return result;
   }
 
   /**
    * Returns the value of <code>Authorization</code> header that can be used in a particular
    * request.
-   * <p>
-   * TODO document that each invocation will increase nonce count, etc
    * <p>
    * This method takes the request's <code>entity-body</code> as an argument. The entity body is the
    * message body after decoding any transfer encoding that might have been applied. Example:If
@@ -491,11 +490,15 @@ public final class DigestAuthentication {
    * <code>GET</code> requests for example do not. See
    * {@link DigestChallengeResponse#entityBody(byte[])} for more details.
    * <p>
-   * This method can be used for any request that has an entity body, but it is only used for
-   * "quality of protection" <code>auth-int</code>. Quality of protection <code>auth-int</code>
-   * requires a hash of the entity body of the message to be included in the challenge response.
+   * This method can be used for any request that has an entity body, but the entity-body is only
+   * used for "quality of protection" <code>auth-int</code>. Quality of protection
+   * <code>auth-int</code> requires a hash of the entity body of the message to be included in the
+   * challenge response.
    * <p>
-   * TODO test
+   * The first time an <code>Authorization</code> header is generated nonce count will be set to 1.
+   * Each subsequent call will increase the nonce count by one. The server expects the nonce count
+   * to increase by exactly one for each request, so do not call this method unless you intend to
+   * use the result in a request.
    *
    * @param requestMethod the HTTP request method, such as GET or POST.
    * @param digestUri     the {@code Request-URI} of the {@code Request-Line} of the HTTP request,
