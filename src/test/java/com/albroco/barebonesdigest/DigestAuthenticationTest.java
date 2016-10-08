@@ -1,6 +1,5 @@
 package com.albroco.barebonesdigest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -13,8 +12,7 @@ import java.util.Set;
 
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH_INT;
-import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
-    .UNSPECIFIED_RFC2069_COMPATIBLE;
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
@@ -333,7 +331,6 @@ public class DigestAuthenticationTest {
         auth.getChallengeResponse().getSupportedQopTypes());
   }
 
-  @Ignore("Not implemented")
   @Test(expected = IllegalStateException.class)
   public void testReorderChallengesAfterChellengeHasBeenChosen() throws Exception {
     DigestAuthentication auth =

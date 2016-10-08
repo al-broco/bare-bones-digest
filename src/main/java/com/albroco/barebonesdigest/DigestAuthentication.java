@@ -282,14 +282,32 @@ public final class DigestAuthentication {
    * <p>
    * Note that if no challenges remain it will not be possible to generate a response, see
    * {@link #canRespond()}.
+   * <p>
+   * Calling this method multiple times will apply multiple filters. A new filter does not replace
+   * an earlier filter.
+   * <p>
+   * This method must be called before a choice is made as to which challenge to use. Once a choice
+   * has been made it cannot be changed. This means that his method cannot be called after methods
+   * such as {@link #getChallengeResponse()} or {@link #getAuthorizationForRequest(String, String)}.
    *
    * TODO test
-   * TODO exception if challenge already chosen
    *
    * @param filter a predicate to use for filtering
    * @return this object so that setters can be chained
+   * @throws IllegalStateException if this method is called after a method that requires a choice
+   *                               to be made regarding which of the available challenges to use:
+   *                               {@link #isEntityBodyDigestRequired()},
+   *                               {@link #getChallengeResponse()},
+   *                               {@link #getAuthorizationForRequest(String, String)},
+   *                               {@link #getAuthorizationForRequest(String, String, byte[])}.
+   * @see #EXCLUDE_AUTH_INT_FILTER
+   * @see #EXCLUDE_LEGACY_QOP_FILTER
    */
   public DigestAuthentication filterChallenges(Predicate<? super DigestChallenge> filter) {
+    if (challenges == null) {
+      throw new IllegalStateException(
+          "Cannot change challenge ordering after challenge has been chosen");
+    }
     for (Iterator<DigestChallenge> i = challenges.iterator(); i.hasNext(); ) {
       if (!filter.apply(i.next())) {
         i.remove();
@@ -304,10 +322,9 @@ public final class DigestAuthentication {
    * <p>
    * By default, challenges are sorted using {@link #DEFAULT_CHALLENGE_COMPARATOR}.
    * <p>
-   * This method must be called before any method that requires a choice to be made which of the
-   * available challenges to use (such as {@link #getChallengeResponse()}).
-   * <p>
-   * TODO: rewrite this text
+   * This method must be called before a choice is made as to which challenge to use. Once a choice
+   * has been made it cannot be changed. This means that his method cannot be called after methods
+   * such as {@link #getChallengeResponse()} or {@link #getAuthorizationForRequest(String, String)}.
    *
    * @param orderingComparator A comparator object that will be used to sort the challenges. The
    *                           challenge that will be used is the first supported challenge
@@ -322,7 +339,10 @@ public final class DigestAuthentication {
    */
   public DigestAuthentication challengeOrdering(Comparator<? super DigestChallenge>
       orderingComparator) {
-    // TODO: fail if challenges is null
+    if (challenges == null) {
+      throw new IllegalStateException(
+          "Cannot change challenge ordering after challenge has been chosen");
+    }
     Collections.sort(this.challenges, orderingComparator);
     return this;
   }
