@@ -1,5 +1,7 @@
 package com.albroco.barebonesdigest;
 
+import com.android.internal.util.Predicate;
+
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -12,7 +14,8 @@ import java.util.Set;
 
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH_INT;
-import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE;
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
+    .UNSPECIFIED_RFC2069_COMPATIBLE;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
@@ -319,6 +322,91 @@ public class DigestAuthenticationTest {
   public void testCannotRespondToMissingChallenges() throws Exception {
     DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader("");
     assertFalse(auth.canRespond());
+  }
+
+  @Test
+  public void testFilterChallengesNoChange() throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_CHALLENGE);
+    auth.filterChallenges(new Predicate<Object>() {
+      @Override
+      public boolean apply(Object o) {
+        return true;
+      }
+    });
+
+    assertEquals(EnumSet.of(AUTH), auth.getChallengeResponse().getSupportedQopTypes());
+  }
+
+  @Test
+  public void testFilterChallengesRemoveAllChallenges() throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_CHALLENGE);
+    auth.filterChallenges(new Predicate<Object>() {
+      @Override
+      public boolean apply(Object o) {
+        return false;
+      }
+    });
+
+    assertFalse(auth.canRespond());
+  }
+
+  @Test
+  public void testFilterChallengesRemoveOneChallenge() throws Exception {
+    DigestAuthentication auth =
+        DigestAuthentication.fromWwwAuthenticateHeader(AUTH_CHALLENGE + "," + LEGACY_CHALLENGE);
+    // Filter to remove the auth qop challenge
+    auth.filterChallenges(new Predicate<DigestChallenge>() {
+      @Override
+      public boolean apply(DigestChallenge challenge) {
+        return !challenge.getSupportedQopTypes().contains(AUTH);
+      }
+    });
+    assertEquals(EnumSet.of(UNSPECIFIED_RFC2069_COMPATIBLE),
+        auth.getChallengeResponse().getSupportedQopTypes());
+  }
+
+  @Test
+  public void testFilterChallengesExcludeAuthIntFilterRemovesChallengeThatSupportsOnlyAuthInt()
+      throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_INT_CHALLENGE)
+        .filterChallenges(DigestAuthentication.EXCLUDE_AUTH_INT_FILTER);
+    assertFalse(auth.canRespond());
+  }
+
+  @Test
+  public void
+  testFilterChallengesExcludeAuthIntFilterDoesNotRemoveChallengeThatSupportAuthAndAuthInt()
+      throws Exception {
+    DigestAuthentication auth =
+        DigestAuthentication.fromWwwAuthenticateHeader(AUTH_AUTH_INT_CHALLENGE)
+            .filterChallenges(DigestAuthentication.EXCLUDE_AUTH_INT_FILTER);
+    assertTrue(auth.canRespond());
+  }
+
+  @Test
+  public void testFilterChallengesExcludeLegacyQopFilterRemovesChallengeThatSupportsOnlyLegacy()
+      throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(LEGACY_CHALLENGE)
+        .filterChallenges(DigestAuthentication.EXCLUDE_LEGACY_QOP_FILTER);
+    assertFalse(auth.canRespond());
+  }
+
+  @Test
+  public void
+  testFilterChallengesExcludeLegacyQopFilterDoesNotRemoveChallengeThatSupportAuthAndLegacy()
+      throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_CHALLENGE)
+        .filterChallenges(DigestAuthentication.EXCLUDE_LEGACY_QOP_FILTER);
+    assertTrue(auth.canRespond());
+  }
+
+  @Test(expected=IllegalStateException.class)
+  public void
+  testFilterChallengesAfterChellengeHasBeenChosen()
+      throws Exception {
+    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_CHALLENGE);
+    auth.getChallengeResponse();
+    auth.filterChallenges(DigestAuthentication.EXCLUDE_LEGACY_QOP_FILTER);
   }
 
   @Test

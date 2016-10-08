@@ -66,7 +66,6 @@ public final class DigestAuthentication {
    * Predicate that can be used with {@link #filterChallenges(Predicate)} to prevent challenges that
    * only support the {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE} from being used
    * when generating a response.
-   * TODO test
    */
   public static final Predicate<DigestChallenge> EXCLUDE_LEGACY_QOP_FILTER =
       QopFilter.disallowingQops(UNSPECIFIED_RFC2069_COMPATIBLE);
@@ -75,7 +74,6 @@ public final class DigestAuthentication {
    * Predicate that can be used with {@link #filterChallenges(Predicate)} to prevent challenges that
    * only support the {@link QualityOfProtection#AUTH_INT} from being used when generating a
    * response.
-   * TODO test
    */
   public static final Predicate<DigestChallenge> EXCLUDE_AUTH_INT_FILTER =
       QopFilter.disallowingQops(AUTH_INT);
@@ -290,8 +288,6 @@ public final class DigestAuthentication {
    * has been made it cannot be changed. This means that his method cannot be called after methods
    * such as {@link #getChallengeResponse()} or {@link #getAuthorizationForRequest(String, String)}.
    *
-   * TODO test
-   *
    * @param filter a predicate to use for filtering
    * @return this object so that setters can be chained
    * @throws IllegalStateException if this method is called after a method that requires a choice
@@ -305,8 +301,7 @@ public final class DigestAuthentication {
    */
   public DigestAuthentication filterChallenges(Predicate<? super DigestChallenge> filter) {
     if (challenges == null) {
-      throw new IllegalStateException(
-          "Cannot change challenge ordering after challenge has been chosen");
+      throw new IllegalStateException("Cannot filter challenges after challenge has been chosen");
     }
     for (Iterator<DigestChallenge> i = challenges.iterator(); i.hasNext(); ) {
       if (!filter.apply(i.next())) {
