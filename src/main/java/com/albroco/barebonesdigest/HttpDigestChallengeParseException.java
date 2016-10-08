@@ -1,9 +1,12 @@
 package com.albroco.barebonesdigest;
 
+import java.io.IOException;
+
 /**
- * Indicates that a HTTP digest challenge could not be parsed because it is malformed.
+ * Indicates that a <code>WWW-Authenticate</code> header or challenge could not be parsed because it
+ * is malformed.
  */
-public class HttpDigestChallengeParseException extends HttpDigestException {
+public class HttpDigestChallengeParseException extends IOException {
   /**
    * Constructs a new {@code HttpDigestChallengeParseException} with its stack trace and detail
    * message filled in.
