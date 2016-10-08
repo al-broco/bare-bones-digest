@@ -32,19 +32,36 @@ public final class DigestAuthentication {
 
   /**
    * Predicate for filtering challenges baesd on what "quality of protection" types they support.
-   * TODO test
    */
   public static final class QopFilter implements Predicate<DigestChallenge> {
     private final Set<QualityOfProtection> supportedQops;
 
+    /**
+     * Returns a filter that returns {@code true} for any {@code DigestChallenge} that supports any
+     * of the specified qops.
+     *
+     * @param supportedQop  a qop
+     * @param supportedQops more qops
+     * @return a filter that returns {@code true} for any {@code DigestChallenge} that supports any
+     * of the specified qops
+     */
     public static QopFilter allowingQops(QualityOfProtection supportedQop,
         QualityOfProtection... supportedQops) {
       return new QopFilter(EnumSet.of(supportedQop, supportedQops));
     }
 
-    public static QopFilter disallowingQops(QualityOfProtection supportedQop,
-        QualityOfProtection... supportedQops) {
-      return new QopFilter(EnumSet.complementOf(EnumSet.of(supportedQop, supportedQops)));
+    /**
+     * Returns a filter that returns {@code true} for any {@code DigestChallenge} that only supports
+     * the specified qops and nothing else.
+     *
+     * @param unsupportedQop  a qop
+     * @param unsupportedQops more qops
+     * @return a filter that returns {@code true} for any {@code DigestChallenge} that only supports
+     * the specified qops and nothing else.
+     */
+    public static QopFilter disallowingQops(QualityOfProtection unsupportedQop,
+        QualityOfProtection... unsupportedQops) {
+      return new QopFilter(EnumSet.complementOf(EnumSet.of(unsupportedQop, unsupportedQops)));
     }
 
     private QopFilter(Set<QualityOfProtection> supportedQops) {
