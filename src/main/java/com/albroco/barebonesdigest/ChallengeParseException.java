@@ -6,14 +6,14 @@ import java.io.IOException;
  * Indicates that a <code>WWW-Authenticate</code> header or challenge could not be parsed because it
  * is malformed.
  */
-public class HttpDigestChallengeParseException extends IOException {
+public class ChallengeParseException extends IOException {
   /**
-   * Constructs a new {@code HttpDigestChallengeParseException} with its stack trace and detail
+   * Constructs a new {@code ChallengeParseException} with its stack trace and detail
    * message filled in.
    *
    * @param detailMessage the detail message for this exception.
    */
-  public HttpDigestChallengeParseException(String detailMessage) {
+  public ChallengeParseException(String detailMessage) {
     super(detailMessage);
   }
 
@@ -23,7 +23,7 @@ public class HttpDigestChallengeParseException extends IOException {
    * @param message The detail message for the exception.
    * @param cause   The detail cause for the exception.
    */
-  public HttpDigestChallengeParseException(String message, Throwable cause) {
+  public ChallengeParseException(String message, Throwable cause) {
     super(message, cause);
   }
 
@@ -32,7 +32,7 @@ public class HttpDigestChallengeParseException extends IOException {
    *
    * @param cause The detail cause for the exception.
    */
-  public HttpDigestChallengeParseException(Throwable cause) {
+  public ChallengeParseException(Throwable cause) {
     super(cause);
   }
 }

@@ -155,10 +155,10 @@ public final class DigestAuthentication {
    *
    * @param connection the connection
    * @return a new {@code DigestAuthentication} object
-   * @throws HttpDigestChallengeParseException if challenges could not be parsed
+   * @throws ChallengeParseException if challenges could not be parsed
    */
   public static DigestAuthentication fromResponse(HttpURLConnection connection) throws
-      HttpDigestChallengeParseException {
+      ChallengeParseException {
     return fromResponseHeaders(connection.getHeaderFields());
   }
 
@@ -172,10 +172,10 @@ public final class DigestAuthentication {
    * @param headers the headers, as a map where the keys are header names and values are
    *                iterables where each element is a header value string
    * @return a new {@code DigestAuthentication} object
-   * @throws HttpDigestChallengeParseException if challenges could not be parsed
+   * @throws ChallengeParseException if challenges could not be parsed
    */
   public static <T extends Iterable<String>> DigestAuthentication fromResponseHeaders(Map<String,
-      T> headers) throws HttpDigestChallengeParseException {
+      T> headers) throws ChallengeParseException {
     return fromChallenges(WwwAuthenticateHeader.extractChallenges(headers));
   }
 
@@ -184,10 +184,10 @@ public final class DigestAuthentication {
    *
    * @param wwwAuthenticateHeaders the <code>WWW-Authenticate</code> headers
    * @return a new {@code DigestAuthentication} object
-   * @throws HttpDigestChallengeParseException if challenges could not be parsed
+   * @throws ChallengeParseException if challenges could not be parsed
    */
   public static DigestAuthentication fromWwwAuthenticateHeaders(Iterable<String>
-      wwwAuthenticateHeaders) throws HttpDigestChallengeParseException {
+      wwwAuthenticateHeaders) throws ChallengeParseException {
     return fromChallenges(WwwAuthenticateHeader.extractChallenges(wwwAuthenticateHeaders));
   }
 
@@ -196,10 +196,10 @@ public final class DigestAuthentication {
    *
    * @param wwwAuthenticateHeader the <code>WWW-Authenticate</code> header
    * @return a new {@code DigestAuthentication} object
-   * @throws HttpDigestChallengeParseException if challenges could not be parsed
+   * @throws ChallengeParseException if challenges could not be parsed
    */
   public static DigestAuthentication fromWwwAuthenticateHeader(String wwwAuthenticateHeader)
-      throws HttpDigestChallengeParseException {
+      throws ChallengeParseException {
     return fromChallenges(WwwAuthenticateHeader.extractChallenges(wwwAuthenticateHeader));
   }
 
@@ -219,10 +219,10 @@ public final class DigestAuthentication {
    *
    * @param challenges the challenges
    * @return a new {@code DigestAuthentication} object
-   * @throws HttpDigestChallengeParseException if challenges could not be parsed
+   * @throws ChallengeParseException if challenges could not be parsed
    */
   public static DigestAuthentication fromChallenges(Iterable<String> challenges) throws
-      HttpDigestChallengeParseException {
+      ChallengeParseException {
     List<DigestChallenge> supportedChallenges = createListOfMatchingSize(challenges);
 
     for (String challenge : challenges) {

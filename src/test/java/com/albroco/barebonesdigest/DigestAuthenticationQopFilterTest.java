@@ -22,7 +22,7 @@ public class DigestAuthenticationQopFilterTest {
           "Digest realm=\"\",algorithm=MD5,nonce=\"whatever\",qop=\"auth,auth-int\"");
       LEGACY_CHALLENGE =
           DigestChallenge.parse("Digest realm=\"\",algorithm=MD5,nonce=\"whatever\"");
-    } catch (HttpDigestChallengeParseException e) {
+    } catch (ChallengeParseException e) {
       e.printStackTrace();
       throw new RuntimeException(e);
     }

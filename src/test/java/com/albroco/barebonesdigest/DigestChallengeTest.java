@@ -373,7 +373,7 @@ public class DigestChallengeTest {
     assertNotNull(header);
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testMalformedChallengeMissingRealm() throws Exception {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
@@ -382,7 +382,7 @@ public class DigestChallengeTest {
     assertNull(DigestChallenge.parse(CHALLENGE));
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testMalformedChallengeMissingNonce() throws Exception {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
@@ -391,7 +391,7 @@ public class DigestChallengeTest {
     assertNull(DigestChallenge.parse(CHALLENGE));
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testMalformedChallengeWrongType() throws Exception {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
@@ -400,7 +400,7 @@ public class DigestChallengeTest {
     assertNull(DigestChallenge.parse(CHALLENGE));
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testMalformedChallengeWrongSyntax() throws Exception {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5

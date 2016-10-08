@@ -57,7 +57,7 @@ public class DigestAuthenticationDefaultChallengeComparatorTest {
     }
     try {
       return DigestChallenge.parse(str);
-    } catch (HttpDigestChallengeParseException e) {
+    } catch (ChallengeParseException e) {
       e.printStackTrace();
       return null;
     }

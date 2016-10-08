@@ -137,37 +137,37 @@ public class WwwAuthenticateHeaderTest {
         WwwAuthenticateHeader.extractChallenges("Custom"));
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testMalformedChallengeMixToken68AndAuthParam1() throws Exception {
     WwwAuthenticateHeader.extractChallenges("Basic realm=\"simple\", token68=");
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testMalformedChallengeMixToken68AndAuthParam2() throws Exception {
     WwwAuthenticateHeader.extractChallenges("Custom token68==, realm=\"simple\"");
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testMalformedChallengeMissingScheme() throws Exception {
     WwwAuthenticateHeader.extractChallenges("realm=\"simple\"");
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testMalformedChallengeMissingCommas() throws Exception {
     WwwAuthenticateHeader.extractChallenges("Custom1 custom2 custom3");
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testMalformedChallengeEmptyChallenge() throws Exception {
     WwwAuthenticateHeader.extractChallenges("Custom1,,custom2");
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testMalformedChallengeWhitespaceOnlyChallenge() throws Exception {
     WwwAuthenticateHeader.extractChallenges("Custom1, ,custom2");
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testMalformedChallengeWhitespaceOnly() throws Exception {
     assertEquals(Collections.emptyList(), WwwAuthenticateHeader.extractChallenges("  "));
   }

@@ -40,11 +40,11 @@ public final class WwwAuthenticateHeader {
    *
    * @param connection the connection the response will be read from
    * @return a list of challenges
-   * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
-   *                                           parsed
+   * @throws ChallengeParseException if the challenges are malformed and could not be
+   *                                 parsed
    */
   public static List<String> extractChallenges(HttpURLConnection connection) throws
-      HttpDigestChallengeParseException {
+      ChallengeParseException {
     return extractChallenges(connection.getHeaderFields());
   }
 
@@ -62,11 +62,11 @@ public final class WwwAuthenticateHeader {
    * @param headers the headers, as a map where the keys are header names and values are
    *                iterables where each element is a header value string
    * @return a list of challenges
-   * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
-   *                                           parsed
+   * @throws ChallengeParseException if the challenges are malformed and could not be
+   *                                 parsed
    */
   public static <T extends Iterable<String>> List<String> extractChallenges(Map<String, T>
-      headers) throws HttpDigestChallengeParseException {
+      headers) throws ChallengeParseException {
     if (headers.containsKey(HTTP_HEADER_WWW_AUTHENTICATE)) {
       return extractChallenges(headers.get(HTTP_HEADER_WWW_AUTHENTICATE));
     }
@@ -85,11 +85,11 @@ public final class WwwAuthenticateHeader {
    *
    * @param wwwAuthenticateHeaders the header values
    * @return a list of challenges
-   * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
-   *                                           parsed
+   * @throws ChallengeParseException if the challenges are malformed and could not be
+   *                                 parsed
    */
   public static List<String> extractChallenges(Iterable<String> wwwAuthenticateHeaders) throws
-      HttpDigestChallengeParseException {
+      ChallengeParseException {
     List<String> result = new ArrayList<>();
     for (String header : wwwAuthenticateHeaders) {
       extractChallenges(header, result);
@@ -102,18 +102,18 @@ public final class WwwAuthenticateHeader {
    *
    * @param wwwAuthenticateHeader the header value
    * @return a list of challenges
-   * @throws HttpDigestChallengeParseException if the challenges are malformed and could not be
-   *                                           parsed
+   * @throws ChallengeParseException if the challenges are malformed and could not be
+   *                                 parsed
    */
   public static List<String> extractChallenges(String wwwAuthenticateHeader) throws
-      HttpDigestChallengeParseException {
+      ChallengeParseException {
     List<String> result = new ArrayList<>();
     extractChallenges(wwwAuthenticateHeader, result);
     return result;
   }
 
   private static void extractChallenges(String header,
-      List<String> result) throws HttpDigestChallengeParseException {
+      List<String> result) throws ChallengeParseException {
     Rfc2616AbnfParser parser = new Rfc2616AbnfParser(header);
     while (parser.hasMoreData()) {
       try {
@@ -129,7 +129,7 @@ public final class WwwAuthenticateHeader {
           parser.consumeLiteral(",").consumeOws();
         }
       } catch (Rfc2616AbnfParser.ParseException e) {
-        throw new HttpDigestChallengeParseException(e);
+        throw new ChallengeParseException(e);
       }
     }
   }

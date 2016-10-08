@@ -95,7 +95,7 @@ public class DigestAuthenticationTest {
     assertFalse(auth.canRespond());
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testCreateFromHeadersMalformedHeader() throws Exception {
     Map<String, List<String>> headers = new HashMap<>();
     headers.put("WWW-Authenticate", Collections.singletonList("x x x"));
@@ -152,7 +152,7 @@ public class DigestAuthenticationTest {
     assertFalse(auth.canRespond());
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testCreateFromWwwAuthHeadersMalformedHeader() throws Exception {
     DigestAuthentication.fromWwwAuthenticateHeaders(Collections.singletonList("x x x"));
   }
@@ -192,7 +192,7 @@ public class DigestAuthenticationTest {
     assertFalse(auth.canRespond());
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testCreateFromWwwAuthHeaderMalformedHeader() throws Exception {
     DigestAuthentication.fromWwwAuthenticateHeader("x x x");
   }
@@ -237,7 +237,7 @@ public class DigestAuthenticationTest {
     assertFalse(auth.canRespond());
   }
 
-  @Test(expected = HttpDigestChallengeParseException.class)
+  @Test(expected = ChallengeParseException.class)
   public void testCreateFromChallengesMalformedChallenge() throws Exception {
     DigestAuthentication.fromChallenges(Collections.singleton("Digest x x x"));
   }
