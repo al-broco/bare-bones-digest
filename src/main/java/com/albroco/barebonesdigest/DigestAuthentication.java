@@ -284,6 +284,7 @@ public final class DigestAuthentication {
    * {@link #canRespond()}.
    *
    * TODO test
+   * TODO exception if challenge already chosen
    *
    * @param filter a predicate to use for filtering
    * @return this object so that setters can be chained
@@ -316,7 +317,8 @@ public final class DigestAuthentication {
    *                               to be made regarding which of the available challenges to use:
    *                               {@link #isEntityBodyDigestRequired()},
    *                               {@link #getChallengeResponse()},
-   *                               {@link #getAuthorizationForRequest(String, String)}.
+   *                               {@link #getAuthorizationForRequest(String, String)},
+   *                               {@link #getAuthorizationForRequest(String, String, byte[])}.
    */
   public DigestAuthentication challengeOrdering(Comparator<? super DigestChallenge>
       orderingComparator) {
@@ -431,11 +433,6 @@ public final class DigestAuthentication {
    * Returns the value of <code>Authorization</code> header that can be used in a particular
    * request.
    * <p>
-   * The response returned references the internal representation of this instance, modifying it
-   * will modify this instance. Example: Calling
-   * {@link DigestChallengeResponse#username(String) username} on the response will change the value
-   * returned by {@link #getUsername()}.
-   * <p>
    * TODO document that each invocation will increase nonce count, etc
    *
    * @param requestMethod the HTTP request method, such as GET or POST.
@@ -454,21 +451,73 @@ public final class DigestAuthentication {
    * @throws InsufficientInformationException If username or password has not been set
    * @see DigestChallengeResponse#requestMethod(String)
    * @see DigestChallengeResponse#digestUri(String)
+   * @see #getAuthorizationForRequest(String, String, byte[])
    */
   public String getAuthorizationForRequest(String requestMethod, String digestUri) {
+    prepareForAuthorization();
+
+    String result =
+        getChallengeResponse().requestMethod(requestMethod).digestUri(digestUri).getHeaderValue();
+    getChallengeResponse().requestMethod(null).digestUri(null).entityBody(null);
+    // TODO test that ccalues above are cleared
+    return result;
+  }
+
+  /**
+   * Returns the value of <code>Authorization</code> header that can be used in a particular
+   * request.
+   * <p>
+   * TODO document that each invocation will increase nonce count, etc
+   * <p>
+   * This method takes the request's <code>entity-body</code> as an argument. The entity body is the
+   * message body after decoding any transfer encoding that might have been applied. Example:If
+   * <code>Transfer-Encoding</code> is <code>gzip</code> the entity body is the unzipped message and
+   * the message body is the gzipped message. Only some requests have entity bodies,
+   * <code>GET</code> requests for example do not. See
+   * {@link DigestChallengeResponse#entityBody(byte[])} for more details.
+   * <p>
+   * This method can be used for any request that has an entity body, but it is only used for
+   * "quality of protection" <code>auth-int</code>. Quality of protection <code>auth-int</code>
+   * requires a hash of the entity body of the message to be included in the challenge response.
+   * <p>
+   * TODO test
+   *
+   * @param requestMethod the HTTP request method, such as GET or POST.
+   * @param digestUri     the {@code Request-URI} of the {@code Request-Line} of the HTTP request,
+   *                      see {@link DigestChallengeResponse#digestUri(String)} for a discussion
+   *                      of what to set here
+   * @param entityBody    the <code>entity-body</code> of the request (see above), or {@code null}
+   *                      if the request does not have an entity body
+   * @return an authorization string, to use in an <code>Authorization</code> header
+   * @throws IllegalStateException            If this method is called when
+   *                                          {@link #canRespond()} returns {@code false}, that
+   *                                          is, none of the available challenges are supported
+   * @throws InsufficientInformationException If username or password has not been set
+   * @see DigestChallengeResponse#requestMethod(String)
+   * @see DigestChallengeResponse#digestUri(String)
+   * @see DigestChallengeResponse#entityBody(byte[])
+   * @see #getAuthorizationForRequest(String, String)
+   * @see #isEntityBodyDigestRequired()
+   */
+  public String getAuthorizationForRequest(String requestMethod,
+      String digestUri,
+      byte[] entityBody) {
+    prepareForAuthorization();
+
+    String result = getChallengeResponse().requestMethod(requestMethod)
+        .digestUri(digestUri)
+        .entityBody(entityBody)
+        .getHeaderValue();
+    getChallengeResponse().requestMethod(null).digestUri(null).entityBody(null);
+    return result;
+  }
+
+  private void prepareForAuthorization() {
     if (!firstResponse) {
       getChallengeResponse().incrementNonceCount().randomizeClientNonce();
     }
     firstResponse = false;
-
-    return getChallengeResponse().requestMethod(requestMethod)
-        .digestUri(digestUri)
-        .getHeaderValue();
   }
-
-  // TODO method with entity-body
-
-  // TODO method with entity-body digest
 
   private static List<DigestChallenge> createListOfMatchingSize(Iterable<?> iterable) {
     List<DigestChallenge> digestChallenges;
