@@ -615,12 +615,9 @@ public class DigestAuthenticationTest {
   }
 
   @Test
-  public void testGetAuthorizationForRequestEnitityBodySetOnChallengeResponse()
-      throws Exception {
+  public void testGetAuthorizationForRequestEnitityBodySetOnChallengeResponse() throws Exception {
     DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_INT_CHALLENGE);
-    auth.username("user")
-        .password("passwd")
-        .getChallengeResponse().entityBody(new byte[0]);
+    auth.username("user").password("passwd").getChallengeResponse().entityBody(new byte[0]);
     String authorization = auth.getAuthorizationForRequest("POST", "/index.html", new byte[0]);
     assertNotNull(authorization);
   }
