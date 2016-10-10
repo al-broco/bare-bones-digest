@@ -13,9 +13,8 @@ import java.util.EnumSet;
 import java.util.Set;
 
 /**
- * Describes the contents of an {@code Authorization} HTTP request header. Once the client has
- * received a HTTP Digest challenge from the server this header should be included in all subsequent
- * requests to authorize the client.
+ * Represents a HTTP digest challenge response, as sent from the client to the server in a
+ * <code>Authorization</code> header.
  * <p>
  * Instances of this class is normally created as a response to an incoming challenge using
  * {@link #responseTo(DigestChallenge)}. To generate the {@code Authorization} header, som

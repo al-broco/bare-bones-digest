@@ -22,20 +22,25 @@ public class UseCaseCodeExamplesTest {
   @Test
   public void testGenerateResponseFromHeaders() throws Exception {
     // Step 1. Create the connection
-    HttpURLConnection connection = createConnection();
+    URL url = new URL("http://httpbin.org/digest-auth/auth/user/passwd");
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
     // Step 2. Make the request and check to see if the response contains an authorization challenge
     if (connection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-
       // Step 3. Create a authentication object from the challenge...
       DigestAuthentication auth = DigestAuthentication.fromResponse(connection);
       // ...with correct credentials
       auth.username("user").password("passwd");
 
-      // Step 4. Create a new connection, identical to the original one
-      connection = createConnection();
+      // Step 4 (Optional). Check if the challenge was a digest challenge of a supported type
+      if (!auth.canRespond()) {
+        // No digest challenge or a challenge of an unsupported type! Do something else or fail
+        return;
+      }
 
-      // Step 5. Set the Authorization header on the request, with the challenge response
+      // Step 5. Create a new connection, identical to the original one..
+      connection = (HttpURLConnection) url.openConnection();
+      // ...and set the Authorization header on the request, with the challenge response
       connection.setRequestProperty(DigestChallengeResponse.HTTP_HEADER_AUTHORIZATION,
           auth.getAuthorizationForRequest("GET", connection.getURL().getPath()));
     }
@@ -47,22 +52,23 @@ public class UseCaseCodeExamplesTest {
   public void testReuseChallengeResponse() throws Exception {
     DigestAuthentication auth = null;
 
-    HttpURLConnection connection = createConnection();
-
-    if (connection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-      auth = DigestAuthentication.fromResponse(connection).username("user").password("passwd");
-      connection = createConnection();
-      connection.setRequestProperty(DigestChallengeResponse.HTTP_HEADER_AUTHORIZATION,
-          auth.getAuthorizationForRequest("GET", connection.getURL().getPath()));
+    URL url = new URL("http://httpbin.org/digest-auth/auth/user/passwd");
+    HttpURLConnection initialConnection = (HttpURLConnection) url.openConnection();
+    if (initialConnection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+      auth = DigestAuthentication.fromResponse(initialConnection);
+      auth.username("user").password("passwd");
+      initialConnection = (HttpURLConnection) url.openConnection();
+      initialConnection.setRequestProperty(DigestChallengeResponse.HTTP_HEADER_AUTHORIZATION,
+          auth.getAuthorizationForRequest("GET", initialConnection.getURL().getPath()));
     }
 
-    assertEquals(200, connection.getResponseCode());
+    assertEquals(200, initialConnection.getResponseCode());
 
-    HttpURLConnection secondRequest = createConnection();
-    String get = auth.getAuthorizationForRequest("GET", connection.getURL().getPath());
-    secondRequest.setRequestProperty(DigestChallengeResponse.HTTP_HEADER_AUTHORIZATION, get);
+    HttpURLConnection anotherConnection = (HttpURLConnection) url.openConnection();
+    anotherConnection.setRequestProperty(DigestChallengeResponse.HTTP_HEADER_AUTHORIZATION,
+        auth.getAuthorizationForRequest("GET", initialConnection.getURL().getPath()));
 
-    assertEquals(200, connection.getResponseCode());
+    assertEquals(200, anotherConnection.getResponseCode());
   }
 
   @Test
@@ -70,11 +76,13 @@ public class UseCaseCodeExamplesTest {
     HttpURLConnection connection = createConnection();
 
     if (connection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+      // Parse the headers and extract challenges, this will return challenges of all types
       List<String> challengeStrings =
           WwwAuthenticateHeader.extractChallenges(connection.getHeaderFields());
 
-      // Check for other challenge types here
+      // Check the challenges and act on them...
 
+      // ...or pass them to DigestAuthentication to handle digest challenges:
       DigestAuthentication auth =
           DigestAuthentication.fromChallenges(challengeStrings).username("user").password("passwd");
 

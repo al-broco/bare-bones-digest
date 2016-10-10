@@ -20,8 +20,105 @@ import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
     .UNSPECIFIED_RFC2069_COMPATIBLE;
 
 /**
- * TODO doc
- * note: not thread safe
+ * Utility class with high-level methods for parsing challenges and generating responses.
+ * <p>
+ * Create an instance of this class once a digest challenge is received. Use the instance to respond
+ * to the challenge and to authenticate future requests.
+ *
+ * <h1>Basic usage</h1>
+ *
+ * Here is a basic example of how to make a request using {@code HttpURLConnection} and, in case
+ * of a challenge, respond to the challenge:
+ *
+ * <blockquote><pre>{@code
+ * // Step 1. Create the connection
+ * URL url = new URL("http://httpbin.org/digest-auth/auth/user/passwd");
+ * HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+ *
+ * // Step 2. Make the request and check to see if the response contains an authorization challenge
+ * if (connection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+ *     // Step 3. Create a authentication object from the challenge...
+ *     DigestAuthentication auth = DigestAuthentication.fromResponse(connection);
+ *     // ...with correct credentials
+ *     auth.username("user").password("passwd");
+ *
+ *     // Step 4 (Optional). Check if the challenge was a digest challenge of a supported type
+ *     if (!auth.canRespond()) {
+ *         // No digest challenge or a challenge of an unsupported type - do something else or fail
+ *         return;
+ *     }
+ *
+ *     // Step 5. Create a new connection, identical to the original one..
+ *     connection = (HttpURLConnection) url.openConnection();
+ *     // ...and set the Authorization header on the request, with the challenge response
+ *     connection.setRequestProperty(DigestChallengeResponse.HTTP_HEADER_AUTHORIZATION,
+ *         auth.getAuthorizationForRequest("GET", connection.getURL().getPath()));
+ * }
+ * }</pre></blockquote>
+ *
+ * <h1>Reuse challenges for future requests</h1>
+ *
+ * The {@code DigestAuthentication} object can be used to authenticate future requests. This removes
+ * the need of making the request twice (once for the challenge and once for the actual request):
+ *
+ * <blockquote><pre>{@code
+ * HttpURLConnection anotherConnection = (HttpURLConnection) url.openConnection();
+ * anotherConnection.setRequestProperty(DigestChallengeResponse.HTTP_HEADER_AUTHORIZATION,
+ *     auth.getAuthorizationForRequest("GET", initialConnection.getURL().getPath()));
+ * }</pre></blockquote>
+ *
+ * <h1>Supporting other authentication schemes</h1>
+ *
+ * To support other authentication schemes than Digest, you can use {@link WwwAuthenticateHeader} to
+ * parse <code>WWW-Authenticate</code> headers into individual challenges. Example:
+ *
+ * <blockquote><pre>{@code
+ * if (connection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+ *     // Parse the headers and extract challenges, this will return challenges of all types
+ *     List<String> challengeStrings =
+ *         WwwAuthenticateHeader.extractChallenges(connection.getHeaderFields());
+ *
+ *     // Check the challenges and act on them...
+ *
+ *     // ...or pass them to DigestAuthentication to handle digest challenges:
+ *     DigestAuthentication auth =
+ *         DigestAuthentication.fromChallenges(challengeStrings).username("user").password
+ *         ("passwd");
+ * }
+ * }</pre></blockquote>
+ *
+ * <h1>Overriding which challenge is used for the response</h1>
+ *
+ * If the HTTP response from the server contains more then one Digest challenge, one will be chosen
+ * when generating the challenge response.
+ * <ul>
+ * <li>Use {@link #challengeOrdering(Comparator)} to define which challenge is preferred.</li>
+ * <li>Use {@link #filterChallenges} to prevent challenges from being used altogether.</li>
+ * </ul>
+ * <p>
+ * Example: to exclude any challenges that <em>only</em> support the obsolete legacy quality of
+ * protection defined in <a href="https://tools.ietf.org/html/rfc2069">RFC  2069</a>, use:
+ * <pre>{@code
+ * auth.filterChallenges(DigestAuthentication.EXCLUDE_LEGACY_QOP_FILTER);
+ * }</pre>
+ * <p>
+ * In most situations there is no need to override which challenge is used, the default behavior is
+ * usually fine.
+ *
+ * <h1>Supporting <code>auth-int</code> quality of protection</h1>
+ *
+ * The <code>auth-int</code> quality of protection requires a digest of the entity body of the
+ * request to be included in the challenge response. To be compatible with servers that require
+ * <code>auth-int</code> quality of protection, use
+ * {@link #getAuthorizationForRequest(String, String, byte[])} instead of
+ * {@link #getAuthorizationForRequest(String, String)}.
+ * <p>
+ * <code>auth-int</code> is uncommon and cannot be used with HTTP requests that does not include a
+ * body, such as <code>GET</code>.
+ *
+ * <h1>Thread safety</h1>
+ *
+ * This class is not thread safe.
  */
 public final class DigestAuthentication {
   private List<DigestChallenge> challenges;
