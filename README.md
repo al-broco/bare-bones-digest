@@ -102,7 +102,7 @@ if (connection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
 [`DigestAuthentication`](http://al-broco.github.io/bare-bones-digest/javadoc/0.0.3/com/albroco/barebonesdigest/DigestAuthentication.html)
 is the main entry point of the API, read the documentation for more examples. Some other useful
 classes include:
-* [`WwwAuthenticationHeader`](http://al-broco.github.io/bare-bones-digest/javadoc/0.0.3/com/albroco/barebonesdigest/WwwAuthentication.html)
+* [`WwwAuthenticateHeader`](http://al-broco.github.io/bare-bones-digest/javadoc/0.0.3/com/albroco/barebonesdigest/WwwAuthenticateHeader.html)
   which can be used to parse challenges from `WWW-Authenticate` headers, including challenges of
   other types than Digest.
 * [`DigestChallenge`](http://al-broco.github.io/bare-bones-digest/javadoc/0.0.3/com/albroco/barebonesdigest/DigestChallenge.html)
