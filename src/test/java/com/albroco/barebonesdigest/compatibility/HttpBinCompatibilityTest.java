@@ -1,3 +1,5 @@
+// Copyright (c) 2016 Petter Wintzell
+
 package com.albroco.barebonesdigest.compatibility;
 
 import com.albroco.barebonesdigest.DigestChallenge;
