@@ -71,7 +71,8 @@ follows:
 
 ### Implementing HTTP Digest authentication
 
-Here is an example of hoe to make a request and respond to a Digest challenge:
+Here is an example of how to make a request and respond to a Digest
+challenge:
 ```
 // Step 1. Create the connection
 URL url = new URL("http://httpbin.org/digest-auth/auth/user/passwd");
@@ -101,12 +102,12 @@ if (connection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
 [`DigestAuthentication`](http://al-broco.github.io/bare-bones-digest/javadoc/0.0.3/com/albroco/barebonesdigest/DigestAuthentication.html)
 is the main entry point of the API, read the documentation for more examples. Some other useful
 classes include:
-* [`WwwAuthenticationHeader`](http://al-broco.github.io/bare-bones-digest/javadoc/0.0.3/com/albroco/barebonesdigest/WwwAuthentication.html),
+* [`WwwAuthenticationHeader`](http://al-broco.github.io/bare-bones-digest/javadoc/0.0.3/com/albroco/barebonesdigest/WwwAuthentication.html)
   which can be used to parse challenges from `WWW-Authenticate` headers, including challenges of
   other types than Digest.
-* [`DigestChallenge`](http://al-broco.github.io/bare-bones-digest/javadoc/0.0.3/com/albroco/barebonesdigest/DigestChallenge.html),
+* [`DigestChallenge`](http://al-broco.github.io/bare-bones-digest/javadoc/0.0.3/com/albroco/barebonesdigest/DigestChallenge.html)
   which provides functionality for parsing digest challenges.
-* [`DigestChallengeResponse`](http://al-broco.github.io/bare-bones-digest/javadoc/0.0.3/com/albroco/barebonesdigest/DigestChallengeResponse.html),
+* [`DigestChallengeResponse`](http://al-broco.github.io/bare-bones-digest/javadoc/0.0.3/com/albroco/barebonesdigest/DigestChallengeResponse.html)
   which provides functionality for generating responses to digest challenges.
 
 ## Features
