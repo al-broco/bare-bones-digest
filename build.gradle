@@ -43,7 +43,7 @@ dependencies {
 ext {
     PUBLISH_GROUP_ID = 'com.albroco'
     PUBLISH_ARTIFACT_ID = 'bare-bones-digest'
-    PUBLISH_VERSION = '0.0.2'
+    PUBLISH_VERSION = '0.0.3-rc1'
 }
 
 apply from: 'https://raw.githubusercontent.com/blundell/release-android-library/master/android-release-aar.gradle'
