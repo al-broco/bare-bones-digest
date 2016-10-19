@@ -15,7 +15,8 @@ import java.util.Set;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH;
 import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.AUTH_INT;
-import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE;
+import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
+    .UNSPECIFIED_RFC2069_COMPATIBLE;
 
 /**
  * Utility class with high-level methods for parsing challenges and generating responses.
@@ -117,7 +118,14 @@ public final class DigestAuthentication {
    * Default comparator used when comparing which challenge to use when there is more than one to
    * choose from.
    * <p>
-   * Orders challenges from most preferred to least preferred:
+   * Challenges that are not supported are ordered last.
+   * <p>
+   * Challenges that use digest algorithms <code>SHA-256</code> or <code>SHA-256-sess</code> are
+   * always preferred over challenges that use <code>MD5</code>, <code>MD5-sess</code>, or does
+   * not specify an algorithm.
+   * <p>
+   * If the rules above are not enough challenges are ordered according to the following, from
+   * most preferred to least preferred:
    * <ol>
    * <li>Challenges where the server supports qop types <code>auth</code> and
    * <code>auth-int</code>.</li>
@@ -138,8 +146,64 @@ public final class DigestAuthentication {
 
         @Override
         public int compare(DigestChallenge lhs, DigestChallenge rhs) {
-          return score(rhs) - score(lhs);
+          int result = supportScore(rhs) - supportScore(lhs);
+          if (result == 0) {
+            result = algorithmScore(rhs) - algorithmScore(lhs);
+          }
+          if (result == 0) {
+            result = miscScore(rhs) - miscScore(lhs);
+          }
+
+          return result;
         }
+
+        private int supportScore(DigestChallenge challenge) {
+          if (DigestChallengeResponse.isChallengeSupported(challenge)) {
+            return 0;
+          }
+
+          return -1;
+        }
+
+        private int algorithmScore(DigestChallenge challenge) {
+          if (challenge.getAlgorithm().equals("SHA-256") ||
+              challenge.getAlgorithm().equals("SHA-256-sess")) {
+            return 0;
+          }
+
+          return -1;
+        }
+
+        private int miscScore(DigestChallenge challenge) {
+          Set<DigestChallenge.QualityOfProtection> supportedQopTypes =
+              challenge.getSupportedQopTypes();
+          if (supportedQopTypes.containsAll(AUTH_AUTH_INT_QOPS))
+
+          {
+            return 0;
+          }
+
+          if (supportedQopTypes.contains(AUTH))
+
+          {
+            return -1;
+          }
+
+          if (supportedQopTypes.contains(UNSPECIFIED_RFC2069_COMPATIBLE))
+
+          {
+            return -2;
+          }
+
+          if (supportedQopTypes.contains(AUTH_INT))
+
+          {
+            return -3;
+          }
+
+          return -4;
+        }
+
 
         private int score(DigestChallenge challenge) {
           if (!DigestChallengeResponse.isChallengeSupported(challenge)) {

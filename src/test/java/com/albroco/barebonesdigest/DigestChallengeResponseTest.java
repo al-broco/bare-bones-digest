@@ -35,6 +35,16 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
+  public void testIsAlgorithmSupportedSha256() {
+    assertTrue(DigestChallengeResponse.isAlgorithmSupported("SHA-256"));
+  }
+
+  @Test
+  public void testIsAlgorithmSupportedSha256Sess() {
+    assertTrue(DigestChallengeResponse.isAlgorithmSupported("SHA-256-sess"));
+  }
+
+  @Test
   public void testIsAlgorithmSupportedNoAlgorithm() {
     assertTrue(DigestChallengeResponse.isAlgorithmSupported(null));
   }
@@ -56,6 +66,16 @@ public class DigestChallengeResponseTest {
 
   @Test
   public void testGetAndSetMd5SessAlgorithm() throws Exception {
+    assertEquals("MD5-sess", new DigestChallengeResponse().algorithm("MD5-sess").getAlgorithm());
+  }
+
+  @Test
+  public void testGetAndSetSha256Algorithm() throws Exception {
+    assertEquals("MD5", new DigestChallengeResponse().algorithm("MD5").getAlgorithm());
+  }
+
+  @Test
+  public void testGetAndSetSha256SessAlgorithm() throws Exception {
     assertEquals("MD5-sess", new DigestChallengeResponse().algorithm("MD5-sess").getAlgorithm());
   }
 

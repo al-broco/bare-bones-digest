@@ -57,7 +57,7 @@ import java.util.Set;
  * With {@code auth-int} quality of protection the challenge response includes a hash of the
  * request's {@code entity-body}, which provides some protection from man-in-the-middle attacks.
  * Not all requests include an {@code entity-body}, PUT and POST do but GET does not. To support
- * {@code auth-int}, you must set either the MD5 hash of the {@code entity-body} (using
+ * {@code auth-int}, you must set either the digest of the {@code entity-body} (using
  * {@link #entityBodyDigest(byte[])}) or the {@code entity-body} itself (using
  * {@link #entityBody(byte[])}).
  *
@@ -90,8 +90,6 @@ public final class DigestChallengeResponse {
   private static final SecureRandom RANDOM = new SecureRandom();
   private static final byte[] clientNonceByteBuffer = new byte[CLIENT_NONCE_BYTE_COUNT];
 
-  private final MessageDigest md5;
-
   private String algorithm;
   private String username;
   private String password;
@@ -114,13 +112,6 @@ public final class DigestChallengeResponse {
    * challenge.
    */
   public DigestChallengeResponse() {
-    try {
-      this.md5 = MessageDigest.getInstance("MD5");
-    } catch (NoSuchAlgorithmException e) {
-      // TODO find out if this can happen
-      throw new RuntimeException(e);
-    }
-
     supportedQopTypes = EnumSet.noneOf(QualityOfProtection.class);
     nonceCount(1).randomizeClientNonce().firstRequestClientNonce(getClientNonce());
   }
@@ -165,23 +156,23 @@ public final class DigestChallengeResponse {
   /**
    * Returns {@code true} if a given digest algorithm is supported.
    * <p>
-   * The only values currently supported are "MD5", "MD5-sess", and {@code null}. {@code null}
-   * indicates that the digest is generated using MD5, but no {@code algorithm} directive is
+   * Supported values are "MD5", "MD5-sess", "SHA-256", "SHA-256-sess", and {@code null}. {@code
+   * null} indicates that the digest is generated using MD5, but no {@code algorithm} directive is
    * included in the response.
    *
    * @param algorithm the algorithm
    * @return {@code true} if the algorithm is supported
    */
   public static boolean isAlgorithmSupported(String algorithm) {
-    return algorithm == null || "MD5".equals(algorithm) || "MD5-sess".equals(algorithm);
+    return algorithm == null || "MD5".equals(algorithm) || "MD5-sess".equals(algorithm) ||
+        "SHA-256".equals(algorithm) || "SHA-256-sess".equals(algorithm);
   }
 
   /**
    * Sets the {@code algorithm} directive, which must be the same as the {@code algorithm} directive
    * of the challenge.
    * <p>
-   * Use {@link #isAlgorithmSupported(String)} to check if a particular algorithm is supported on
-   * the device.
+   * Use {@link #isAlgorithmSupported(String)} to check if a particular algorithm is supported.
    *
    * @param algorithm the value of the {@code algorithm} directive or {@code null} to not include an
    *                  algorithm in the response
@@ -265,7 +256,7 @@ public final class DigestChallengeResponse {
    * <b>There is normally no need to manually set the client nonce since it will have a default
    * value of a randomly generated string.</b> If you do, make sure to call
    * {@link #firstRequestClientNonce(String)} if you modify the client nonce for the first request,
-   * or some algorithms may not work (notably {@code MD5-sess}).
+   * or some session variants of algorithms (those ending in <code>-sess</code>) may not work.
    *
    * @param clientNonce The unquoted value of the {@code cnonce} directive.
    * @return this object so that setters can be chained
@@ -308,10 +299,10 @@ public final class DigestChallengeResponse {
   /**
    * Sets the value of client nonce used in the first request.
    * <p>
-   * This value is used in some algorithms, notably {@code MD5-sess}. If the challenge is reused
-   * for multiple request, the original client nonce used when responding to the original challenge
-   * is used in subsequent challenge responses, even if the client changes the client nonce for
-   * subsequent requests.
+   * This value is used in session based algorithms (those ending in <code>-sess</code>). If the
+   * challenge is reused for multiple request, the original client nonce used when responding to
+   * the original challenge is used in subsequent challenge responses, even if the client changes
+   * the client nonce for subsequent requests.
    * <p>
    * <b>Normally, there is no need to call this method.</b> The default value of the client nonce
    * is a randomly generated string, and the default value of the first request client nonce is
@@ -343,10 +334,10 @@ public final class DigestChallengeResponse {
   /**
    * Returns the value of client nonce used in the first request.
    * <p>
-   * This value is used in some algorithms, notably {@code MD5-sess}. If the challenge is reused
-   * for multiple request, the original client nonce used when responding to the original challenge
-   * is used in subsequent challenge responses, even if the client changes the client nonce for
-   * subsequent requests.
+   * This value is used in session based algorithms (those ending in <code>-sess</code>). If the
+   * challenge is reused for multiple request, the original client nonce used when responding to
+   * the original challenge is used in subsequent challenge responses, even if the client changes
+   * the client nonce for subsequent requests.
    *
    * @return the value of client nonce used in the first request.
    * @see #firstRequestClientNonce(String)
@@ -810,22 +801,22 @@ public final class DigestChallengeResponse {
   }
 
   /**
-   * Sets the MD5 digest of the {@code entity-body} of the request, which is only used for the
+   * Sets the digest of the {@code entity-body} of the request, which is only used for the
    * "auth-int" quality of protection.
    * <p>
    * Note that the {@code entity-body} is not the same as the {@code message-body}. See
    * {@link #entityBody(byte[])} for details.
    * <p>
-   * Here is an example of how to compute the MD5 digest of an entity body:
+   * Here is an example of how to compute the SHA-256 digest of an entity body:
    * <pre>
    * {@code
-   * MessageDigest digest = MessageDigest.getInstance("MD5");
-   * md5.update(entityBody);
-   * byte[] digest = md5.digest();
+   * MessageDigest md = MessageDigest.getInstance("SHA-256");
+   * md.update(entityBody);
+   * byte[] digest = md.digest();
    * }
    * </pre>
    *
-   * @param entityBodyDigest the MD5 checksum of the {@code entity-body}
+   * @param entityBodyDigest the digest of the {@code entity-body}
    * @return this object so that setters can be chained
    * @see #entityBody(byte[])
    */
@@ -840,9 +831,9 @@ public final class DigestChallengeResponse {
   }
 
   /**
-   * Returns the MD5 digest of the {@code entity-body}.
+   * Returns the digest of the {@code entity-body}.
    *
-   * @return the MD5 digest of the {@code entity-body}
+   * @return the digest of the {@code entity-body}
    */
   public byte[] getEntityBodyDigest() {
     if (entityBodyDigest == null) {
@@ -1029,10 +1020,12 @@ public final class DigestChallengeResponse {
   }
 
   private String calculateResponse() {
+    MessageDigest digest = createMessageDigestForAlgorithm(algorithm);
+
     QualityOfProtection qop = getQop();
-    String a1 = getA1();
+    String a1 = getA1(digest);
     String a2 = calculateA2(qop);
-    String secret = H(a1);
+    String secret = H(digest, a1);
     String data = "";
 
     switch (qop) {
@@ -1042,33 +1035,58 @@ public final class DigestChallengeResponse {
             String.format("%08x", nonceCount),
             getClientNonce(),
             qop.getQopValue(),
-            H(a2));
+            H(digest, a2));
         break;
       case UNSPECIFIED_RFC2069_COMPATIBLE: {
-        data = joinWithColon(getNonce(), H(a2));
+        data = joinWithColon(getNonce(), H(digest, a2));
         break;
       }
     }
 
-    return "\"" + KD(secret, data) + "\"";
+    return "\"" + KD(digest, secret, data) + "\"";
   }
 
-  private String getA1() {
+  private static MessageDigest createMessageDigestForAlgorithm(String algorithm) {
+    String androidDigestName = getAndroidDigestNameForAlgorithm(algorithm);
+
+    try {
+      return MessageDigest.getInstance(androidDigestName);
+    } catch (NoSuchAlgorithmException e) {
+      // All digest names above must be supported since API level 1, see
+      // https://developer.android.com/reference/java/security/MessageDigest.html
+      throw new RuntimeException("Mandatory MessageDigest not supported: " + androidDigestName);
+    }
+  }
+
+  private static String getAndroidDigestNameForAlgorithm(String algorithm) {
+    String androidDigestName;
+
+    if (algorithm == null || algorithm.equals("MD5") || algorithm.equals("MD5-sess")) {
+      androidDigestName = "MD5";
+    } else if (algorithm.equals("SHA-256") || algorithm.equals("SHA-256-sess")) {
+      androidDigestName = "SHA-256";
+    } else {
+      throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
+    }
+    return androidDigestName;
+  }
+
+  private String getA1(MessageDigest digest) {
     if (A1 == null) {
-      A1 = calculateA1();
+      A1 = calculateA1(digest);
     }
     return A1;
   }
 
-  private String calculateA1() {
-    if (getAlgorithm() == null || "MD5".equals(getAlgorithm())) {
+  private String calculateA1(MessageDigest digest) {
+    if (getAlgorithm() == null) {
       return joinWithColon(username, getRealm(), password);
-    } else if ("MD5-sess".equals(getAlgorithm())) {
-      return joinWithColon(H(joinWithColon(username, getRealm(), password)),
+    } else if (getAlgorithm().endsWith("-sess")) {
+      return joinWithColon(H(digest, joinWithColon(username, getRealm(), password)),
           getNonce(),
           getFirstRequestClientNonce());
     } else {
-      throw new RuntimeException("Unsupported algorithm: " + getAlgorithm());
+      return joinWithColon(username, getRealm(), password);
     }
   }
 
@@ -1110,15 +1128,19 @@ public final class DigestChallengeResponse {
    * @param string the string
    * @return the value of <em>H(string)</em>
    */
-  private String H(String string) {
+  private String H(MessageDigest digest, String string) {
     // TODO find out which encoding to use
-    return encodeHexString(calculateChecksum(string.getBytes()));
+    return encodeHexString(calculateChecksum(digest, string.getBytes()));
+  }
+
+  private byte[] calculateChecksum(MessageDigest digest, byte[] data) {
+    digest.reset();
+    digest.update(data);
+    return digest.digest();
   }
 
   private byte[] calculateChecksum(byte[] data) {
-    md5.reset();
-    md5.update(data);
-    return md5.digest();
+    return calculateChecksum(createMessageDigestForAlgorithm(algorithm), data);
   }
 
   /**
@@ -1134,8 +1156,8 @@ public final class DigestChallengeResponse {
    * @param data   the data
    * @return the value of <em>KD(secret, data)</em>
    */
-  private String KD(String secret, String data) {
-    return H(secret + ":" + data);
+  private String KD(MessageDigest digest, String secret, String data) {
+    return H(digest, secret + ":" + data);
   }
 
   private static String encodeHexString(byte[] bytes) {

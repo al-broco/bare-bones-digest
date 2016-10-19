@@ -5,7 +5,6 @@ package com.albroco.barebonesdigest.compatibility;
 import com.albroco.barebonesdigest.DigestChallenge;
 import com.albroco.barebonesdigest.DigestChallengeResponse;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static com.albroco.barebonesdigest.DigestTestUtils.assertHeadersEqual;
@@ -56,7 +55,6 @@ public class HttpBinCompatibilityTest {
    *
    * @see <a href="https://github.com/Runscope/httpbin">https://github.com/Runscope/httpbin</a>
    */
-  @Ignore("SHA-256 not supported")
   @Test
   public void testQopAuthAuthenticationSha256Algorithm() throws Exception {
     // Tests an actual challenge and compares it to a correct response

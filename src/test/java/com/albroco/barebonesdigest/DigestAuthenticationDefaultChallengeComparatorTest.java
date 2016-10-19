@@ -13,22 +13,36 @@ import static com.albroco.barebonesdigest.DigestAuthentication.DEFAULT_CHALLENGE
 import static junit.framework.Assert.assertEquals;
 
 public class DigestAuthenticationDefaultChallengeComparatorTest {
-  private static final DigestChallenge AUTH_CHALLENGE = createChallenge("MD5", "auth");
-  private static final DigestChallenge AUTH_INT_CHALLENGE = createChallenge("MD5", "auth-int");
-  private static final DigestChallenge AUTH_AUTH_INT_CHALLENGE =
+  private static final DigestChallenge SHA256_AUTH_CHALLENGE = createChallenge("SHA-256", "auth");
+  private static final DigestChallenge SHA256_AUTH_INT_CHALLENGE =
+      createChallenge("SHA-256", "auth-int");
+  private static final DigestChallenge SHA256_AUTH_AUTH_INT_CHALLENGE =
+      createChallenge("SHA-256", "auth,auth-int");
+  private static final DigestChallenge SHA256_LEGACY_CHALLENGE = createChallenge("SHA-256", null);
+  private static final DigestChallenge SHA256_UNSUPPORTED_QOP_CHALLENGE =
+      createChallenge("SHA-256", "custom");
+  private static final DigestChallenge MD5_AUTH_CHALLENGE = createChallenge("MD5", "auth");
+  private static final DigestChallenge MD5_AUTH_INT_CHALLENGE = createChallenge("MD5", "auth-int");
+  private static final DigestChallenge MD5_AUTH_AUTH_INT_CHALLENGE =
       createChallenge("MD5", "auth,auth-int");
-  private static final DigestChallenge LEGACY_CHALLENGE = createChallenge("MD5", null);
-  private static final DigestChallenge UNSUPPORTED_QOP_CHALLENGE = createChallenge("MD5", "custom");
-  private static final DigestChallenge UNSUPPORTED_ALGORITHM_CHALLENGE =
+  private static final DigestChallenge MD5_LEGACY_CHALLENGE = createChallenge("MD5", null);
+  private static final DigestChallenge MD5_UNSUPPORTED_QOP_CHALLENGE =
+      createChallenge("MD5", "custom");
+  private static final DigestChallenge MD5_UNSUPPORTED_ALGORITHM_CHALLENGE =
       createChallenge("UNSUPPORTED", "auth,auth-int");
 
   @Test
   public void testSorting1() {
-    List<DigestChallenge> sortedList = Arrays.asList(AUTH_AUTH_INT_CHALLENGE,
-        AUTH_CHALLENGE,
-        LEGACY_CHALLENGE,
-        AUTH_INT_CHALLENGE,
-        UNSUPPORTED_QOP_CHALLENGE);
+    List<DigestChallenge> sortedList = Arrays.asList(SHA256_AUTH_AUTH_INT_CHALLENGE,
+        SHA256_AUTH_CHALLENGE,
+        SHA256_LEGACY_CHALLENGE,
+        SHA256_AUTH_INT_CHALLENGE,
+        MD5_AUTH_AUTH_INT_CHALLENGE,
+        MD5_AUTH_CHALLENGE,
+        MD5_LEGACY_CHALLENGE,
+        MD5_AUTH_INT_CHALLENGE,
+        SHA256_UNSUPPORTED_QOP_CHALLENGE,
+        MD5_UNSUPPORTED_QOP_CHALLENGE);
 
     List<DigestChallenge> list = new ArrayList<>(sortedList);
     Collections.reverse(list);
@@ -39,11 +53,16 @@ public class DigestAuthenticationDefaultChallengeComparatorTest {
 
   @Test
   public void testSorting2() {
-    List<DigestChallenge> sortedList = Arrays.asList(AUTH_AUTH_INT_CHALLENGE,
-        AUTH_CHALLENGE,
-        LEGACY_CHALLENGE,
-        AUTH_INT_CHALLENGE,
-        UNSUPPORTED_ALGORITHM_CHALLENGE);
+    List<DigestChallenge> sortedList = Arrays.asList(SHA256_AUTH_AUTH_INT_CHALLENGE,
+        SHA256_AUTH_CHALLENGE,
+        SHA256_LEGACY_CHALLENGE,
+        SHA256_AUTH_INT_CHALLENGE,
+        MD5_AUTH_AUTH_INT_CHALLENGE,
+        MD5_AUTH_CHALLENGE,
+        MD5_LEGACY_CHALLENGE,
+        MD5_AUTH_INT_CHALLENGE,
+        SHA256_UNSUPPORTED_QOP_CHALLENGE,
+        MD5_UNSUPPORTED_ALGORITHM_CHALLENGE);
 
     List<DigestChallenge> list = new ArrayList<>(sortedList);
     Collections.reverse(list);

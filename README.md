@@ -112,7 +112,8 @@ classes include:
 
 ## Features
 
-* Supports `MD5` and `MD5-sess` algorithms.
+* Supports `MD5`, `MD5-sess`, `SHA-256`, and `SHA-256-sess`
+  algorithms.
 * Supports `auth`, `auth-int` and [RFC
   2069](https://tools.ietf.org/html/rfc2069) quality of protection.
 * Somewhat lenient parsing, where common server mistakes (such as not
@@ -123,9 +124,7 @@ classes include:
 * The implementation is based on [RFC
   2617](https://tools.ietf.org/html/rfc2617). Features from [RFC
   7616](https://tools.ietf.org/html/rfc7616) (which obsoletes RFC
-  2617) are not implemented. In particular, MD5 and MD5-sess are the
-  only supported algorithms, even though RFC 7616 [recommends against
-  using them](https://tools.ietf.org/html/rfc7616#section-3.2).
+  2617) are only partially implemented.
 
 ## References
 
