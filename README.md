@@ -126,3 +126,28 @@ classes include:
   2617) are not implemented. In particular, MD5 and MD5-sess are the
   only supported algorithms, even though RFC 7616 [recommends against
   using them](https://tools.ietf.org/html/rfc7616#section-3.2).
+
+## References
+
+* [RFC 2069](https://tools.ietf.org/html/rfc2069) (obsolete): An
+  Extension to HTTP : Digest Access Authentication.
+* [RFC 2616](https://tools.ietf.org/html/rfc2616) (obsolete):
+  Hypertext Transfer Protocol -- HTTP/1.1.
+* [RFC 2617](https://tools.ietf.org/html/rfc2617) (obsolete): HTTP
+  Authentication: Basic and Digest Access Authentication.
+* [RFC 5234](https://tools.ietf.org/html/rfc5234): Augmented BNF for
+  Syntax Specifications: ABNF.
+* [RFC 7230](https://tools.ietf.org/html/rfc7230): Hypertext Transfer
+  Protocol (HTTP/1.1): Message Syntax and Routing.
+* [RFC 7235](https://tools.ietf.org/html/rfc7235): Hypertext Transfer
+  Protocol (HTTP/1.1): Authentication.
+* [RFC 7615](https://tools.ietf.org/html/rfc7615): HTTP
+  Authentication-Info and Proxy-Authentication-Info Response Header
+  Fields.
+* [RFC 7616](https://tools.ietf.org/html/rfc7616): HTTP Digest Access
+  Authentication.
+* Wikipedia on [Digest access
+  authentication](https://en.wikipedia.org/wiki/Digest_access_authentication).
+* [draft-smith-sip-auth-examples-00.txt](http://www.cs.columbia.edu/sip/drafts/sip/draft-smith-sip-auth-examples-00.txt):
+  Digest Authentication Examples for Session Initiation Protocol
+  (SIP).
