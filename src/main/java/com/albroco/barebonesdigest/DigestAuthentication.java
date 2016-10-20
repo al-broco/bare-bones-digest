@@ -103,9 +103,10 @@ import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
  * <code>auth-int</code> is uncommon and cannot be used with HTTP requests that does not include a
  * body, such as <code>GET</code>.
  *
- * <h1>Thread safety</h1>
+ * <h1>Concurrency</h1>
  *
- * This class is not thread safe.
+ * This class is thread safe, read and write operations are synchronized.
+ *
  */
 public final class DigestAuthentication {
   private List<DigestChallenge> challenges;
@@ -386,7 +387,7 @@ public final class DigestAuthentication {
    *                               {@link #getAuthorizationForRequest(String, String)},
    *                               {@link #getAuthorizationForRequest(String, String, byte[])}.
    */
-  public DigestAuthentication challengeOrdering(Comparator<? super DigestChallenge>
+  public synchronized DigestAuthentication challengeOrdering(Comparator<? super DigestChallenge>
       orderingComparator) {
     if (challenges == null) {
       throw new IllegalStateException(
@@ -405,7 +406,7 @@ public final class DigestAuthentication {
    *
    * @return {@code true} if the digest of the {@code entity-body} must be set
    */
-  public boolean isEntityBodyDigestRequired() {
+  public synchronized boolean isEntityBodyDigestRequired() {
     return getChallengeResponse().isEntityBodyDigestRequired();
   }
 
@@ -417,7 +418,7 @@ public final class DigestAuthentication {
    * @see #getUsername()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestAuthentication username(String username) {
+  public synchronized DigestAuthentication username(String username) {
     if (response != null) {
       response.username(username);
     } else {
@@ -432,7 +433,7 @@ public final class DigestAuthentication {
    * @return the username
    * @see #username(String)
    */
-  public String getUsername() {
+  public synchronized String getUsername() {
     if (response != null) {
       return response.getUsername();
     }
@@ -446,7 +447,7 @@ public final class DigestAuthentication {
    * @return this object so that setters can be chained
    * @see #getPassword()
    */
-  public DigestAuthentication password(String password) {
+  public synchronized DigestAuthentication password(String password) {
     if (response != null) {
       response.password(password);
     } else {
@@ -461,7 +462,7 @@ public final class DigestAuthentication {
    * @return the password
    * @see #password(String)
    */
-  public String getPassword() {
+  public synchronized String getPassword() {
     if (response != null) {
       return response.getPassword();
     }
@@ -481,7 +482,7 @@ public final class DigestAuthentication {
    *                               {@link #canRespond()} returns {@code false}, that is, none of
    *                               the available challenges are supported
    */
-  public DigestChallengeResponse getChallengeResponse() {
+  public synchronized DigestChallengeResponse getChallengeResponse() {
     if (!canRespond()) {
       throw new IllegalStateException(
           "None of the provided challenges is supported, no response can be generated");
@@ -525,7 +526,7 @@ public final class DigestAuthentication {
    * @see DigestChallengeResponse#digestUri(String)
    * @see #getAuthorizationForRequest(String, String, byte[])
    */
-  public String getAuthorizationForRequest(String requestMethod, String digestUri) {
+  public synchronized String getAuthorizationForRequest(String requestMethod, String digestUri) {
     prepareForAuthorization();
     String result =
         getChallengeResponse().requestMethod(requestMethod).digestUri(digestUri).getHeaderValue();
@@ -571,7 +572,7 @@ public final class DigestAuthentication {
    * @see #getAuthorizationForRequest(String, String)
    * @see #isEntityBodyDigestRequired()
    */
-  public String getAuthorizationForRequest(String requestMethod,
+  public synchronized String getAuthorizationForRequest(String requestMethod,
       String digestUri,
       byte[] entityBody) {
     prepareForAuthorization();
@@ -602,7 +603,7 @@ public final class DigestAuthentication {
   }
 
   @Override
-  public String toString() {
+  public synchronized String toString() {
     return "DigestAuthentication{" +
         "challenges=" + challenges +
         ", response=" + response +

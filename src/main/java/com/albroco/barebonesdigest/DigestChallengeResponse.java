@@ -71,10 +71,9 @@ import java.util.Set;
  * {@link #clientNonce(String)}. You may also have to call {@link #firstRequestClientNonce(String)},
  * see the documentation of thet method for details.
  *
- * <h2>Thread safety</h2>
+ * <h2>Concurrency</h2>
  *
- * This class is not thread safe. Manipulating an instance from different threads will result in
- * undefined behaviour.
+ * This class is thread safe, read and write operations are synchronized.
  *
  * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">RFC 2617, "HTTP Digest Access
  * Authentication", Section 3.2.2, "The Authorization Request Header"</a>
@@ -182,7 +181,7 @@ public final class DigestChallengeResponse {
    * @see #isAlgorithmSupported(String)
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse algorithm(String algorithm) {
+  public synchronized DigestChallengeResponse algorithm(String algorithm) {
     if (!isAlgorithmSupported(algorithm)) {
       throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
     }
@@ -198,7 +197,7 @@ public final class DigestChallengeResponse {
    * @return the value of the {@code algorithm} directive
    * @see #algorithm(String)
    */
-  public String getAlgorithm() {
+  public synchronized String getAlgorithm() {
     return algorithm;
   }
 
@@ -210,7 +209,7 @@ public final class DigestChallengeResponse {
    * @see #getUsername()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse username(String username) {
+  public synchronized DigestChallengeResponse username(String username) {
     this.username = username;
     invalidateA1();
     return this;
@@ -222,7 +221,7 @@ public final class DigestChallengeResponse {
    * @return the username
    * @see #username(String)
    */
-  public String getUsername() {
+  public synchronized String getUsername() {
     return username;
   }
 
@@ -233,7 +232,7 @@ public final class DigestChallengeResponse {
    * @return this object so that setters can be chained
    * @see #getPassword()
    */
-  public DigestChallengeResponse password(String password) {
+  public synchronized DigestChallengeResponse password(String password) {
     this.password = password;
     invalidateA1();
     return this;
@@ -245,7 +244,7 @@ public final class DigestChallengeResponse {
    * @return the password
    * @see #password(String)
    */
-  public String getPassword() {
+  public synchronized String getPassword() {
     return password;
   }
 
@@ -264,7 +263,7 @@ public final class DigestChallengeResponse {
    * @see #randomizeClientNonce()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse clientNonce(String clientNonce) {
+  public synchronized DigestChallengeResponse clientNonce(String clientNonce) {
     this.clientNonce = clientNonce;
     if ("MD5-sess".equals(getAlgorithm())) {
       invalidateA1();
@@ -281,7 +280,7 @@ public final class DigestChallengeResponse {
    * @return the {@code cnonce} directive
    * @see #clientNonce(String)
    */
-  public String getClientNonce() {
+  public synchronized String getClientNonce() {
     return clientNonce;
   }
 
@@ -292,7 +291,7 @@ public final class DigestChallengeResponse {
    * @see #clientNonce(String)
    * @see #getClientNonce()
    */
-  public DigestChallengeResponse randomizeClientNonce() {
+  public synchronized DigestChallengeResponse randomizeClientNonce() {
     return clientNonce(generateRandomNonce());
   }
 
@@ -323,7 +322,7 @@ public final class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2.2">Section 3.2.2.2, A1, of RFC
    * 2617</a>
    */
-  public DigestChallengeResponse firstRequestClientNonce(String firstRequestClientNonce) {
+  public synchronized DigestChallengeResponse firstRequestClientNonce(String firstRequestClientNonce) {
     this.firstRequestClientNonce = firstRequestClientNonce;
     if ("MD5-sess".equals(getAlgorithm())) {
       invalidateA1();
@@ -347,7 +346,7 @@ public final class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2.2">Section 3.2.2.2, A1, of RFC
    * 2617</a>
    */
-  public String getFirstRequestClientNonce() {
+  public synchronized String getFirstRequestClientNonce() {
     return firstRequestClientNonce;
   }
 
@@ -364,7 +363,7 @@ public final class DigestChallengeResponse {
    * @see #getNonce()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse quotedNonce(String quotedNonce) {
+  public synchronized DigestChallengeResponse quotedNonce(String quotedNonce) {
     this.quotedNonce = quotedNonce;
     resetNonceCount();
     if ("MD5-sess".equals(getAlgorithm())) {
@@ -381,7 +380,7 @@ public final class DigestChallengeResponse {
    * @see #nonce(String)
    * @see #getNonce()
    */
-  public String getQuotedNonce() {
+  public synchronized String getQuotedNonce() {
     return quotedNonce;
   }
 
@@ -398,7 +397,7 @@ public final class DigestChallengeResponse {
    * @see #getQuotedNonce()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse nonce(String unquotedNonce) {
+  public synchronized DigestChallengeResponse nonce(String unquotedNonce) {
     if (unquotedNonce == null) {
       return quotedNonce(null);
     }
@@ -413,7 +412,7 @@ public final class DigestChallengeResponse {
    * @see #quotedNonce(String)
    * @see #getQuotedNonce()
    */
-  public String getNonce() {
+  public synchronized String getNonce() {
     // TODO: Cache since value is used each time a header is written
     if (quotedNonce == null) {
       return null;
@@ -437,7 +436,7 @@ public final class DigestChallengeResponse {
    * @see #incrementNonceCount()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse nonceCount(int nonceCount) {
+  public synchronized DigestChallengeResponse nonceCount(int nonceCount) {
     this.nonceCount = nonceCount;
     return this;
   }
@@ -450,7 +449,7 @@ public final class DigestChallengeResponse {
    * @see #getNonceCount()
    * @see #resetNonceCount()
    */
-  public DigestChallengeResponse incrementNonceCount() {
+  public synchronized DigestChallengeResponse incrementNonceCount() {
     nonceCount(nonceCount + 1);
     return this;
   }
@@ -463,7 +462,7 @@ public final class DigestChallengeResponse {
    * @see #getNonceCount()
    * @see #incrementNonceCount()
    */
-  public DigestChallengeResponse resetNonceCount() {
+  public synchronized DigestChallengeResponse resetNonceCount() {
     nonceCount(1);
     return this;
   }
@@ -476,7 +475,7 @@ public final class DigestChallengeResponse {
    * @see #resetNonceCount()
    * @see #incrementNonceCount()
    */
-  public int getNonceCount() {
+  public synchronized int getNonceCount() {
     return nonceCount;
   }
 
@@ -493,7 +492,7 @@ public final class DigestChallengeResponse {
    * @see #getOpaque()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse quotedOpaque(String quotedOpaque) {
+  public synchronized DigestChallengeResponse quotedOpaque(String quotedOpaque) {
     this.quotedOpaque = quotedOpaque;
     return this;
   }
@@ -507,7 +506,7 @@ public final class DigestChallengeResponse {
    * @see #opaque(String)
    * @see #getOpaque()
    */
-  public String getQuotedOpaque() {
+  public synchronized String getQuotedOpaque() {
     return quotedOpaque;
   }
 
@@ -527,7 +526,7 @@ public final class DigestChallengeResponse {
    * @see #getQuotedOpaque()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse opaque(String unquotedOpaque) {
+  public synchronized DigestChallengeResponse opaque(String unquotedOpaque) {
     if (unquotedOpaque == null) {
       return quotedOpaque(null);
     }
@@ -543,7 +542,7 @@ public final class DigestChallengeResponse {
    * @see #quotedOpaque(String)
    * @see #getQuotedOpaque()
    */
-  public String getOpaque() {
+  public synchronized String getOpaque() {
     if (quotedOpaque == null) {
       return null;
     }
@@ -564,7 +563,7 @@ public final class DigestChallengeResponse {
    * @see #getSupportedQopTypes()
    * @see #getQop()
    */
-  public DigestChallengeResponse supportedQopTypes(Set<QualityOfProtection> supportedQopTypes) {
+  public synchronized DigestChallengeResponse supportedQopTypes(Set<QualityOfProtection> supportedQopTypes) {
     if (supportedQopTypes.isEmpty()) {
       throw new IllegalArgumentException("The set of supported qop types cannot be empty");
     }
@@ -581,7 +580,7 @@ public final class DigestChallengeResponse {
    * @see #supportedQopTypes(Set)
    * @see #getQop()
    */
-  public Set<QualityOfProtection> getSupportedQopTypes() {
+  public synchronized Set<QualityOfProtection> getSupportedQopTypes() {
     return Collections.unmodifiableSet(supportedQopTypes);
   }
 
@@ -611,7 +610,7 @@ public final class DigestChallengeResponse {
    * @see #getEntityBodyDigest()
    * @see #entityBody(byte[])
    */
-  public QualityOfProtection getQop() {
+  public synchronized QualityOfProtection getQop() {
     if (supportedQopTypes.contains(QualityOfProtection.AUTH_INT) && this.entityBodyDigest != null) {
       return QualityOfProtection.AUTH_INT;
     }
@@ -657,7 +656,7 @@ public final class DigestChallengeResponse {
    * @return this object so that setters can be chained
    * @see #getDigestUri()
    */
-  public DigestChallengeResponse digestUri(String digestUri) {
+  public synchronized DigestChallengeResponse digestUri(String digestUri) {
     this.digestUri = digestUri;
     return this;
   }
@@ -668,7 +667,7 @@ public final class DigestChallengeResponse {
    * @return the value of the {@code digest-uri} directive
    * @see #digestUri(String)
    */
-  public String getDigestUri() {
+  public synchronized String getDigestUri() {
     return digestUri;
   }
 
@@ -684,7 +683,7 @@ public final class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">Section 3.2.1 of RFC 2617</a>
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse quotedRealm(String quotedRealm) {
+  public synchronized DigestChallengeResponse quotedRealm(String quotedRealm) {
     this.quotedRealm = quotedRealm;
     invalidateA1();
     return this;
@@ -698,7 +697,7 @@ public final class DigestChallengeResponse {
    * @see #realm(String)
    * @see #getRealm()
    */
-  public String getQuotedRealm() {
+  public synchronized String getQuotedRealm() {
     return quotedRealm;
   }
 
@@ -714,7 +713,7 @@ public final class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">Section 3.2.1 of RFC 2617</a>
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public DigestChallengeResponse realm(String unquotedRealm) {
+  public synchronized DigestChallengeResponse realm(String unquotedRealm) {
     if (unquotedRealm == null) {
       return quotedRealm(null);
     }
@@ -729,7 +728,7 @@ public final class DigestChallengeResponse {
    * @see #quotedRealm(String)
    * @see #getQuotedRealm()
    */
-  public String getRealm() {
+  public synchronized String getRealm() {
     // TODO: Cache since value is used each time a header is written
     if (quotedRealm == null) {
       return null;
@@ -745,7 +744,7 @@ public final class DigestChallengeResponse {
    * @see #getRequestMethod()
    * @see <a href="https://tools.ietf.org/html/rfc2616#section-5.1.1">Section 5.1.1 of RFC 2616</a>
    */
-  public DigestChallengeResponse requestMethod(String requestMethod) {
+  public synchronized DigestChallengeResponse requestMethod(String requestMethod) {
     this.requestMethod = requestMethod;
     return this;
   }
@@ -756,7 +755,7 @@ public final class DigestChallengeResponse {
    * @return the HTTP method
    * @see #requestMethod(String)
    */
-  public String getRequestMethod() {
+  public synchronized String getRequestMethod() {
     return requestMethod;
   }
 
@@ -790,7 +789,7 @@ public final class DigestChallengeResponse {
    * @return this object so that setters can be chained
    * @see #entityBodyDigest(byte[])
    */
-  public DigestChallengeResponse entityBody(byte[] entityBody) {
+  public synchronized DigestChallengeResponse entityBody(byte[] entityBody) {
     if (entityBody != null) {
       entityBodyDigest = calculateChecksum(entityBody);
     } else {
@@ -820,7 +819,7 @@ public final class DigestChallengeResponse {
    * @return this object so that setters can be chained
    * @see #entityBody(byte[])
    */
-  public DigestChallengeResponse entityBodyDigest(byte[] entityBodyDigest) {
+  public synchronized DigestChallengeResponse entityBodyDigest(byte[] entityBodyDigest) {
     if (entityBodyDigest != null) {
       this.entityBodyDigest = Arrays.copyOf(entityBodyDigest, entityBodyDigest.length);
     } else {
@@ -835,7 +834,7 @@ public final class DigestChallengeResponse {
    *
    * @return the digest of the {@code entity-body}
    */
-  public byte[] getEntityBodyDigest() {
+  public synchronized byte[] getEntityBodyDigest() {
     if (entityBodyDigest == null) {
       return null;
     }
@@ -854,7 +853,7 @@ public final class DigestChallengeResponse {
    * @see #entityBodyDigest(byte[])
    * @see #getSupportedQopTypes()
    */
-  public boolean isEntityBodyDigestRequired() {
+  public synchronized boolean isEntityBodyDigestRequired() {
     return getSupportedQopTypes().equals(EnumSet.of(QualityOfProtection.AUTH_INT));
   }
 
@@ -871,7 +870,7 @@ public final class DigestChallengeResponse {
    * @throws IllegalArgumentException if the challenge is not supported
    * @see #isChallengeSupported(DigestChallenge)
    */
-  public DigestChallengeResponse challenge(DigestChallenge challenge) {
+  public synchronized DigestChallengeResponse challenge(DigestChallenge challenge) {
     return quotedNonce(challenge.getQuotedNonce()).quotedOpaque(challenge.getQuotedOpaque())
         .quotedRealm(challenge.getQuotedRealm())
         .algorithm(challenge.getAlgorithm())
@@ -912,7 +911,7 @@ public final class DigestChallengeResponse {
    *                                          listed above has not been set
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
-  public String getHeaderValue() {
+  public synchronized String getHeaderValue() {
     if (username == null) {
       throw new InsufficientInformationException("Mandatory username not set");
     }
@@ -1175,7 +1174,7 @@ public final class DigestChallengeResponse {
   }
 
   @Override
-  public String toString() {
+  public synchronized String toString() {
     return "DigestChallengeResponse{" +
         "algorithm=" + algorithm +
         ", realm=" + quotedRealm +

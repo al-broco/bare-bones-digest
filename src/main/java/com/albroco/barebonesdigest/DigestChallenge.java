@@ -27,9 +27,9 @@ import java.util.regex.Pattern;
  * and surrounding quotes removed). Quoting is defined in
  * <a href="https://tools.ietf.org/html/rfc2616#section-2.2"> RFC 2616, Section 2.2</a>.
  *
- * <h2>Thread safety</h2>
+ * <h2>Concurrency</h2>
  *
- * This class is not thread safe.
+ * This class is thread safe.
  *
  * <h2>Limitations</h2>
  *
