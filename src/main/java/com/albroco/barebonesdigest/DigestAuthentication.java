@@ -177,27 +177,19 @@ public final class DigestAuthentication {
         private int miscScore(DigestChallenge challenge) {
           Set<DigestChallenge.QualityOfProtection> supportedQopTypes =
               challenge.getSupportedQopTypes();
-          if (supportedQopTypes.containsAll(AUTH_AUTH_INT_QOPS))
-
-          {
+          if (supportedQopTypes.containsAll(AUTH_AUTH_INT_QOPS)) {
             return 0;
           }
 
-          if (supportedQopTypes.contains(AUTH))
-
-          {
+          if (supportedQopTypes.contains(AUTH)) {
             return -1;
           }
 
-          if (supportedQopTypes.contains(UNSPECIFIED_RFC2069_COMPATIBLE))
-
-          {
+          if (supportedQopTypes.contains(UNSPECIFIED_RFC2069_COMPATIBLE)) {
             return -2;
           }
 
-          if (supportedQopTypes.contains(AUTH_INT))
-
-          {
+          if (supportedQopTypes.contains(AUTH_INT)) {
             return -3;
           }
 
