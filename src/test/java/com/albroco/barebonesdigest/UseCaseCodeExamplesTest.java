@@ -3,6 +3,7 @@
 package com.albroco.barebonesdigest;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -14,6 +15,13 @@ import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 
+/**
+ * Tests that the code from the code examples work.
+ * <p>
+ * Note: These are not unit tests since they are dependent on an external resource. By default,
+ * they are all disabled.
+ */
+@Ignore("Dependent on an external resource (remote server)")
 public class UseCaseCodeExamplesTest {
 
   @Before
