@@ -105,6 +105,30 @@ public class DigestChallengeTest {
   }
 
   @Test
+  public void testGetOpaqueOpaqueMissing() throws Exception {
+    String CHALLENGE = "Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "qop=\"auth,auth-int\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
+
+    DigestChallenge header = DigestChallenge.parse(CHALLENGE);
+
+    assertNull(header.getOpaque());
+  }
+
+  @Test
+  public void testGetQuotedOpaqueOpaqueMissing() throws Exception {
+    String CHALLENGE = "Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "qop=\"auth,auth-int\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
+
+    DigestChallenge header = DigestChallenge.parse(CHALLENGE);
+
+    assertNull(header.getQuotedOpaque());
+  }
+
+  @Test
   public void testMd5Algorithm() throws Exception {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +

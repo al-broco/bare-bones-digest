@@ -419,7 +419,10 @@ public class DigestChallenge {
    * opaque directive is not present in the header
    */
   public String getOpaque() {
-    return Rfc2616AbnfParser.unquote(quotedOpaque);
+    if (quotedOpaque != null) {
+      return Rfc2616AbnfParser.unquote(quotedOpaque);
+    }
+    return null;
   }
 
   /**
