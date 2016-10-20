@@ -36,7 +36,6 @@ import java.util.regex.Pattern;
  * All values are parsed but not all values are stored. In particular, the following is not stored:
  *
  * <ul>
- * <li>The values of the {@code domain} directive.</li>
  * <li>Unrecognized directives.</li>
  * <li>Supported "quality of protection" values except for the standard ones, "auth" and
  * "auth-int".</li>
@@ -93,18 +92,21 @@ public class DigestChallenge {
   private final String quotedRealm;
   private final String quotedNonce;
   private final String quotedOpaque;
+  private final String quotedDomain;
   private final String algorithm;
   private final Set<QualityOfProtection> supportedQops;
   private final boolean stale;
 
   private DigestChallenge(String realm,
       String nonce,
+      String quotedDomain,
       String quotedOpaque,
       String algorithm,
       Set<QualityOfProtection> supportedQops,
       boolean stale) {
     this.quotedRealm = realm;
     this.quotedNonce = nonce;
+    this.quotedDomain = quotedDomain;
     this.quotedOpaque = quotedOpaque;
     this.algorithm = algorithm;
     this.supportedQops = supportedQops;
@@ -146,6 +148,7 @@ public class DigestChallenge {
       String quotedRealm = null;
       String quotedNonce = null;
       String quotedOpaque = null;
+      String quotedDomain = null;
       String algorithm = null;
       String qopOptions = null;
       boolean stale = false;
@@ -194,8 +197,7 @@ public class DigestChallenge {
           case "domain":
             // Domain definition from RFC 2617, Section 3.2.1:
             // domain            = "domain" "=" <"> URI ( 1*SP URI ) <">
-            // TODO store domain
-            parser.consumeQuotedString().get();
+            quotedDomain = parser.consumeQuotedString().get();
             break;
 
           case "stale":
@@ -237,6 +239,7 @@ public class DigestChallenge {
 
       return new DigestChallenge(quotedRealm,
           quotedNonce,
+          quotedDomain,
           quotedOpaque,
           algorithm,
           parseSupportedQopsFromQopOptions(qopOptions),
@@ -301,6 +304,48 @@ public class DigestChallenge {
    */
   public String getRealm() {
     return Rfc2616AbnfParser.unquote(quotedRealm);
+  }
+
+  /**
+   * Returns the quoted version of the optional <em>domain</em> directive, exactly as it appears
+   * in the challenge, or {@code null} if the domain is not set.
+   *
+   * The domain directive is described in
+   * <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">Section 3.2.1 of RFC 2617</a>:
+   *
+   * <dl>
+   * <dt>domain</dt>
+   * <dd>A quoted, space-separated list of URIs, as specified in RFC XURI, that define the
+   * protection space. [&hellip;]</dd>
+   * </dl>
+   *
+   * @return The quoted value of the domain directive, exactly as it appears in the challenge, or
+   * {@code null} if the challenge does not contain the domain directive.
+   */
+  public String getQuotedDomain() {
+    return quotedDomain;
+  }
+
+  /**
+   * Returns the unquoted version of the optional <em>domain</em> directive, or {@code null} if the
+   * domain is not set.
+   *
+   * The domain directive is described in
+   * <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">Section 3.2.1 of RFC 2617</a>:
+   *
+   * <dl>
+   * <dt>domain</dt>
+   * <dd>A quoted, space-separated list of URIs, as specified in RFC XURI, that define the
+   * protection space. [&hellip;]</dd>
+   * </dl>
+   *
+   * @return The unquoted value of the domain directive
+   */
+  public String getDomain() {
+    if (quotedDomain != null) {
+      return Rfc2616AbnfParser.unquote(quotedDomain);
+    }
+    return null;
   }
 
   /**

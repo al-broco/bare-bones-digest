@@ -203,6 +203,30 @@ public class DigestChallengeTest {
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
+    assertEquals("\"http://domain.testrealm.com\"", header.getQuotedDomain());
+    assertEquals("http://domain.testrealm.com", header.getDomain());
+  }
+
+  @Test
+  public void testGetDomainDomainMissing() throws Exception {
+    String CHALLENGE = "Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
+
+    DigestChallenge header = DigestChallenge.parse(CHALLENGE);
+
+    assertNull(header.getDomain());
+  }
+
+  @Test
+  public void testGetQuotedDomainDomainMissing() throws Exception {
+    String CHALLENGE = "Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
+
+    DigestChallenge header = DigestChallenge.parse(CHALLENGE);
+
+    assertNull(header.getQuotedDomain());
   }
 
   @Test
