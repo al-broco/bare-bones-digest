@@ -119,6 +119,36 @@ classes include:
 * Somewhat lenient parsing, where common server mistakes (such as not
   quoting the `qop` directive) does not cause the parsing to fail.
 
+## Interoperability
+
+bare-bones-digest has been tested for interoperability with the
+following servers:
+
+* Apache HTTP Server v2.4 with
+  [mod_auth_digest](http://httpd.apache.org/docs/2.4/mod/mod_auth_digest.html).
+* [nodejs](https://nodejs.org) v4.2.6 with
+  [Passport](http://passportjs.org/) v0.3.2 and
+  [passport-http](https://github.com/jaredhanson/passport-http)
+  v0.3.0.
+* [nodejs](https://nodejs.org) v4.2.6 with
+  [node-http-digest](https://github.com/thedjinn/node-http-digest)
+  v0.1.0.
+* An [Axis M1054](http://www.axis.com/se/sv/products/axis-m1054) camera.
+* [httpbin](https://github.com/Runscope/httpbin) v0.5. `auth-int` has
+  not been tested since only GET requests are supported by httpbin.
+
+Testing is basic. For each valid combination of qop and algorithm that
+the server supports a single request has been successfully
+authenticated.
+
+bare-bones-digest has been tested with, and is not compatible with,
+the following servers:
+
+* [nodejs](https://nodejs.org) v4.2.6 with
+  [node-digest](https://github.com/wearefractal/node-digest)
+  v0.0.5. node-digest expects to find spaces in challenge responses
+  where bare-bones-digest does not put them.
+
 ## Limitations
 
 * The implementation is based on [RFC
