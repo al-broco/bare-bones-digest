@@ -146,6 +146,7 @@ public class DigestChallengeTest {
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
+        "qop=auth, " +
         "algorithm=MD5-sess";
 
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
@@ -154,18 +155,28 @@ public class DigestChallengeTest {
     assertEquals("MD5-sess", header.getAlgorithm());
   }
 
+  @Test(expected = ChallengeParseException.class)
+  public void testMd5SessAlgorithmMissingQop() throws Exception {
+    String CHALLENGE = "Digest " +
+        "realm=\"testrealm@host.com\", " +
+        "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
+        "algorithm=MD5-sess";
+
+    DigestChallenge.parse(CHALLENGE);
+  }
+
   @Test
   public void testQuotedAlgorithm() throws Exception {
     // This is not a valid challenge but parsing is intentionally lenient
     String CHALLENGE = "Digest " +
         "realm=\"testrealm@host.com\", " +
         "nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", " +
-        "algorithm=\"MD5-sess\"";
+        "algorithm=\"MD5\"";
 
     DigestChallenge header = DigestChallenge.parse(CHALLENGE);
 
     assertNotNull(header);
-    assertEquals("MD5-sess", header.getAlgorithm());
+    assertEquals("MD5", header.getAlgorithm());
   }
 
   @Test

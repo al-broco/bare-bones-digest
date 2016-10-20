@@ -236,6 +236,10 @@ public class DigestChallenge {
         throw new ChallengeParseException(
             "Missing directive 'nonce' for challenge: " + challengeString);
       }
+      if (algorithm != null && algorithm.endsWith("-sess") && qopOptions == null) {
+        throw new ChallengeParseException(
+            "Session based algorithm (" + algorithm + ") cannot be used if qop is not set");
+      }
 
       return new DigestChallenge(quotedRealm,
           quotedNonce,
