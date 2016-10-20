@@ -13,7 +13,7 @@ import static com.albroco.barebonesdigest.DigestTestUtils.assertHeadersEqual;
  *
  * @see <a href="https://github.com/thedjinn/node-http-digest">node-http-digest</a>
  */
-public class NodeHttpDigestCompatibilityTest {
+public class NodeJsNodeHttpDigestCompatibilityTest {
 
   /**
    * Tests that the library is compatible with a server implemented as:
