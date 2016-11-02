@@ -322,7 +322,8 @@ public final class DigestChallengeResponse {
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2.2">Section 3.2.2.2, A1, of RFC
    * 2617</a>
    */
-  public synchronized DigestChallengeResponse firstRequestClientNonce(String firstRequestClientNonce) {
+  public synchronized DigestChallengeResponse firstRequestClientNonce(String
+      firstRequestClientNonce) {
     this.firstRequestClientNonce = firstRequestClientNonce;
     if ("MD5-sess".equals(getAlgorithm())) {
       invalidateA1();
@@ -563,7 +564,8 @@ public final class DigestChallengeResponse {
    * @see #getSupportedQopTypes()
    * @see #getQop()
    */
-  public synchronized DigestChallengeResponse supportedQopTypes(Set<QualityOfProtection> supportedQopTypes) {
+  public synchronized DigestChallengeResponse supportedQopTypes(Set<QualityOfProtection>
+      supportedQopTypes) {
     if (supportedQopTypes.isEmpty()) {
       throw new IllegalArgumentException("The set of supported qop types cannot be empty");
     }
