@@ -34,8 +34,8 @@ public class AxisM1054CompatibilityTest {
         .clientNonce("fd7e8e85093d0ea9")
         .firstRequestClientNonce("fd7e8e85093d0ea9");
 
-    String actualRespons = auth.getAuthorizationForRequest("GET", "/axis-cgi/jpg/image.cgi");
+    String actualResponse = auth.getAuthorizationForRequest("GET", "/axis-cgi/jpg/image.cgi");
 
-    assertHeadersEqual(expectedResponse, actualRespons);
+    assertHeadersEqual(expectedResponse, actualResponse);
   }
 }
