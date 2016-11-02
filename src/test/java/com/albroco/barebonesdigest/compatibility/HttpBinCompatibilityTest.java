@@ -2,10 +2,16 @@
 
 package com.albroco.barebonesdigest.compatibility;
 
+import com.albroco.barebonesdigest.DigestAuthentication;
 import com.albroco.barebonesdigest.DigestChallenge;
 import com.albroco.barebonesdigest.DigestChallengeResponse;
 
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.albroco.barebonesdigest.DigestTestUtils.assertHeadersEqual;
 
@@ -29,24 +35,46 @@ public class HttpBinCompatibilityTest {
   @Test
   public void testQopAuthAuthenticationMd5Algorithm() throws Exception {
     // Tests an actual challenge and compares it to a correct response
-    DigestChallenge challenge = DigestChallenge.parse("Digest " +
-        "nonce=\"ad317569721cf76378c9e16549710c80\", realm=\"me@kennethreitz.com\", " +
-        "algorithm=MD5, opaque=\"5ce4f90dc57064bce88fa755374de06a\", qop=\"auth\"");
+    Map<String, List<String>> responseHeaders = new HashMap<String, List<String>>() {{
+      put("WWW-Authenticate",
+          Arrays.asList(new String[]{
+              "Digest nonce=\"fa670d6814c95916137b4a3282f9a4b3\", " +
+                  "opaque=\"7c835eb339cfcf0906ef3c9c9308d345\", realm=\"me@kennethreitz.com\", " +
+                  "qop=auth",}));
 
-    String expectedResponse = "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
-        "nonce=\"ad317569721cf76378c9e16549710c80\",uri=\"/digest-auth/auth/user/passwd/MD5\"," +
-        "response=\"2d0219f304214b3a7b82441820fde5b8\",cnonce=\"83365a929a0358e4\"," +
-        "opaque=\"5ce4f90dc57064bce88fa755374de06a\",algorithm=MD5,qop=auth,nc=00000001";
+    }};
 
-    DigestChallengeResponse response = DigestChallengeResponse.responseTo(challenge)
-        .clientNonce("83365a929a0358e4")
-        .firstRequestClientNonce("83365a929a0358e4")
-        .username("user")
+    DigestAuthentication auth = DigestAuthentication.fromResponseHeaders(responseHeaders);
+
+    String expected1stChallengeResp =
+        "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
+            "nonce=\"fa670d6814c95916137b4a3282f9a4b3\",uri=\"/digest-auth/auth/user/passwd\"," +
+            "response=\"f1bd8482a9048d39e71a2261710d899e\",cnonce=\"5cfa3f5df37a1032\"," +
+            "opaque=\"7c835eb339cfcf0906ef3c9c9308d345\",qop=auth,nc=00000001";
+
+    auth.username("user")
         .password("passwd")
-        .digestUri("/digest-auth/auth/user/passwd/MD5")
-        .requestMethod("GET");
+        .getChallengeResponse()
+        .clientNonce("5cfa3f5df37a1032")
+        .firstRequestClientNonce("5cfa3f5df37a1032");
 
-    assertHeadersEqual(expectedResponse, response.getHeaderValue());
+    String actual1stChallengeResp =
+        auth.getAuthorizationForRequest("GET", "/digest-auth/auth/user/passwd");
+
+    assertHeadersEqual(expected1stChallengeResp, actual1stChallengeResp);
+
+    String expected2ndChallengeResp =
+        "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
+            "nonce=\"fa670d6814c95916137b4a3282f9a4b3\",uri=\"/digest-auth/auth/user/passwd\"," +
+            "response=\"7ab68f8d0f58dff1118b683e286dbab6\",cnonce=\"5f8b5f70805c6676\"," +
+            "opaque=\"7c835eb339cfcf0906ef3c9c9308d345\",qop=auth,nc=00000002";
+
+    auth.getChallengeResponse().clientNonce("5f8b5f70805c6676");
+
+    String actual2ndChallengeResp =
+        auth.getAuthorizationForRequest("GET", "/digest-auth/auth/user/passwd");
+
+    assertHeadersEqual(expected2ndChallengeResp, actual2ndChallengeResp);
   }
 
   /**
