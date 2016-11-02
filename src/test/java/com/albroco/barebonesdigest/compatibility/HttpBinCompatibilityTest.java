@@ -37,20 +37,18 @@ public class HttpBinCompatibilityTest {
     // Tests an actual challenge and compares it to a correct response
     Map<String, List<String>> responseHeaders = new HashMap<String, List<String>>() {{
       put("WWW-Authenticate",
-          Arrays.asList(new String[]{
-              "Digest nonce=\"fa670d6814c95916137b4a3282f9a4b3\", " +
-                  "opaque=\"7c835eb339cfcf0906ef3c9c9308d345\", realm=\"me@kennethreitz.com\", " +
-                  "qop=auth",}));
+          Arrays.asList(new String[]{"Digest nonce=\"fa670d6814c95916137b4a3282f9a4b3\", " +
+              "opaque=\"7c835eb339cfcf0906ef3c9c9308d345\", realm=\"me@kennethreitz.com\", " +
+              "qop=auth",}));
 
     }};
 
     DigestAuthentication auth = DigestAuthentication.fromResponseHeaders(responseHeaders);
 
-    String expected1stChallengeResp =
-        "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
-            "nonce=\"fa670d6814c95916137b4a3282f9a4b3\",uri=\"/digest-auth/auth/user/passwd\"," +
-            "response=\"f1bd8482a9048d39e71a2261710d899e\",cnonce=\"5cfa3f5df37a1032\"," +
-            "opaque=\"7c835eb339cfcf0906ef3c9c9308d345\",qop=auth,nc=00000001";
+    String expected1stChallengeResp = "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
+        "nonce=\"fa670d6814c95916137b4a3282f9a4b3\",uri=\"/digest-auth/auth/user/passwd\"," +
+        "response=\"f1bd8482a9048d39e71a2261710d899e\",cnonce=\"5cfa3f5df37a1032\"," +
+        "opaque=\"7c835eb339cfcf0906ef3c9c9308d345\",qop=auth,nc=00000001";
 
     auth.username("user")
         .password("passwd")
@@ -63,11 +61,10 @@ public class HttpBinCompatibilityTest {
 
     assertHeadersEqual(expected1stChallengeResp, actual1stChallengeResp);
 
-    String expected2ndChallengeResp =
-        "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
-            "nonce=\"fa670d6814c95916137b4a3282f9a4b3\",uri=\"/digest-auth/auth/user/passwd\"," +
-            "response=\"7ab68f8d0f58dff1118b683e286dbab6\",cnonce=\"5f8b5f70805c6676\"," +
-            "opaque=\"7c835eb339cfcf0906ef3c9c9308d345\",qop=auth,nc=00000002";
+    String expected2ndChallengeResp = "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
+        "nonce=\"fa670d6814c95916137b4a3282f9a4b3\",uri=\"/digest-auth/auth/user/passwd\"," +
+        "response=\"7ab68f8d0f58dff1118b683e286dbab6\",cnonce=\"5f8b5f70805c6676\"," +
+        "opaque=\"7c835eb339cfcf0906ef3c9c9308d345\",qop=auth,nc=00000002";
 
     auth.getChallengeResponse().clientNonce("5f8b5f70805c6676");
 
@@ -75,6 +72,48 @@ public class HttpBinCompatibilityTest {
         auth.getAuthorizationForRequest("GET", "/digest-auth/auth/user/passwd");
 
     assertHeadersEqual(expected2ndChallengeResp, actual2ndChallengeResp);
+  }
+
+  /**
+   * Tests that the library is compatible with httpbin (version not known), link is
+   * "/digest-auth/auth-int/user/passwd/MD5".
+   *
+   * @see <a href="https://github.com/Runscope/httpbin">https://github.com/Runscope/httpbin</a>
+   */
+  @Test
+  public void testQopAuthIntAuthenticationMd5Algorithm() throws Exception {
+    // Tests an actual challenge and compares it to a correct response
+    Map<String, List<String>> responseHeaders = new HashMap<String, List<String>>() {{
+      put("WWW-Authenticate",
+          Arrays.asList(new String[]{"Digest nonce=\"ab7d01efad3849f42af4a139b027dbbe\", " +
+              "opaque=\"6f5031885996c5ea2efa9efff8b44fcd\", realm=\"me@kennethreitz.com\", " +
+              "qop=auth-int",}));
+
+    }};
+
+    DigestAuthentication auth = DigestAuthentication.fromResponseHeaders(responseHeaders);
+
+    String expectedChallengeResp = "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
+        "nonce=\"ab7d01efad3849f42af4a139b027dbbe\",uri=\"/digest-auth/auth-int/user/passwd\"," +
+        "response=\"b52f5938a01ec5787e476685e715bb6e\",cnonce=\"3509870636279b49\"," +
+        "opaque=\"6f5031885996c5ea2efa9efff8b44fcd\",qop=auth-int,nc=00000001";
+
+    auth.username("user")
+        .password("passwd")
+        .getChallengeResponse()
+        .clientNonce("3509870636279b49")
+        .firstRequestClientNonce("3509870636279b49");
+
+    // Note: This is a GET request, which does not have an entity-body so according to the spec
+    // it should not be possible to authenticate using auth-int. httpbin accepts the authentication
+    // anyway if setting the entity-body to a byte array of zero length. Note: This httpbin endpoint
+    // does not support POST.
+    byte[] entityBody = new byte[0];
+
+    String actual1stChallengeResp =
+        auth.getAuthorizationForRequest("GET", "/digest-auth/auth-int/user/passwd", entityBody);
+
+    assertHeadersEqual(expectedChallengeResp, actual1stChallengeResp);
   }
 
   /**

@@ -134,8 +134,7 @@ following servers:
   [node-http-digest](https://github.com/thedjinn/node-http-digest)
   v0.1.0.
 * An [Axis M1054](http://www.axis.com/se/sv/products/axis-m1054) camera.
-* [httpbin](https://github.com/Runscope/httpbin) v0.5. `auth-int` has
-  not been tested since only GET requests are supported by httpbin.
+* [httpbin](https://github.com/Runscope/httpbin) v0.5.
 
 Testing is basic. For each valid combination of qop and algorithm that
 the server supports a single request has been successfully
