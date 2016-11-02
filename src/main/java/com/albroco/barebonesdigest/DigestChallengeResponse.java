@@ -112,7 +112,9 @@ public final class DigestChallengeResponse {
    */
   public DigestChallengeResponse() {
     supportedQopTypes = EnumSet.noneOf(QualityOfProtection.class);
-    nonceCount(1).randomizeClientNonce().firstRequestClientNonce(getClientNonce());
+    nonceCount(1).randomizeClientNonce()
+        .firstRequestClientNonce(getClientNonce())
+        .entityBody(new byte[0]);
   }
 
   /**
@@ -172,6 +174,11 @@ public final class DigestChallengeResponse {
    * of the challenge.
    * <p>
    * Use {@link #isAlgorithmSupported(String)} to check if a particular algorithm is supported.
+   * <p>
+   * Note: Setting the algorithm will also reset the <code>entity-body</code> to a byte array of
+   * zero length, see {@link #entityBody(byte[])}. This is because the <code>entity-body</code> is
+   * not stored, only the digest is. If you need to set both <code>entity-body</code> and
+   * <code>algorithm</code>, make sure to set <code>algorithm</code> first.
    *
    * @param algorithm the value of the {@code algorithm} directive or {@code null} to not include an
    *                  algorithm in the response
@@ -187,6 +194,7 @@ public final class DigestChallengeResponse {
     }
 
     this.algorithm = algorithm;
+    entityBody(new byte [0]);
     invalidateA1();
     return this;
   }
@@ -589,20 +597,14 @@ public final class DigestChallengeResponse {
   /**
    * Returns the "quality of protection" that will be used for the response.
    * <p>
-   * This is a derived value, computed from the set of supported "quality of protection" types
-   * and whether the digest of the {@code entity-body} for the request has been set or not:
+   * This is a derived value, computed from the set of supported "quality of protection" types:
    * <ol>
-   * <li>If {@link QualityOfProtection#AUTH_INT} is supported and the digest of the
-   * {@code entity-body} has been set (see {@link #entityBodyDigest(byte[])} and
-   * {@link #entityBody(byte[])}), {@link QualityOfProtection#AUTH_INT} is used.</li>
-   * <li>Otherwise, if {@link QualityOfProtection#AUTH} is supported it is used.</li>
+   * <li>If {@link QualityOfProtection#AUTH} is supported it is used.</li>
+   * <li>Otherwise, if {@link QualityOfProtection#AUTH_INT} is supported it is used.</li>
    * <li>Otherwise, if {@link QualityOfProtection#UNSPECIFIED_RFC2069_COMPATIBLE} is supported it
    * is used.</li>
    * <li>Otherwise, there is no way of responding to the challenge without violating the
-   * specification. This can happen if this method is called before
-   * {@link #supportedQopTypes(Set)} is called, or if the only supported qop type is
-   * {@link QualityOfProtection#AUTH_INT} but the digest of the {@code entity-body} has not been
-   * set. This method will return {@code null}.</li>
+   * specification. {@code null} will be returned.</li>
    * </ol>
    *
    * @return the "quality of protection" that will be used for the response
@@ -613,12 +615,12 @@ public final class DigestChallengeResponse {
    * @see #entityBody(byte[])
    */
   public synchronized QualityOfProtection getQop() {
-    if (supportedQopTypes.contains(QualityOfProtection.AUTH_INT) && this.entityBodyDigest != null) {
-      return QualityOfProtection.AUTH_INT;
-    }
-
     if (supportedQopTypes.contains(QualityOfProtection.AUTH)) {
       return QualityOfProtection.AUTH;
+    }
+
+    if (supportedQopTypes.contains(QualityOfProtection.AUTH_INT)) {
+      return QualityOfProtection.AUTH_INT;
     }
 
     if (supportedQopTypes.contains(QualityOfProtection.UNSPECIFIED_RFC2069_COMPATIBLE)) {
@@ -765,6 +767,11 @@ public final class DigestChallengeResponse {
    * Sets the {@code entity-body} of the request, which is only used for the "auth-int" quality of
    * protection.
    * <p>
+   * The default value is a byte array of zero length. Note that the <code>entity-body</code> is
+   * not stored, to save space only the digest of the <code>entity-body</code> is stored. For this
+   * reason, changing the digest algorithm (see {@link #algorithm(String)}) will reset the
+   * <code>entity-body</code> to a zero-length array.
+   * <p>
    * With "auth-int" quality of protection, the whole {@code entity-body} of the message is
    * hashed and included in the response, providing some protection against tampering.
    * <p>
@@ -785,19 +792,17 @@ public final class DigestChallengeResponse {
    * Content-Length or Transfer-Encoding header field in the request's message-headers.[&hellip;]
    * </blockquote>
    * In particular, PUT and POST requests include an {@code entity-body} (although it may be of
-   * zero length), GET requests do not.
+   * zero length), GET requests do not. To be fully conformant with the standards, "auth-int"
+   * cannot be used to authenticate requests without an {@code entity-body}. Some servers
+   * implementations allow requests without an {@code entity-body} to be authenticated using an
+   * {@code entity-body} of zero length.
    *
    * @param entityBody the {@code entity-body}
    * @return this object so that setters can be chained
    * @see #entityBodyDigest(byte[])
    */
   public synchronized DigestChallengeResponse entityBody(byte[] entityBody) {
-    if (entityBody != null) {
-      entityBodyDigest = calculateChecksum(entityBody);
-    } else {
-      entityBodyDigest = null;
-    }
-
+    entityBodyDigest = calculateChecksum(entityBody);
     return this;
   }
 
@@ -822,12 +827,7 @@ public final class DigestChallengeResponse {
    * @see #entityBody(byte[])
    */
   public synchronized DigestChallengeResponse entityBodyDigest(byte[] entityBodyDigest) {
-    if (entityBodyDigest != null) {
-      this.entityBodyDigest = Arrays.copyOf(entityBodyDigest, entityBodyDigest.length);
-    } else {
-      this.entityBodyDigest = null;
-    }
-
+    this.entityBodyDigest = Arrays.copyOf(entityBodyDigest, entityBodyDigest.length);
     return this;
   }
 
@@ -837,9 +837,6 @@ public final class DigestChallengeResponse {
    * @return the digest of the {@code entity-body}
    */
   public synchronized byte[] getEntityBodyDigest() {
-    if (entityBodyDigest == null) {
-      return null;
-    }
     return Arrays.copyOf(entityBodyDigest, entityBodyDigest.length);
   }
 
@@ -847,8 +844,8 @@ public final class DigestChallengeResponse {
    * Returns {@code true} if the digest of the {@code entity-body} is required to generate an
    * authorization header for this response.
    * <p>
-   * For most challenges, setting the digest of the {@code entity-body} is optional. It is only
-   * required if the only quality of protection the server accepts is {@code auth-int}.
+   * For most challenges the digest of the {@code entity-body} is not used. It is only required
+   * if {@link #getQop()} returns {@link QualityOfProtection#AUTH_INT}.
    *
    * @return {@code true} if the digest of the {@code entity-body} must be set
    * @see #entityBody(byte[])
@@ -856,7 +853,7 @@ public final class DigestChallengeResponse {
    * @see #getSupportedQopTypes()
    */
   public synchronized boolean isEntityBodyDigestRequired() {
-    return getSupportedQopTypes().equals(EnumSet.of(QualityOfProtection.AUTH_INT));
+    return getQop() == QualityOfProtection.AUTH_INT;
   }
 
   /**
@@ -890,9 +887,13 @@ public final class DigestChallengeResponse {
    * <li>{@link #password(String)}.</li>
    * <li>{@link #digestUri(String)}.</li>
    * <li>{@link #requestMethod(String)}.</li>
-   * <li>If the qop type is <code>auth-int</code> (which is uncommon), {@link #entityBody(byte[])}
-   * or {@link #entityBodyDigest(byte[])} must also be set (see
-   * {@link #isEntityBodyDigestRequired()}).</li>
+   * </ul>
+   * <p>
+   * If the qop type is <code>auth-int</code> the following must also be set unless the default
+   * value (zero-length entity body) is applicable:
+   * <ul>
+   * <li>{@link #entityBody(byte[])} or {@link #entityBodyDigest(byte[])}. See also
+   * {@link #isEntityBodyDigestRequired()}.</li>
    * </ul>
    * <p>
    * The following directives must also be set, but are normally parsed from the challenge or have
@@ -931,10 +932,6 @@ public final class DigestChallengeResponse {
     }
     if (requestMethod == null) {
       throw new InsufficientInformationException("Mandatory request method not set");
-    }
-    if (isEntityBodyDigestRequired() && entityBodyDigest == null) {
-      throw new InsufficientInformationException(
-          "entity-body or entity-body digest must be set for qop auth-int");
     }
     if (getSupportedQopTypes().isEmpty() || getQop() == null) {
       throw new InsufficientInformationException("Mandatory supported qop types not set");

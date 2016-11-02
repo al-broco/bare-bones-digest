@@ -100,8 +100,9 @@ import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
  * {@link #getAuthorizationForRequest(String, String, byte[])} instead of
  * {@link #getAuthorizationForRequest(String, String)}.
  * <p>
- * <code>auth-int</code> is uncommon and cannot be used with HTTP requests that does not include a
- * body, such as <code>GET</code>.
+ * <code>auth-int</code> is uncommon. It cannot be used with HTTP requests that does not include a
+ * body, such as <code>GET</code>. Some server implementations accept <code>auth-int</code>
+ * authentication for such requests as well, using a zero-length entity body.
  *
  * <h1>Concurrency</h1>
  *
@@ -506,6 +507,10 @@ public final class DigestAuthentication {
    * Each subsequent call will increase the nonce count by one. The server expects the nonce count
    * to increase by exactly one for each request, so do not call this method unless you intend to
    * use the result in a request.
+   * <p>
+   * Calling this method has the same effect as calling
+   * {@link #getAuthorizationForRequest(String, String, byte[])} with a zero-length byte array for
+   * {@code entityBody}.
    *
    * @param requestMethod the HTTP request method, such as GET or POST.
    * @param digestUri     the {@code Request-URI} of the {@code Request-Line} of the HTTP request,
@@ -515,25 +520,13 @@ public final class DigestAuthentication {
    * @throws IllegalStateException            If this method is called when
    *                                          {@link #canRespond()} returns {@code false}, that
    *                                          is, none of the available challenges are supported
-   * @throws InsufficientInformationException If this method is called when and entity body is
-   *                                          required ({@link #isEntityBodyDigestRequired()}
-   *                                          returns {@code true}) and an entity body has not
-   *                                          been set on the challenge response directly. See
-   *                                          {@link #getAuthorizationForRequest(String, String, byte[])}
    * @throws InsufficientInformationException If username or password has not been set
    * @see DigestChallengeResponse#requestMethod(String)
    * @see DigestChallengeResponse#digestUri(String)
    * @see #getAuthorizationForRequest(String, String, byte[])
    */
   public synchronized String getAuthorizationForRequest(String requestMethod, String digestUri) {
-    String result =
-        getChallengeResponse().requestMethod(requestMethod).digestUri(digestUri).getHeaderValue();
-    getChallengeResponse().requestMethod(null)
-        .digestUri(null)
-        .entityBody(null)
-        .incrementNonceCount()
-        .randomizeClientNonce();
-    return result;
+    return getAuthorizationForRequest(requestMethod, digestUri, new byte[0]);
   }
 
   /**
@@ -547,10 +540,13 @@ public final class DigestAuthentication {
    * <code>GET</code> requests for example do not. See
    * {@link DigestChallengeResponse#entityBody(byte[])} for more details.
    * <p>
-   * This method can be used for any request that has an entity body, but the entity-body is only
-   * used for "quality of protection" <code>auth-int</code>. Quality of protection
-   * <code>auth-int</code> requires a hash of the entity body of the message to be included in the
-   * challenge response.
+   * This method can be used for any request, but the entity-body is only used for "quality of
+   * protection" <code>auth-int</code>. Quality of protection <code>auth-int</code> requires a
+   * hash of the entity body of the message to be included in the challenge response.
+   * <p>
+   * Not all requests have an <code>entity-body</code>, for example, GET requests do not. Some
+   * servers accept an <code>entity-body</code> of zero length for such requests (even though it is
+   * strictly speaking not correct to do so).
    * <p>
    * The first time an <code>Authorization</code> header is generated nonce count will be set to 1.
    * Each subsequent call will increase the nonce count by one. The server expects the nonce count
@@ -561,8 +557,7 @@ public final class DigestAuthentication {
    * @param digestUri     the {@code Request-URI} of the {@code Request-Line} of the HTTP request,
    *                      see {@link DigestChallengeResponse#digestUri(String)} for a discussion
    *                      of what to set here
-   * @param entityBody    the <code>entity-body</code> of the request (see above), or {@code null}
-   *                      if the request does not have an entity body
+   * @param entityBody    the <code>entity-body</code> of the request (see above)
    * @return an authorization string, to use in an <code>Authorization</code> header
    * @throws IllegalStateException            If this method is called when
    *                                          {@link #canRespond()} returns {@code false}, that
@@ -583,7 +578,7 @@ public final class DigestAuthentication {
         .getHeaderValue();
     getChallengeResponse().requestMethod(null)
         .digestUri(null)
-        .entityBody(null)
+        .entityBody(new byte[0])
         .incrementNonceCount()
         .randomizeClientNonce();
     return result;

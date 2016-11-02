@@ -7,6 +7,9 @@ import com.albroco.barebonesdigest.DigestChallengeResponse;
 
 import org.junit.Test;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import static com.albroco.barebonesdigest.DigestTestUtils.assertHeadersEqual;
 
 /**
@@ -182,6 +185,11 @@ public class SmithClarksonExamplesTest {
         .requestMethod("INVITE")
         .entityBody(entityBody.getBytes());
 
+    // Force the response to use auth-int and not auth
+    Set<DigestChallenge.QualityOfProtection> qopTypes = EnumSet.copyOf(response.getSupportedQopTypes());
+    qopTypes.remove(DigestChallenge.QualityOfProtection.AUTH);
+    response.supportedQopTypes(qopTypes);
+
     assertHeadersEqual(expectedResponse, response.getHeaderValue());
   }
 
@@ -227,6 +235,11 @@ public class SmithClarksonExamplesTest {
         .digestUri("sip:bob@biloxi.com")
         .requestMethod("INVITE")
         .entityBody(entityBody.getBytes());
+
+    // Force the response to use auth-int and not auth
+    Set<DigestChallenge.QualityOfProtection> qopTypes = EnumSet.copyOf(response.getSupportedQopTypes());
+    qopTypes.remove(DigestChallenge.QualityOfProtection.AUTH);
+    response.supportedQopTypes(qopTypes);
 
     assertHeadersEqual(expectedResponse, response.getHeaderValue());
   }

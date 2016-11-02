@@ -85,35 +85,46 @@ public class HttpBinCompatibilityTest {
     // Tests an actual challenge and compares it to a correct response
     Map<String, List<String>> responseHeaders = new HashMap<String, List<String>>() {{
       put("WWW-Authenticate",
-          Arrays.asList(new String[]{"Digest nonce=\"ab7d01efad3849f42af4a139b027dbbe\", " +
-              "opaque=\"6f5031885996c5ea2efa9efff8b44fcd\", realm=\"me@kennethreitz.com\", " +
-              "qop=auth-int",}));
+          Arrays.asList(new String[]{
+              "Digest nonce=\"5fa47e6f0ea32457ddd5bb8f2e216744\", " +
+                  "opaque=\"57114b3e58fe9e11e27c986a6ace567b\", realm=\"me@kennethreitz.com\", " +
+                  "qop=auth-int",}));
 
     }};
 
     DigestAuthentication auth = DigestAuthentication.fromResponseHeaders(responseHeaders);
 
-    String expectedChallengeResp = "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
-        "nonce=\"ab7d01efad3849f42af4a139b027dbbe\",uri=\"/digest-auth/auth-int/user/passwd\"," +
-        "response=\"b52f5938a01ec5787e476685e715bb6e\",cnonce=\"3509870636279b49\"," +
-        "opaque=\"6f5031885996c5ea2efa9efff8b44fcd\",qop=auth-int,nc=00000001";
+    String expected1stChallengeResp =
+        "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
+            "nonce=\"5fa47e6f0ea32457ddd5bb8f2e216744\"," +
+            "uri=\"/digest-auth/auth-int/user/passwd\"," +
+            "response=\"068ff0565c5fa972e74c80c0a6a2148f\",cnonce=\"87ffb3ed6c945edd\"," +
+            "opaque=\"57114b3e58fe9e11e27c986a6ace567b\",qop=auth-int,nc=00000001";
 
     auth.username("user")
         .password("passwd")
         .getChallengeResponse()
-        .clientNonce("3509870636279b49")
-        .firstRequestClientNonce("3509870636279b49");
-
-    // Note: This is a GET request, which does not have an entity-body so according to the spec
-    // it should not be possible to authenticate using auth-int. httpbin accepts the authentication
-    // anyway if setting the entity-body to a byte array of zero length. Note: This httpbin endpoint
-    // does not support POST.
-    byte[] entityBody = new byte[0];
+        .clientNonce("87ffb3ed6c945edd")
+        .firstRequestClientNonce("87ffb3ed6c945edd");
 
     String actual1stChallengeResp =
-        auth.getAuthorizationForRequest("GET", "/digest-auth/auth-int/user/passwd", entityBody);
+        auth.getAuthorizationForRequest("GET", "/digest-auth/auth-int/user/passwd");
 
-    assertHeadersEqual(expectedChallengeResp, actual1stChallengeResp);
+    assertHeadersEqual(expected1stChallengeResp, actual1stChallengeResp);
+
+    String expected2ndChallengeResp =
+        "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
+            "nonce=\"5fa47e6f0ea32457ddd5bb8f2e216744\"," +
+            "uri=\"/digest-auth/auth-int/user/passwd\"," +
+            "response=\"13ba2a7a7a545671a7223dc06189853f\",cnonce=\"cda594d5958d55a2\"," +
+            "opaque=\"57114b3e58fe9e11e27c986a6ace567b\",qop=auth-int,nc=00000002";
+
+    auth.getChallengeResponse().clientNonce("cda594d5958d55a2");
+
+    String actual2ndChallengeResp =
+        auth.getAuthorizationForRequest("GET", "/digest-auth/auth-int/user/passwd");
+
+    assertHeadersEqual(expected2ndChallengeResp, actual2ndChallengeResp);
   }
 
   /**

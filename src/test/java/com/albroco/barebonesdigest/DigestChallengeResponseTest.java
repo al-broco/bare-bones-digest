@@ -90,6 +90,24 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
+  public void testSetAlgorithmToMd5ResetsEntityBodyDigest() {
+    byte[] digest = {-44, 29, -116, -39, -113, 0, -78, 4, -23, -128, 9, -104, -20, -8, 66, 126};
+    DigestChallengeResponse response = new DigestChallengeResponse();
+    response.entityBody(new byte[] { 1, 2, 3}).algorithm("MD5");
+    assertArrayEquals(digest, response.getEntityBodyDigest());
+  }
+
+  @Test
+  public void testSetAlgorithmToSha256ResetsEntityBodyDigest() {
+    byte[] digest =
+        {-29, -80, -60, 66, -104, -4, 28, 20, -102, -5, -12, -56, -103, 111, -71, 36, 39, -82, 65,
+            -28, 100, -101, -109, 76, -92, -107, -103, 27, 120, 82, -72, 85};
+    DigestChallengeResponse response = new DigestChallengeResponse();
+    response.entityBody(new byte[] { 1, 2, 3}).algorithm("SHA-256");
+    assertArrayEquals(digest, response.getEntityBodyDigest());
+  }
+
+  @Test
   public void testGetAndSetUsername() {
     assertEquals("user", new DigestChallengeResponse().username("user").getUsername());
   }
@@ -420,7 +438,7 @@ public class DigestChallengeResponseTest {
 
   @Test
   public void testGetQopAllQopTypesSupportedEntityBodySet() {
-    assertEquals(AUTH_INT,
+    assertEquals(AUTH,
         new DigestChallengeResponse().supportedQopTypes(EnumSet.allOf(QualityOfProtection.class))
             .entityBody(new byte[0])
             .getQop());
@@ -431,11 +449,6 @@ public class DigestChallengeResponseTest {
     assertEquals(AUTH,
         new DigestChallengeResponse().supportedQopTypes(EnumSet.allOf(QualityOfProtection.class))
             .getQop());
-  }
-
-  @Test
-  public void testGetQopOnlyAuthIntSupportedEntityBodyNotSet() {
-    assertNull(new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH_INT)).getQop());
   }
 
   @Test
@@ -483,14 +496,39 @@ public class DigestChallengeResponseTest {
 
   @Test
   public void testEntityBodyDigestDefaultValue() {
-    assertNull(new DigestChallengeResponse().getEntityBodyDigest());
+    byte[] digest = {-44, 29, -116, -39, -113, 0, -78, 4, -23, -128, 9, -104, -20, -8, 66, 126};
+    assertArrayEquals(digest, new DigestChallengeResponse().getEntityBodyDigest());
   }
 
   @Test
-  public void testUnsetEntityBodyDigest() {
-    assertNull(new DigestChallengeResponse().entityBodyDigest(new byte[3])
-        .entityBodyDigest(null)
-        .getEntityBodyDigest());
+  public void testEntityBodyDigestMd5DefaultValue() {
+    byte[] digest = {-44, 29, -116, -39, -113, 0, -78, 4, -23, -128, 9, -104, -20, -8, 66, 126};
+    assertArrayEquals(digest, new DigestChallengeResponse().algorithm("MD5").getEntityBodyDigest());
+  }
+
+  @Test
+  public void testEntityBodyDigestMd5SessDefaultValue() {
+    byte[] digest = {-44, 29, -116, -39, -113, 0, -78, 4, -23, -128, 9, -104, -20, -8, 66, 126};
+    assertArrayEquals(digest,
+        new DigestChallengeResponse().algorithm("MD5-sess").getEntityBodyDigest());
+  }
+
+  @Test
+  public void testEntityBodyDigestSha256DefaultValue() {
+    byte[] digest =
+        {-29, -80, -60, 66, -104, -4, 28, 20, -102, -5, -12, -56, -103, 111, -71, 36, 39, -82, 65,
+            -28, 100, -101, -109, 76, -92, -107, -103, 27, 120, 82, -72, 85};
+    assertArrayEquals(digest,
+        new DigestChallengeResponse().algorithm("SHA-256").getEntityBodyDigest());
+  }
+
+  @Test
+  public void testEntityBodyDigestSha256SessDefaultValue() {
+    byte[] digest =
+        {-29, -80, -60, 66, -104, -4, 28, 20, -102, -5, -12, -56, -103, 111, -71, 36, 39, -82, 65,
+            -28, 100, -101, -109, 76, -92, -107, -103, 27, 120, 82, -72, 85};
+    assertArrayEquals(digest,
+        new DigestChallengeResponse().algorithm("SHA-256-sess").getEntityBodyDigest());
   }
 
   @Test
@@ -518,13 +556,6 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
-  public void testUnsetEntityBody() {
-    assertNull(new DigestChallengeResponse().entityBodyDigest(new byte[3])
-        .entityBody(null)
-        .getEntityBodyDigest());
-  }
-
-  @Test
   public void testIsEntityBodyDigestRequiredOnlyAuthIntSupported() {
     assertTrue(new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH_INT))
         .isEntityBodyDigestRequired());
@@ -544,7 +575,7 @@ public class DigestChallengeResponseTest {
 
   @Test
   public void testIsEntityBodyDigestRequiredAuthIntAndRfc2069Supported() {
-    assertFalse(new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH,
+    assertTrue(new DigestChallengeResponse().supportedQopTypes(EnumSet.of(AUTH_INT,
         UNSPECIFIED_RFC2069_COMPATIBLE)).isEntityBodyDigestRequired());
   }
 
@@ -678,14 +709,6 @@ public class DigestChallengeResponseTest {
   }
 
   @Test(expected = InsufficientInformationException.class)
-  public void testMissingEntityBodyWhenQopIsAuthInt() {
-    createChallengeFromRfc2617Example().supportedQopTypes(EnumSet.of(AUTH_INT))
-        .entityBody(null)
-        .clientNonce(null)
-        .getHeaderValue();
-  }
-
-  @Test(expected = InsufficientInformationException.class)
   public void testSupportedQopTypesNotSet() {
     // The example below is from Section 3.5 of RC 2617,
     // https://tools.ietf.org/html/rfc2617#section-3.5
@@ -786,7 +809,7 @@ public class DigestChallengeResponseTest {
   }
 
   @Test
-  public void testPreferAuthIntOverAuthIfEntityBodyIsSpecified() throws Exception {
+  public void testPreferAuthOverAuthIntIfEntityBodyIsSpecified() throws Exception {
     DigestChallengeResponse response = new DigestChallengeResponse().username("usr")
         .password("pwd")
         .realm("realm")
@@ -798,7 +821,7 @@ public class DigestChallengeResponseTest {
         .supportedQopTypes(EnumSet.of(AUTH, AUTH_INT))
         .firstRequestClientNonce("cnonce");
 
-    assertEquals("auth-int", directiveFromHeader(response.getHeaderValue(), "qop"));
+    assertEquals("auth", directiveFromHeader(response.getHeaderValue(), "qop"));
   }
 
   @Test

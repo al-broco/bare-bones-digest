@@ -524,12 +524,6 @@ public class DigestAuthenticationTest {
         assignments.contains(expectedAssignment));
   }
 
-  @Test(expected = InsufficientInformationException.class)
-  public void testGetAuthorizationForRequestMissingEnitityBodyDigest() throws Exception {
-    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_INT_CHALLENGE);
-    auth.username("user").password("passwd").getAuthorizationForRequest("GET", "/index.html");
-  }
-
   @Test
   public void testGetAuthorizationForRequestEnitityBodySetOnChallengeResponse() throws Exception {
     DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_INT_CHALLENGE);
@@ -591,17 +585,5 @@ public class DigestAuthenticationTest {
     auth.username("user")
         .password("passwd")
         .getAuthorizationForRequest("POST", "/index.html", new byte[0]);
-  }
-
-  @Test(expected = InsufficientInformationException.class)
-  public void testGetAuthorizationForRequestWithEntityEntityBodyNotReusedInSubsequentRequests()
-      throws Exception {
-    DigestAuthentication auth = DigestAuthentication.fromWwwAuthenticateHeader(AUTH_INT_CHALLENGE);
-    // This should work:
-    auth.username("user")
-        .password("passwd")
-        .getAuthorizationForRequest("POST", "/index.html", new byte[0]);
-    // THis should fail:
-    auth.username("user").password("passwd").getAuthorizationForRequest("POST", "/index.html");
   }
 }
