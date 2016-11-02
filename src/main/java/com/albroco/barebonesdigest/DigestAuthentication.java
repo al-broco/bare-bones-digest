@@ -106,7 +106,6 @@ import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
  * <h1>Concurrency</h1>
  *
  * This class is thread safe, read and write operations are synchronized.
- *
  */
 public final class DigestAuthentication {
   private List<DigestChallenge> challenges;
@@ -527,10 +526,13 @@ public final class DigestAuthentication {
    * @see #getAuthorizationForRequest(String, String, byte[])
    */
   public synchronized String getAuthorizationForRequest(String requestMethod, String digestUri) {
-    prepareForAuthorization();
     String result =
         getChallengeResponse().requestMethod(requestMethod).digestUri(digestUri).getHeaderValue();
-    getChallengeResponse().requestMethod(null).digestUri(null).entityBody(null);
+    getChallengeResponse().requestMethod(null)
+        .digestUri(null)
+        .entityBody(null)
+        .incrementNonceCount()
+        .randomizeClientNonce();
     return result;
   }
 
@@ -575,21 +577,16 @@ public final class DigestAuthentication {
   public synchronized String getAuthorizationForRequest(String requestMethod,
       String digestUri,
       byte[] entityBody) {
-    prepareForAuthorization();
-
     String result = getChallengeResponse().requestMethod(requestMethod)
         .digestUri(digestUri)
         .entityBody(entityBody)
         .getHeaderValue();
-    getChallengeResponse().requestMethod(null).digestUri(null).entityBody(null);
+    getChallengeResponse().requestMethod(null)
+        .digestUri(null)
+        .entityBody(null)
+        .incrementNonceCount()
+        .randomizeClientNonce();
     return result;
-  }
-
-  private void prepareForAuthorization() {
-    if (!firstResponse) {
-      getChallengeResponse().incrementNonceCount().randomizeClientNonce();
-    }
-    firstResponse = false;
   }
 
   private static List<DigestChallenge> createListOfMatchingSize(Iterable<?> iterable) {
