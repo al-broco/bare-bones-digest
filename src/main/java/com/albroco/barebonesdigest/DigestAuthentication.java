@@ -196,33 +196,6 @@ public final class DigestAuthentication {
 
           return -4;
         }
-
-
-        private int score(DigestChallenge challenge) {
-          if (!DigestChallengeResponse.isChallengeSupported(challenge)) {
-            return Integer.MIN_VALUE;
-          }
-
-          Set<DigestChallenge.QualityOfProtection> supportedQopTypes =
-              challenge.getSupportedQopTypes();
-          if (supportedQopTypes.containsAll(AUTH_AUTH_INT_QOPS)) {
-            return 0;
-          }
-
-          if (supportedQopTypes.contains(AUTH)) {
-            return -1;
-          }
-
-          if (supportedQopTypes.contains(UNSPECIFIED_RFC2069_COMPATIBLE)) {
-            return -2;
-          }
-
-          if (supportedQopTypes.contains(AUTH_INT)) {
-            return -3;
-          }
-
-          return Integer.MIN_VALUE;
-        }
       };
 
   /**
