@@ -48,7 +48,7 @@ public class UseCaseCodeExamplesTest {
         return;
       }
 
-      // Step 5. Create a new connection, identical to the original one..
+      // Step 5. Create a new connection, identical to the original one.
       connection = (HttpURLConnection) url.openConnection();
       // ...and set the Authorization header on the request, with the challenge response
       connection.setRequestProperty(DigestChallengeResponse.HTTP_HEADER_AUTHORIZATION,

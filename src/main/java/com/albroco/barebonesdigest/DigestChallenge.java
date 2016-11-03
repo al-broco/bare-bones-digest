@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * <p>
  * To parse a HTTP Digest challenge pass it to the {@link #parse(String)} method. Note that the
  * HTTP Digest challenge must first be extracted from the header value if the header contains
- * multiple challenges.
+ * multiple challenges, see {@link WwwAuthenticateHeader}.
  *
  * <h2>Quoted and unquoted values</h2>
  *
@@ -41,6 +41,7 @@ import java.util.regex.Pattern;
  * "auth-int".</li>
  * </ul>
  *
+ * @see WwwAuthenticateHeader
  * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.1">RFC 2617, Section 3.2.1, The
  * WWW-Authenticate Response Header</a>
  * @see <a href="https://tools.ietf.org/html/rfc2616#section-14.47">RFC 7235, Section 14.47,
@@ -53,17 +54,31 @@ public class DigestChallenge {
   public enum QualityOfProtection {
     /**
      * Indicates authentication ({@code auth}) quality of protection.
+     * <p>
+     * This is the most commonly used quality of protection, specified in
+     * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>.
      */
     AUTH("auth"),
 
     /**
      * Indicates authentication with integrity protection ({@code auth-int}) quality of protection.
+     * <p>
+     * This quality of protection is rarely used and most servers do not implement it. It requires
+     * the client to compute a digest of the body of the message and thus provides some protection
+     * from man-in-the-middle attacks. Defined in
+     * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>.
      */
     AUTH_INT("auth-int"),
 
     /**
      * A nameless quality of protection compatible with RFC 2069. Used when the server does not
      * specify a qop.
+     * <p>
+     * This quality of protection is rarely used since it has been long obsoleted. It is included
+     * for backwards compatibility. It is defined in
+     * <a href="https://tools.ietf.org/html/rfc2069">RFC 2069</a>. It is present in
+     * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a> for backwards compatibility, but
+     * in <a href="https://tools.ietf.org/html/rfc7616">RFC 7616</a> it is removed altogether.
      */
     UNSPECIFIED_RFC2069_COMPATIBLE(null);
 

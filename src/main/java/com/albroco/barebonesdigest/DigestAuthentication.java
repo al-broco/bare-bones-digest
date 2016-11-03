@@ -47,7 +47,7 @@ import static com.albroco.barebonesdigest.DigestChallenge.QualityOfProtection
  *         return;
  *     }
  *
- *     // Step 5. Create a new connection, identical to the original one..
+ *     // Step 5. Create a new connection, identical to the original one.
  *     connection = (HttpURLConnection) url.openConnection();
  *     // ...and set the Authorization header on the request, with the challenge response
  *     connection.setRequestProperty(DigestChallengeResponse.HTTP_HEADER_AUTHORIZATION,
@@ -137,7 +137,6 @@ public final class DigestAuthentication {
    * <li>Challenges where the server supports qop type <code>auth-int</code> and nothing else.
    * This is ranked last among the supported challenges because <code>auth-int</code> is limited
    * and cannot authenticate requests without a body, such as HTTP GET.</li>
-   * <li>Unsupported challenges.</li>
    * </ol>
    */
   public static final Comparator<DigestChallenge> DEFAULT_CHALLENGE_COMPARATOR =
@@ -352,7 +351,7 @@ public final class DigestAuthentication {
    * @param orderingComparator A comparator object that will be used to sort the challenges. The
    *                           challenge that will be used is the first supported challenge
    *                           according to the sort order defined by the comparator.
-   * @return this object so that setters can be chained
+   * @return this object
    * @throws IllegalStateException if this method is called after a method that requires a choice
    *                               to be made regarding which of the available challenges to use:
    *                               {@link #isEntityBodyDigestRequired()},
@@ -387,7 +386,7 @@ public final class DigestAuthentication {
    * Sets the username to use for authentication.
    *
    * @param username the username
-   * @return this object so that setters can be chained
+   * @return this object
    * @see #getUsername()
    * @see <a href="https://tools.ietf.org/html/rfc2617#section-3.2.2">Section 3.2.2 of RFC 2617</a>
    */
@@ -417,7 +416,7 @@ public final class DigestAuthentication {
    * Sets the password to use for authentication.
    *
    * @param password the password
-   * @return this object so that setters can be chained
+   * @return this object
    * @see #getPassword()
    */
   public synchronized DigestAuthentication password(String password) {
@@ -507,7 +506,7 @@ public final class DigestAuthentication {
    * request.
    * <p>
    * This method takes the request's <code>entity-body</code> as an argument. The entity body is the
-   * message body after decoding any transfer encoding that might have been applied. Example:If
+   * message body after decoding any transfer encoding that might have been applied. Example: If
    * <code>Transfer-Encoding</code> is <code>gzip</code> the entity body is the unzipped message and
    * the message body is the gzipped message. Only some requests have entity bodies,
    * <code>GET</code> requests for example do not. See
