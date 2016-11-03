@@ -22,9 +22,9 @@ public class DigestTestUtils {
 
   public static String directiveFromHeader(String header, String directive) {
     String prefix = directive + "=";
-    for (String assingment : directiveAssignmentsFromHeader(header)) {
-      if (assingment.startsWith(prefix)) {
-        return assingment.substring(prefix.length());
+    for (String assignment : directiveAssignmentsFromHeader(header)) {
+      if (assignment.startsWith(prefix)) {
+        return assignment.substring(prefix.length());
       }
     }
     return null;
