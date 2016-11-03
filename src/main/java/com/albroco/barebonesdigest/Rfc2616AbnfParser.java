@@ -174,7 +174,7 @@ final class Rfc2616AbnfParser {
   }
 
   private boolean isValidTokenChar(char c) {
-    return c >= 0 && c < VALID_TOKEN_CHARS.length && VALID_TOKEN_CHARS[c];
+    return c < VALID_TOKEN_CHARS.length && VALID_TOKEN_CHARS[c];
   }
 
   public Rfc2616AbnfParser consumeToken68() throws ParseException {
@@ -197,7 +197,7 @@ final class Rfc2616AbnfParser {
   }
 
   private boolean isValidToken68CharExcludingEquals(char c) {
-    return c >= 0 && c < VALID_TOKEN68_CHARS_EXCLUDING_EQUALS.length &&
+    return c < VALID_TOKEN68_CHARS_EXCLUDING_EQUALS.length &&
         VALID_TOKEN68_CHARS_EXCLUDING_EQUALS[c];
   }
 
