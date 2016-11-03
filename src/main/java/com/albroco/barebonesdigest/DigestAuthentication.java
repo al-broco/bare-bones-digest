@@ -113,7 +113,6 @@ public final class DigestAuthentication {
   private DigestChallengeResponse response;
   private String username;
   private String password;
-  private boolean firstResponse = true;
 
   /**
    * Default comparator used when comparing which challenge to use when there is more than one to
@@ -573,7 +572,6 @@ public final class DigestAuthentication {
         ", response=" + response +
         ", username='" + getUsername() + '\'' +
         ", password=*" +
-        ", firstResponse=" + firstResponse +
         '}';
   }
 }
