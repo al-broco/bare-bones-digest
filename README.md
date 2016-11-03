@@ -44,11 +44,10 @@ some other HTTP stack) without too much trouble.
 your project's `build.gradle`:
 
     dependencies {
-        compile 'com.albroco:bare-bones-digest:0.1.0'
+        compile 'com.albroco:bare-bones-digest:1.0.0-rc1'
     }
 
-Versioning follows [semver](http://semver.org). Use an exact version number
-since the library is pre-1.0.0 and the API is not stable between versions.
+Versioning follows [semver](http://semver.org).
 
 ### Digest Authentication at a glance
 
