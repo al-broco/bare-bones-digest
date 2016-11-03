@@ -56,7 +56,7 @@ final class Rfc2616AbnfParser {
     String separators = "()<>@,;:\\\"/[]?={} \t";
 
     for (char c = 0; c < VALID_TOKEN_CHARS.length; ++c) {
-      VALID_TOKEN_CHARS[c] = c >= 32 && c < 127 && separators.indexOf((char) c) == -1;
+      VALID_TOKEN_CHARS[c] = c >= 32 && c < 127 && separators.indexOf(c) == -1;
     }
   }
 
