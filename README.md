@@ -44,7 +44,7 @@ some other HTTP stack) without too much trouble.
 your project's `build.gradle`:
 
     dependencies {
-        compile 'com.albroco:bare-bones-digest:1.0.0-rc1'
+        compile 'com.albroco:bare-bones-digest:1.0.0'
     }
 
 Versioning follows [semver](http://semver.org).
