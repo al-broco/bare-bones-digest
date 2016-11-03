@@ -36,10 +36,9 @@ public class HttpBinCompatibilityTest {
   public void testQopAuthAuthenticationMd5Algorithm() throws Exception {
     // Tests an actual challenge and compares it to a correct response
     Map<String, List<String>> responseHeaders = new HashMap<String, List<String>>() {{
-      put("WWW-Authenticate",
-          Arrays.asList(new String[]{"Digest nonce=\"fa670d6814c95916137b4a3282f9a4b3\", " +
-              "opaque=\"7c835eb339cfcf0906ef3c9c9308d345\", realm=\"me@kennethreitz.com\", " +
-              "qop=auth",}));
+      put("WWW-Authenticate", Arrays.asList("Digest nonce=\"fa670d6814c95916137b4a3282f9a4b3\", " +
+          "opaque=\"7c835eb339cfcf0906ef3c9c9308d345\", realm=\"me@kennethreitz.com\", " +
+          "qop=auth"));
 
     }};
 
@@ -84,22 +83,19 @@ public class HttpBinCompatibilityTest {
   public void testQopAuthIntAuthenticationMd5Algorithm() throws Exception {
     // Tests an actual challenge and compares it to a correct response
     Map<String, List<String>> responseHeaders = new HashMap<String, List<String>>() {{
-      put("WWW-Authenticate",
-          Arrays.asList(new String[]{
-              "Digest nonce=\"5fa47e6f0ea32457ddd5bb8f2e216744\", " +
-                  "opaque=\"57114b3e58fe9e11e27c986a6ace567b\", realm=\"me@kennethreitz.com\", " +
-                  "qop=auth-int",}));
+      put("WWW-Authenticate", Arrays.asList("Digest nonce=\"5fa47e6f0ea32457ddd5bb8f2e216744\", " +
+          "opaque=\"57114b3e58fe9e11e27c986a6ace567b\", realm=\"me@kennethreitz.com\", " +
+          "qop=auth-int"));
 
     }};
 
     DigestAuthentication auth = DigestAuthentication.fromResponseHeaders(responseHeaders);
 
-    String expected1stChallengeResp =
-        "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
-            "nonce=\"5fa47e6f0ea32457ddd5bb8f2e216744\"," +
-            "uri=\"/digest-auth/auth-int/user/passwd\"," +
-            "response=\"068ff0565c5fa972e74c80c0a6a2148f\",cnonce=\"87ffb3ed6c945edd\"," +
-            "opaque=\"57114b3e58fe9e11e27c986a6ace567b\",qop=auth-int,nc=00000001";
+    String expected1stChallengeResp = "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
+        "nonce=\"5fa47e6f0ea32457ddd5bb8f2e216744\"," +
+        "uri=\"/digest-auth/auth-int/user/passwd\"," +
+        "response=\"068ff0565c5fa972e74c80c0a6a2148f\",cnonce=\"87ffb3ed6c945edd\"," +
+        "opaque=\"57114b3e58fe9e11e27c986a6ace567b\",qop=auth-int,nc=00000001";
 
     auth.username("user")
         .password("passwd")
@@ -112,12 +108,11 @@ public class HttpBinCompatibilityTest {
 
     assertHeadersEqual(expected1stChallengeResp, actual1stChallengeResp);
 
-    String expected2ndChallengeResp =
-        "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
-            "nonce=\"5fa47e6f0ea32457ddd5bb8f2e216744\"," +
-            "uri=\"/digest-auth/auth-int/user/passwd\"," +
-            "response=\"13ba2a7a7a545671a7223dc06189853f\",cnonce=\"cda594d5958d55a2\"," +
-            "opaque=\"57114b3e58fe9e11e27c986a6ace567b\",qop=auth-int,nc=00000002";
+    String expected2ndChallengeResp = "Digest username=\"user\",realm=\"me@kennethreitz.com\"," +
+        "nonce=\"5fa47e6f0ea32457ddd5bb8f2e216744\"," +
+        "uri=\"/digest-auth/auth-int/user/passwd\"," +
+        "response=\"13ba2a7a7a545671a7223dc06189853f\",cnonce=\"cda594d5958d55a2\"," +
+        "opaque=\"57114b3e58fe9e11e27c986a6ace567b\",qop=auth-int,nc=00000002";
 
     auth.getChallengeResponse().clientNonce("cda594d5958d55a2");
 
