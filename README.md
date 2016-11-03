@@ -144,9 +144,9 @@ bare-bones-digest has been tested with, and is not compatible with,
 the following servers:
 
 * [nodejs](https://nodejs.org) v4.2.6 with
-  [node-digest](https://github.com/wearefractal/node-digest)
-  v0.0.5. node-digest expects to find spaces in challenge responses
-  where bare-bones-digest does not put them.
+  [node-digest](https://github.com/wearefractal/node-digest) v0.0.5
+  because of [this
+  issue](https://github.com/wearefractal/node-digest/issues/2).
 
 ## Limitations
 
