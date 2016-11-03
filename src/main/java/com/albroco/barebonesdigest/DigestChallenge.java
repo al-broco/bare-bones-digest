@@ -82,7 +82,7 @@ public class DigestChallenge {
      */
     UNSPECIFIED_RFC2069_COMPATIBLE(null);
 
-    private String qopValue;
+    private final String qopValue;
 
     QualityOfProtection(String qopValue) {
       this.qopValue = qopValue;

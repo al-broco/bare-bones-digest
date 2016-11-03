@@ -98,7 +98,7 @@ public final class DigestChallengeResponse {
   private String quotedNonce;
   private int nonceCount;
   private String quotedOpaque;
-  private Set<DigestChallenge.QualityOfProtection> supportedQopTypes;
+  private final Set<DigestChallenge.QualityOfProtection> supportedQopTypes;
   private String digestUri;
   private String quotedRealm;
   private String requestMethod;
