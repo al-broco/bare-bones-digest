@@ -53,7 +53,6 @@ public class WwwAuthenticationChallengeSeparationTest {
 
   public WwwAuthenticationChallengeSeparationTest(String header, String[] challenges) {
     this.header = header;
-    ;
     this.challenges = challenges;
   }
 
