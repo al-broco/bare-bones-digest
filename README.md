@@ -1,10 +1,17 @@
 # bare-bones-digest, HTTP digest authentication for Android
 
-This project is a partial implementation of the [HTTP
+bare-bones-digest is an implementation of the [HTTP
 Digest](https://en.wikipedia.org/wiki/Digest_access_authentication)
 authentication scheme for Android. With a small effort you can use it
 to get HTTP digest working with `HttpURLConnection` or any other HTTP
 stack.
+
+bare-bones-digest aims to support all features of HTTP digest that is
+used in real-life applications. The goal is to be interoperable with
+any server with a HTTP digest implementation.
+
+As of version 1.0.0, bare-bones-digest is stable. Changes will only be
+made as results of bug reports or feature requests.
 
 ## Why?
 
@@ -40,7 +47,7 @@ some other HTTP stack) without too much trouble.
 
 ## How?
 
-`bare-bones-digest` is available from jcenter, include it as a dependency in
+bare-bones-digest is available from jcenter, include it as a dependency in
 your project's `build.gradle`:
 
     dependencies {
@@ -90,7 +97,7 @@ if (connection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
         return;
     }
 
-    // Step 5. Create a new connection, identical to the original one..
+    // Step 5. Create a new connection, identical to the original one...
     connection = (HttpURLConnection) url.openConnection();
     // ...and set the Authorization header on the request, with the challenge response
     connection.setRequestProperty(DigestChallengeResponse.HTTP_HEADER_AUTHORIZATION,
@@ -135,9 +142,8 @@ following servers:
 * An [Axis M1054](http://www.axis.com/se/sv/products/axis-m1054) camera.
 * [httpbin](https://github.com/Runscope/httpbin) v0.5.
 
-Testing is basic. For each valid combination of qop and algorithm that
-the server supports a single request has been successfully
-authenticated.
+For each valid combination of qop and algorithm that the server
+supports a single request has been successfully authenticated.
 
 bare-bones-digest has been tested with, and is not compatible with,
 the following servers:
@@ -149,10 +155,16 @@ the following servers:
 
 ## Limitations
 
-* The implementation is based on [RFC
-  2617](https://tools.ietf.org/html/rfc2617). Features from [RFC
-  7616](https://tools.ietf.org/html/rfc7616) (which obsoletes RFC
-  2617) are only partially implemented.
+The implementation is based on [RFC
+2617](https://tools.ietf.org/html/rfc2617). Features from [RFC
+7616](https://tools.ietf.org/html/rfc7616) (which obsoletes RFC 2617)
+are only partially implemented.
+
+## Support
+
+Please file a github issue if you have any problems! In particular,
+file an issue if bare-bones-digest is not interoperable with your
+server of choice.
 
 ## References
 
