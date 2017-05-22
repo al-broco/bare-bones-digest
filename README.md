@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/al-broco/bare-bones-digest.svg?branch=master)](https://travis-ci.org/al-broco/bare-bones-digest)
+[![codecov](https://codecov.io/gh/al-broco/bare-bones-digest/branch/master/graph/badge.svg)](https://codecov.io/gh/al-broco/bare-bones-digest)
+
 # bare-bones-digest, HTTP digest authentication for Android
 
 bare-bones-digest is an implementation of the [HTTP
