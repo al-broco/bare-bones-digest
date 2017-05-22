@@ -5,10 +5,12 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:2.2.1'
+        classpath 'com.dicedmelon.gradle:jacoco-android:0.1.1'
     }
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'jacoco-android'
 
 android {
     repositories {
@@ -25,6 +27,9 @@ android {
         versionName "1.0"
     }
     buildTypes {
+        debug {
+            testCoverageEnabled true
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
