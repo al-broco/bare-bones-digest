@@ -12,7 +12,10 @@ jdk:
   - oraclejdk8
 
 script:
-   - ./gradlew build test generateRelease
+   - ./gradlew build test jacocoTestReport generateRelease
+
+after_success:
+   - bash <(curl -s https://codecov.io/bash)
 
 branches:
   only:
