@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/al-broco/bare-bones-digest.svg?branch=master)](https://travis-ci.org/al-broco/bare-bones-digest)
 [![codecov](https://codecov.io/gh/al-broco/bare-bones-digest/branch/master/graph/badge.svg)](https://codecov.io/gh/al-broco/bare-bones-digest)
+[![API](https://img.shields.io/badge/API-9%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=9)
 
 # bare-bones-digest, HTTP digest authentication for Android
 
