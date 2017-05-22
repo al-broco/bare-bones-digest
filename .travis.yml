@@ -17,6 +17,9 @@ script:
 after_success:
    - bash <(curl -s https://codecov.io/bash)
 
+after_failure:
+   - cat ./build/al-broco/bare-bones-digest/build/reports/lint-results.xml
+
 branches:
   only:
   - master
