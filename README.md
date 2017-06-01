@@ -58,7 +58,9 @@ your project's `build.gradle`:
         compile 'com.albroco:bare-bones-digest:1.0.0'
     }
 
-Versioning follows [semver](http://semver.org).
+Versioning follows [semver](http://semver.org). The public API for
+bare-bones-digest is the [project
+javadoc](http://al-broco.github.io/bare-bones-digest/javadoc/1.0.0/index.html).
 
 ### Digest Authentication at a glance
 
