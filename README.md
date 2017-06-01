@@ -55,7 +55,7 @@ bare-bones-digest is available from jcenter, include it as a dependency in
 your project's `build.gradle`:
 
     dependencies {
-        compile 'com.albroco:bare-bones-digest:1.0.0'
+        compile 'com.albroco:bare-bones-digest:1.0.1'
     }
 
 Versioning follows [semver](http://semver.org). The public API for
