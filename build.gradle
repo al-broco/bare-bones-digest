@@ -5,12 +5,10 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.2'
-        classpath 'com.dicedmelon.gradle:jacoco-android:0.1.1'
     }
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'jacoco-android'
 
 android {
     repositories {

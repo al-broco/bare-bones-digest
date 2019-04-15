@@ -12,7 +12,7 @@ jdk:
   - oraclejdk8
 
 script:
-   - ./gradlew build test jacocoTestReport generateRelease
+   - ./gradlew build test assembleRelease
 
 after_success:
    - bash <(curl -s https://codecov.io/bash)
