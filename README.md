@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/al-broco/bare-bones-digest.svg?branch=master)](https://travis-ci.org/al-broco/bare-bones-digest)
 [![API](https://img.shields.io/badge/API-9%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=9)
 [![Download](https://api.bintray.com/packages/al-broco/al-broco/bare-bones-digest/images/download.svg?version=1.0.1) ](https://bintray.com/al-broco/al-broco/bare-bones-digest/1.0.1/link)
+![Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen.svg)
 
 # bare-bones-digest, HTTP digest authentication for Android
 
