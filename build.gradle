@@ -50,3 +50,19 @@ ext {
 }
 
 apply from: 'https://raw.githubusercontent.com/blundell/release-android-library/master/android-release-aar.gradle'
+
+uploadArchives {
+    repositories.mavenDeployer {
+        pom.project {
+            licenses {
+                license {
+                    name 'The MIT License (MIT)'
+                    url 'http://opensource.org/licenses/MIT'
+                    distribution 'repo'
+                }
+            }
+            description 'Implementation of HTTP digest authentication for Android'
+            url 'https://github.com/al-broco/bare-bones-digest'
+        }
+    }
+}
