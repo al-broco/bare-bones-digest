@@ -60,7 +60,7 @@ your project's `build.gradle`:
 
 Versioning follows [semver](http://semver.org). The public API for
 bare-bones-digest is the [project
-javadoc](http://al-broco.github.io/bare-bones-digest/javadoc/1.0.1/index.html).
+javadoc](http://al-broco.github.io/bare-bones-digest/javadoc/1.0.2/index.html).
 
 ### Digest Authentication at a glance
 
@@ -111,15 +111,15 @@ if (connection.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
 }
 ```
 
-[`DigestAuthentication`](http://al-broco.github.io/bare-bones-digest/javadoc/1.0.1/com/albroco/barebonesdigest/DigestAuthentication.html)
+[`DigestAuthentication`](http://al-broco.github.io/bare-bones-digest/javadoc/1.0.2/com/albroco/barebonesdigest/DigestAuthentication.html)
 is the main entry point of the API, read the documentation for more examples. Some other useful
 classes include:
-* [`WwwAuthenticateHeader`](http://al-broco.github.io/bare-bones-digest/javadoc/1.0.1/com/albroco/barebonesdigest/WwwAuthenticateHeader.html)
+* [`WwwAuthenticateHeader`](http://al-broco.github.io/bare-bones-digest/javadoc/1.0.2/com/albroco/barebonesdigest/WwwAuthenticateHeader.html)
   which can be used to parse challenges from `WWW-Authenticate` headers, including challenges of
   other types than Digest.
-* [`DigestChallenge`](http://al-broco.github.io/bare-bones-digest/javadoc/1.0.1/com/albroco/barebonesdigest/DigestChallenge.html)
+* [`DigestChallenge`](http://al-broco.github.io/bare-bones-digest/javadoc/1.0.2/com/albroco/barebonesdigest/DigestChallenge.html)
   which provides functionality for parsing digest challenges.
-* [`DigestChallengeResponse`](http://al-broco.github.io/bare-bones-digest/javadoc/1.0.1/com/albroco/barebonesdigest/DigestChallengeResponse.html)
+* [`DigestChallengeResponse`](http://al-broco.github.io/bare-bones-digest/javadoc/1.0.2/com/albroco/barebonesdigest/DigestChallengeResponse.html)
   which provides functionality for generating responses to digest challenges.
 
 ## Features
