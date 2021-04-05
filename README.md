@@ -1,5 +1,4 @@
 [![API](https://img.shields.io/badge/API-9%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=9)
-[![Download](https://api.bintray.com/packages/al-broco/al-broco/bare-bones-digest/images/download.svg?version=1.0.2) ](https://bintray.com/al-broco/al-broco/bare-bones-digest/1.0.2/link)
 ![Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen.svg)
 
 # bare-bones-digest, HTTP digest authentication for Android
@@ -51,11 +50,19 @@ some other HTTP stack) without too much trouble.
 
 ## How?
 
-bare-bones-digest is available from jcenter, include it as a dependency in
-your project's `build.gradle`:
+Include bare-bones-digest as a dependency in your project's
+`build.gradle`:
 
     dependencies {
         implementation 'com.albroco:bare-bones-digest:1.0.2'
+    }
+
+bare-bones-digest is available from Maven Central. If dependency
+resolution fails, make sure `mavenCentral()` is in your list of
+repositories:
+
+    repositories {
+        mavenCentral()
     }
 
 Versioning follows [semver](http://semver.org). The public API for
